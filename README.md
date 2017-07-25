@@ -1,5 +1,5 @@
 # MAIN README
-hahaha
+
 Paparazzi UAS
 =============
 
