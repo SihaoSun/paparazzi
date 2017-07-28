@@ -8,7 +8,7 @@
 #include "subsystems/datalink/datalink.h"
 </header>
   <waypoints>
-    <waypoint height="0" name="HOME" x="0.0" y="0.0"/>
+    <waypoint height="1.5" name="HOME" x="0.0" y="0.0"/>
     <waypoint height="2" name="CLIMB" x="1.2" y="-0.6"/>
     <waypoint name="GOAL" x="2.0" y="2.0"/>
     <waypoint height="1.342321" name="STDBY" x="-2" y="-2"/>
@@ -79,6 +79,35 @@
       <!--path wpts="p1,p2"/-->
       <go from = "p1" wp="p2" hmode="route"/>
     </block>
+    <block name="roll_maneuver">
+      <stay wp="HOME" until = "stage_time>2"/>
+      <while cond="TRUE">
+        <attitude alt = "1.5" roll="20.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
+        <attitude alt = "1.5" roll="-20.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
+        <stay wp="HOME" until = "stage_time>2"/>                
+        <attitude alt = "1.5" roll="-20.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
+        <attitude alt = "1.5" roll="20.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
+        <stay wp="HOME" until = "stage_time>2"/>
+      </while>
+    </block>
+    <block name="pitch_maneuver">
+      <stay wp="HOME" until = "stage_time>2"/>
+      <while cond="TRUE">
+        <attitude alt = "1.5" roll="0.0" pitch = "15.0 " vmode = "alt" until = "stage_time>0.5"/>
+        <attitude alt = "1.5" roll="0.0" pitch = "-15.0 " vmode = "alt" until = "stage_time>0.5"/>
+        <stay wp="HOME" until = "stage_time>2"/>                
+      </while>
+    </block>
+
+    <block name="alt_maneuver">
+      <stay wp="HOME" until = "stage_time>2"/>
+      <while cond="TRUE">
+        <attitude alt = "3.5" roll="0.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.5"/>
+        <attitude alt = "1.0" roll="0.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.5"/>
+        <stay wp="HOME" until = "stage_time>2"/>                
+      </while>
+    </block>
+
     <block key="l" name="Land here" strip_button="Land Here" strip_icon="land-right.png">
       <call_once fun="NavSetWaypointHere(WP_TD)"/>
     </block>

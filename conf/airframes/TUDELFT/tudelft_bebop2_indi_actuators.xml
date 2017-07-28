@@ -163,12 +163,12 @@
 
   <section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
     <!-- control effectiveness -->
-    <define name="G1_ROLL" value="{20 , -20, -20 , 20 }"/>
+    <define name="G1_ROLL" value="{15 , -15, -15 , 15 }"/>
     <define name="G1_PITCH" value="{14 , 14, -14 , -14 }"/>
-    <define name="G1_YAW" value="{-1, 1, -1, 1}"/>
-    <define name="G1_THRUST" value="{-.4, -.4, -.4, -.4}"/>
+    <define name="G1_YAW" value="{-.5, .5, -.5, .5}"/>
+    <define name="G1_THRUST" value="{-.55, -.55, -.55, -.55}"/>
     <!--Counter torque effect of spinning up a rotor-->
-    <define name="G2" value="{61.2093,   -65.3670,  65.7419,   -65.4516}"/>
+    <define name="G2" value="{120,   -120,  120,   -120}"/>
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
     <define name="FILTER_ROLL_RATE" value="TRUE"/>
@@ -176,7 +176,7 @@
     <define name="FILTER_YAW_RATE" value="FALSE"/>
 
     <!-- reference acceleration for attitude control -->
-    <define name="REF_ERR_P" value="600.0"/>
+    <define name="REF_ERR_P" value="300.0"/>
     <define name="REF_ERR_Q" value="600.0"/>
     <define name="REF_ERR_R" value="600.0"/>
     <define name="REF_RATE_P" value="28.0"/>
@@ -237,7 +237,7 @@
     <define name="MILLIAMP_AT_FULL_THROTTLE" value="8700"/>
     <define name="CATASTROPHIC_BAT_LEVEL" value="9.9" unit="V"/>
     <define name="CRITIC_BAT_LEVEL" value="10.3" unit="V"/>
-    <define name="LOW_BAT_LEVEL" value="11.1" unit="V"/>
+    <define name="LOW_BAT_LEVEL" value="10.8" unit="V"/>
     <define name="MAX_BAT_LEVEL" value="12.4" unit="V"/>
   </section>
 </airframe>
