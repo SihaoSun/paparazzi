@@ -165,8 +165,8 @@
     <!-- control effectiveness -->
     <define name="G1_ROLL" value="{15 , -15, -15 , 15 }"/>
     <define name="G1_PITCH" value="{14 , 14, -14 , -14 }"/>
-    <define name="G1_YAW" value="{-.5, .5, -.5, .5}"/>
-    <define name="G1_THRUST" value="{-.55, -.55, -.55, -.55}"/>
+    <define name="G1_YAW" value="{-.25, .25, -.25, .25}"/>
+    <define name="G1_THRUST" value="{-.65, -.65, -.65, -.65}"/>
     <!--Counter torque effect of spinning up a rotor-->
     <define name="G2" value="{120,   -120,  120,   -120}"/>
 
@@ -190,12 +190,12 @@
     <define name="ACT_DYN" value="{0.06, 0.06, 0.06, 0.06}"/>
 
     <!-- Adaptive Learning Rate -->
-    <define name="USE_ADAPTIVE" value="FALSE"/>
+    <define name="USE_ADAPTIVE" value="TRUE"/>
     <define name="ADAPTIVE_MU" value="0.0001"/>
   </section>
 
   <section name="GUIDANCE_V" prefix="GUIDANCE_V_">
-    <define name="HOVER_KP" value="650"/>
+    <define name="HOVER_KP" value="300"/>
     <define name="HOVER_KD" value="85"/>
     <define name="HOVER_KI" value="20"/>
     <define name="NOMINAL_HOVER_THROTTLE" value="0.655"/>
@@ -208,7 +208,7 @@
     <define name="REF_MAX_SPEED" value="2" unit="m/s"/>
     <!-- Bad weather -->
     <!-- define name="MAX_BANK" value="32" unit="deg"/ -->
-    <define name="PGAIN" value="120"/>
+    <define name="PGAIN" value="300"/>
     <define name="DGAIN" value="100"/>
     <define name="IGAIN" value="30"/>
   </section>
