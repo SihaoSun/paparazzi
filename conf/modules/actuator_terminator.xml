@@ -1,0 +1,17 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="actuator_terminator">
+  <doc>
+    <description>Simple triger to terminate one actuator for damage flight test</description>
+  </doc>
+  <header>
+    <file name="actuator_terminator.h"/>
+  </header>
+  <init fun = "actuator_terminator_init()"/>
+  <periodic fun="actuator_terminator()" autorun="FALSE" stop = "actuator_terminator_init()"/>
+  <!--periodic fun="actuator_terminator_print()"/-->
+  <makefile>
+    <file name="actuator_terminator.c"/>
+  </makefile>
+</module>
+

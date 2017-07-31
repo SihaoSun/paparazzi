@@ -45,6 +45,7 @@
     <module name="logger_file">
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
     </module>
+    <module name="actuator_terminator"/>
   </modules>
 
   <commands>
@@ -66,6 +67,7 @@
     <set servo="TOP_RIGHT"    value="autopilot_get_motors_on() ? actuators_pprz[1] : -MAX_PPRZ"/>
     <set servo="BOTTOM_RIGHT" value="autopilot_get_motors_on() ? actuators_pprz[2] : -MAX_PPRZ"/>
     <set servo="BOTTOM_LEFT"  value="autopilot_get_motors_on() ? actuators_pprz[3] : -MAX_PPRZ"/>
+
   </command_laws>
 
   <section name="AIR_DATA" prefix="AIR_DATA_">

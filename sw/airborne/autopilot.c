@@ -134,6 +134,7 @@ void autopilot_periodic(void)
 #else
   autopilot_static_periodic();
 #endif
+
 }
 
 /** AP event call
