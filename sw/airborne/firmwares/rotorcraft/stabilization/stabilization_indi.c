@@ -466,10 +466,10 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   for (i = 0; i < INDI_NUM_ACT; i++) {
     actuators_pprz[i] = (int16_t) indi_u[i];
 
-    if (i == 3 && damage_status()){
-      actuators_pprz[i] = 0;
-      //printf("im damaged!\n");
-    }
+    // if (i == 3 && damage_status()){
+    //   //actuators_pprz[i] = -MAX_PPRZ;
+    //   //actuators_pprz[i] = actuators_pprz[i]*0.0;
+    // }
   }
 
 }
