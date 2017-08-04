@@ -82,11 +82,11 @@
     <block name="roll_maneuver">
       <stay wp="HOME" until = "stage_time>2"/>
       <while cond="TRUE">
-        <attitude alt = "1.5" roll="20.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
-        <attitude alt = "1.5" roll="-20.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
+        <attitude alt = "1.5" roll="15.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
+        <attitude alt = "1.5" roll="-15.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
         <stay wp="HOME" until = "stage_time>2"/>                
-        <attitude alt = "1.5" roll="-20.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
-        <attitude alt = "1.5" roll="20.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
+        <attitude alt = "1.5" roll="-15.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
+        <attitude alt = "1.5" roll="15.0" pitch = "0.0 " vmode = "alt" until = "stage_time>0.1"/>
         <stay wp="HOME" until = "stage_time>2"/>
       </while>
     </block>

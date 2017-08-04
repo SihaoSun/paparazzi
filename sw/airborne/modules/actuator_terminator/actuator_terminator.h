@@ -29,6 +29,8 @@
 #include "std.h"
 
 bool damage_flag;
+bool fault_limitation;
+float fault_factor;
 
 extern void actuator_terminator(void);
 extern void actuator_terminator_init(void);

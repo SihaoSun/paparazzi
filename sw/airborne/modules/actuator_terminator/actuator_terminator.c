@@ -32,6 +32,8 @@ bool damage_status(){
 
 void actuator_terminator_init(){
 	damage_flag = 0;
+	fault_limitation = 1;
+	fault_factor = 0.01;	
 }
 
 void actuator_terminator(){
@@ -39,7 +41,6 @@ void actuator_terminator(){
 	//printf("this is a trial!\n");
 	//actuator_pprz[3] = 5000;
 	damage_flag = 1;
-
 }
 
 void actuator_terminator_print(){

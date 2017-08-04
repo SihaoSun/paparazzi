@@ -29,6 +29,8 @@
       <message name="VECTORNAV_INFO"         period="0.5"/>
       <message name="DIVERGENCE"             period="0.05"/>
       <message name="INDI_G"                 period="2.0"/>
+      <message name="RC"                       period="0.5"/>
+      <message name="BEBOP_ACTUATORS"          period="0.2"/>
     </mode>
 
     <mode name="ppm">

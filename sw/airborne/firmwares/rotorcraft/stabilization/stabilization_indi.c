@@ -43,6 +43,7 @@
 #include "subsystems/abi.h"
 #include "filters/low_pass_filter.h"
 #include "wls/wls_alloc.h"
+#include "modules/actuator_terminator/actuator_terminator.h"
 #include <stdio.h>
 
 //only 4 actuators supported for now
@@ -397,10 +398,22 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   }
 
   // Calculate the min and max increments
+
   for (i = 0; i < INDI_NUM_ACT; i++) {
-    du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
-    du_max[i] = MAX_PPRZ - actuator_state_filt_vect[i];
-    du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];
+    if (damage_status() && i==3 && fault_limitation==false)
+    {
+      du_min[i] = -MAX_PPRZ/fault_factor * act_is_servo[i] - actuator_state_filt_vect[i];
+      du_max[i] = MAX_PPRZ/fault_factor - actuator_state_filt_vect[i];
+      du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];
+    }
+      else{
+      du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
+      du_max[i] = MAX_PPRZ - actuator_state_filt_vect[i];
+      du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];   
+    }
+    // du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
+    // du_max[i] = MAX_PPRZ - actuator_state_filt_vect[i];
+    // du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];
   }
 
   //State prioritization {W Roll, W pitch, W yaw, TOTAL THRUST}
@@ -431,11 +444,28 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
   // Bound the inputs to the actuators
   for (i = 0; i < INDI_NUM_ACT; i++) {
-    if (act_is_servo[i]) {
-      BoundAbs(indi_u[i], MAX_PPRZ);
-    } else {
-      Bound(indi_u[i], 0, MAX_PPRZ);
+    if (damage_status() && i==3 && fault_limitation == false){
+        printf("%f\n",indi_u[i]);
+        if (act_is_servo[i]) {
+        BoundAbs(indi_u[i], MAX_PPRZ/fault_factor);
+      } else {
+        Bound(indi_u[i], 0, MAX_PPRZ/fault_factor);
+      }
     }
+    else
+    {
+        if (act_is_servo[i]) {
+        BoundAbs(indi_u[i], MAX_PPRZ);
+      } else {
+        Bound(indi_u[i], 0, MAX_PPRZ);
+      }      
+ 
+    }
+      // if (act_is_servo[i]) {
+      //   BoundAbs(indi_u[i], MAX_PPRZ);
+      // } else {
+      //   Bound(indi_u[i], 0, MAX_PPRZ);
+      // }
   }
 
   //Don't increment if not flying (not armed)
@@ -446,6 +476,14 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
   // Propagate actuator filters
   get_actuator_state();
+  
+  float actuator_state_actual = actuator_state[3];
+  if (damage_status()){
+
+    //actuator_state[3] = actuator_state[3]/fault_factor;
+    actuator_state[3] = indi_u[3];
+  }
+
   for (i = 0; i < INDI_NUM_ACT; i++) {
     update_butterworth_2_low_pass(&actuator_lowpass_filters[i], actuator_state[i]);
     update_butterworth_2_low_pass(&estimation_input_lowpass_filters[i], actuator_state[i]);
@@ -466,12 +504,13 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   for (i = 0; i < INDI_NUM_ACT; i++) {
     actuators_pprz[i] = (int16_t) indi_u[i];
 
-    // if (i == 3 && damage_status()){
-    //   //actuators_pprz[i] = -MAX_PPRZ;
-    //   //actuators_pprz[i] = actuators_pprz[i]*0.0;
-    // }
+    if (i == 3 && damage_status()){
+      //actuators_pprz[i] = 10;
+      actuators_pprz[i] = (int16_t) indi_u[i]*fault_factor;
+    }
+    printf("%6.2f     %6.2f     %6.2f     %d\n",
+        actuator_state[3],indi_u[3],actuator_state_actual,actuators_pprz[3]);
   }
-
 }
 
 /**
