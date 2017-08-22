@@ -1,0 +1,16 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="guidance_primary_axis">
+  <doc>
+    <description>guidance using primary axis instead of euler angles</description>
+  </doc>
+  <header>
+    <file name="guidance_primary_axis.h"/>
+  </header>
+  <init fun="guidance_primary_axis_init()"/>
+  <periodic fun="guidance_primary_axis_run()" freq="512"/>
+  <makefile>
+    <file name="guidance_primary_axis.c"/>
+  </makefile>
+</module>
+

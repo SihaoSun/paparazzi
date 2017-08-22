@@ -350,8 +350,12 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     rate_ref.p = (float)radio_control.values[RADIO_ROLL]  / MAX_PPRZ * STABILIZATION_INDI_MAX_RATE;
     rate_ref.q = (float)radio_control.values[RADIO_PITCH] / MAX_PPRZ * STABILIZATION_INDI_MAX_RATE;
     rate_ref.r = (float)radio_control.values[RADIO_YAW]   / MAX_PPRZ * STABILIZATION_INDI_MAX_RATE;
-  } else {
-    //calculate the virtual control (reference acceleration) based on a PD controller
+  } else if(guidance_primary_axis_status()==true){
+    rate_ref.p = rate_cmd_primary_axis[0];
+    rate_ref.q = rate_cmd_primary_axis[1];
+    rate_ref.r = rate_cmd_primary_axis[2];
+  }
+  else{//calculate the virtual control (reference acceleration) based on a PD controller
     rate_ref.p = reference_acceleration.err_p * QUAT1_FLOAT_OF_BFP(att_err->qx)
                  / reference_acceleration.rate_p;
     rate_ref.q = reference_acceleration.err_q * QUAT1_FLOAT_OF_BFP(att_err->qy)
@@ -445,7 +449,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   // Bound the inputs to the actuators
   for (i = 0; i < INDI_NUM_ACT; i++) {
     if (damage_status() && i==3 && fault_limitation == false){
-        printf("%f\n",indi_u[i]);
+        //printf("%f\n",indi_u[i]);
         if (act_is_servo[i]) {
         BoundAbs(indi_u[i], MAX_PPRZ/fault_factor);
       } else {
@@ -508,8 +512,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       //actuators_pprz[i] = 10;
       actuators_pprz[i] = (int16_t) indi_u[i]*fault_factor;
     }
-    printf("%6.2f     %6.2f     %6.2f     %d\n",
-        actuator_state[3],indi_u[3],actuator_state_actual,actuators_pprz[3]);
+    printf("%6.2f     %6.2f     %6.2f\n",
+        rate_ref.p, rate_ref.q, rate_ref.r);
   }
 }
 
