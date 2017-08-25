@@ -31,10 +31,13 @@
 #include "std.h"
 
 bool primary_axis_status;
-float *rate_cmd_primary_axis;
+float rate_cmd_primary_axis[3];
+float thrust_primary_axis;
 
 extern bool guidance_primary_axis_status(void);
 extern void guidance_primary_axis_init(void);
+extern void guidance_primary_axis_end(void);
 extern void guidance_primary_axis_run(void);
+void low_pass_filter_init(void);
 #endif
 

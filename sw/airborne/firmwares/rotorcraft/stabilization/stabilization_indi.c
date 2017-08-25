@@ -354,8 +354,9 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     rate_ref.p = rate_cmd_primary_axis[0];
     rate_ref.q = rate_cmd_primary_axis[1];
     rate_ref.r = rate_cmd_primary_axis[2];
-  }
-  else{//calculate the virtual control (reference acceleration) based on a PD controller
+//    rate_ref.r = reference_acceleration.err_r * QUAT1_FLOAT_OF_BFP(att_err->qz)
+//                 / reference_acceleration.rate_r;
+  }else{//calculate the virtual control (reference acceleration) based on a PD controller
     rate_ref.p = reference_acceleration.err_p * QUAT1_FLOAT_OF_BFP(att_err->qx)
                  / reference_acceleration.rate_p;
     rate_ref.q = reference_acceleration.err_q * QUAT1_FLOAT_OF_BFP(att_err->qy)
@@ -393,7 +394,11 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
     stabilization_cmd[COMMAND_THRUST] /= num_thrusters;
 
-  } else {
+  } 
+//  else if (guidance_primary_axis_status() == true){
+//      v_thrust = thrust_primary_axis;
+//  }
+  else {
     // incremental thrust
     for (i = 0; i < INDI_NUM_ACT; i++) {
       v_thrust +=
@@ -512,8 +517,11 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       //actuators_pprz[i] = 10;
       actuators_pprz[i] = (int16_t) indi_u[i]*fault_factor;
     }
-    printf("%6.2f     %6.2f     %6.2f\n",
-        rate_ref.p, rate_ref.q, rate_ref.r);
+//    printf("%6.2f     %6.2f     %6.2f     %6.2f\n",
+//       indi_v[0],indi_v[1],indi_v[2],indi_v[3]);
+//    printf("%d\n", indi_thrust_increment_set);
+//    printf("%d   %6.2f   %6.2f   %6.2f\n", stabilization_cmd[COMMAND_THRUST],actuator_state_filt_vect[1],v_thrust,Bwls[3][1]);   
+//      printf("%6.2f %6.2f %6.2f\n", rate_ref.p, rate_ref.q, rate_ref.r);
   }
 }
 
@@ -548,6 +556,7 @@ void stabilization_indi_run(bool in_flight, bool rate_control)
   struct Int32Quat att_err;
   struct Int32Quat *att_quat = stateGetNedToBodyQuat_i();
   int32_quat_inv_comp(&att_err, att_quat, &stab_att_sp_quat);
+
   /* wrap it in the shortest direction       */
   int32_quat_wrap_shortest(&att_err);
   int32_quat_normalize(&att_err);
@@ -575,6 +584,8 @@ void stabilization_indi_read_rc(bool in_flight, bool in_carefree, bool coordinat
 #endif
 
   QUAT_BFP_OF_REAL(stab_att_sp_quat, q_sp);
+
+//   printf("%d  %d  %d  %d\n", q_sp.qi, q_sp.qx, q_sp.qy, q_sp.qz);
 }
 
 /**

@@ -8,9 +8,8 @@
     <file name="guidance_primary_axis.h"/>
   </header>
   <init fun="guidance_primary_axis_init()"/>
-  <periodic fun="guidance_primary_axis_run()" freq="512"/>
+  <periodic fun="guidance_primary_axis_run()" freq="512" autorun="TRUE" stop = "guidance_primary_axis_end()"/>
   <makefile>
     <file name="guidance_primary_axis.c"/>
   </makefile>
 </module>
-

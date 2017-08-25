@@ -34,7 +34,7 @@
     <module name="guidance" type="indi">
       <define name="GUIDANCE_INDI_SPECIFIC_FORCE_GAIN" value="-500.0"/>
       <define name="GUIDANCE_INDI_THRUST_DYNAMICS" value="0.1"/>
-      <define name="GUIDANCE_INDI_RC_DEBUG" value="FALSE"/>
+      <define name="GUIDANCE_INDI_RC_DEBUG" value="FALSE"/> 
     </module>
   </firmware>
 
@@ -46,7 +46,9 @@
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
     </module>
     <module name="actuator_terminator"/>
-    <!--module name="guidance_primary_axis"/-->
+    <module name="guidance_primary_axis">
+      <define name="GUIDANCE_PA_RC_DEBUG" value="TRUE"/>
+    </module>   
   </modules>
 
   <commands>

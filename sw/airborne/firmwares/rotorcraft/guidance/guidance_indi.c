@@ -194,6 +194,7 @@ void guidance_indi_run(bool in_flight, float heading_sp) {
   thrust_in = thrust_filt.o[0] + euler_cmd.z*thrust_in_specific_force_gain;
   Bound(thrust_in, 0, 9600);
 
+
 #if GUIDANCE_INDI_RC_DEBUG
   if(radio_control.values[RADIO_THROTTLE]<300) {
     thrust_in = 0;
@@ -210,6 +211,7 @@ void guidance_indi_run(bool in_flight, float heading_sp) {
 
   //set the quat setpoint with the calculated roll and pitch
   stabilization_attitude_set_setpoint_rp_quat_f(&guidance_euler_cmd, in_flight, heading_sp);
+
 }
 
 #ifdef GUIDANCE_INDI_SPECIFIC_FORCE_GAIN
