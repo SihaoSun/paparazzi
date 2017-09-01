@@ -35,8 +35,8 @@
       <define name="GUIDANCE_INDI_SPECIFIC_FORCE_GAIN" value="-500.0"/>
       <define name="GUIDANCE_INDI_THRUST_DYNAMICS" value="0.1"/>
       <define name="GUIDANCE_INDI_RC_DEBUG" value="FALSE"/> 
-      <define name="STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE" value="FALSE"/>
-      <define name="PRIMARY_AXIS_THRUST_COMMAND" value="FALSE"/>
+      <define name="STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE" value="TRUE"/>
+      <define name="PRIMARY_AXIS_THRUST_COMMAND" value="TRUE"/>
     </module>
   </firmware>
 
@@ -65,7 +65,7 @@
     <servo name="TOP_LEFT" no="0" min="2500" neutral="2500" max="15000"/>
     <servo name="TOP_RIGHT" no="1" min="2500" neutral="2500" max="15000"/>
     <servo name="BOTTOM_RIGHT" no="2" min="2500" neutral="2500" max="15000"/>
-    <servo name="BOTTOM_LEFT" no="3" min="2500" neutral="2500" max="15000"/>
+    <servo name="BOTTOM_LEFT" no="3" min="0" neutral="0" max="15000"/>
   </servos>
 
   <command_laws>
@@ -239,8 +239,8 @@
 
   <section name="AUTOPILOT">
     <define name="MODE_STARTUP" value="AP_MODE_ATTITUDE_Z_HOLD"/>
-    <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
-    <!--define name="MODE_MANUAL" value="AP_MODE_KILL"/-->
+    <!--define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/-->
+    <define name="MODE_MANUAL" value="AP_MODE_KILL"/>
     <define name="MODE_AUTO1" value="AP_MODE_NAV"/>
     <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
 

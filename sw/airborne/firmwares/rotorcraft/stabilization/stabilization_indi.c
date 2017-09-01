@@ -471,6 +471,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
                     +(g1_damage_inv[i][2] * indi_v[3]);
       }
     }
+    printf("I'm here!\n");
   }
 #else
   // WLS Control Allocator

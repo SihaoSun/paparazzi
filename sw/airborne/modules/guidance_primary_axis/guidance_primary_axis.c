@@ -141,10 +141,10 @@ void guidance_primary_axis_run(void)
   	float rc_y = (radio_control.values[RADIO_ROLL]/9600.0)*5.0;
 //  	sp_accel.x = cosf(psi) * rc_x - sinf(psi) * rc_y;
 //  	sp_accel.y = sinf(psi) * rc_x + cosf(psi) * rc_y;
-  	sp_accel.x = rc_x;
-  	sp_accel.y = rc_y;
-//  	sp_accel.x = cosf(-33/57.3) * rc_x - sinf(-33/57.3) * rc_y;
-//  	sp_accel.y = sinf(-33/57.3) * rc_x + cosf(-33/57.3) * rc_y; 	
+//  	sp_accel.x = rc_x;
+//  	sp_accel.y = rc_y;
+  	sp_accel.x = cosf(-33/57.3) * rc_x - sinf(-33/57.3) * rc_y;
+  	sp_accel.y = sinf(-33/57.3) * rc_x + cosf(-33/57.3) * rc_y; 	
 
   int32_t yaw = radio_control.values[RADIO_YAW];
   DeadBand(yaw, STABILIZATION_ATTITUDE_DEADBAND_R);
@@ -221,7 +221,7 @@ void guidance_primary_axis_run(void)
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;
 	rate_cmd_primary_axis[1] = q_des;
-	rate_cmd_primary_axis[2] = 15.0;
+	rate_cmd_primary_axis[2] = 10.0;
 	thrust_primary_axis = thrust_specific;
 
 //    printf("%6.2f     %6.2f     %6.2f\n", nd_state.x, nd_state.y, nd_state.z);
