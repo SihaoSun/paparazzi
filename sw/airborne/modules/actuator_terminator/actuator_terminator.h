@@ -28,6 +28,8 @@
 
 #include "std.h"
 
+#define DAMAGED_ROTOR_INDEX 3 //0 1 2 3
+
 bool damage_flag;
 bool fault_limitation;
 float fault_factor;

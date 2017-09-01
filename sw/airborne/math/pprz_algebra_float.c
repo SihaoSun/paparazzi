@@ -638,3 +638,4 @@ void float_mat_inv_4d(float invOut[16], float mat_in[16])
     for(i = 0; i < 16; ++i)
         invOut[i] = invOut[i] * inv_det;
 }
+

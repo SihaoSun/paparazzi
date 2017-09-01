@@ -36,6 +36,7 @@
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_quat_transformations.h"
 
 #include "math/pprz_algebra_float.h"
+#include "math/pprz_simple_matrix.h"
 #include "state.h"
 #include "generated/airframe.h"
 #include "subsystems/radio_control.h"
@@ -68,6 +69,7 @@ static void calc_g1_element(float dx_error, int8_t i, int8_t j, float mu_extra);
 static void calc_g2_element(float dx_error, int8_t j, float mu_extra);
 static void calc_g1g2_pseudo_inv(void);
 static void bound_g_mat(void);
+static void calc_g1_inv_damage(void);
 
 int32_t stabilization_att_indi_cmd[COMMANDS_NB];
 struct ReferenceSystem reference_acceleration = {
@@ -161,6 +163,8 @@ float g1_est[INDI_OUTPUTS][INDI_NUM_ACT];
 float g2_est[INDI_NUM_ACT];
 float g1_init[INDI_OUTPUTS][INDI_NUM_ACT];
 float g2_init[INDI_NUM_ACT];
+float g1_damage[3][3];
+float g1_damage_inv[3][3];
 
 Butterworth2LowPass actuator_lowpass_filters[INDI_NUM_ACT];
 Butterworth2LowPass estimation_input_lowpass_filters[INDI_NUM_ACT];
@@ -218,6 +222,7 @@ void stabilization_indi_init(void)
 
   //Calculate G1G2_PSEUDO_INVERSE
   calc_g1g2_pseudo_inv();
+  calc_g1_inv_damage();
 
   // Initialize the array of pointers to the rows of g1g2
   uint8_t i;
@@ -424,19 +429,19 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   // Calculate the min and max increments
 
   for (i = 0; i < INDI_NUM_ACT; i++) {
-    if (damage_status() && i==3 && fault_limitation==false)
-    {
-      du_min[i] = -MAX_PPRZ/fault_factor * act_is_servo[i] - actuator_state_filt_vect[i];
-      du_max[i] = MAX_PPRZ/fault_factor - actuator_state_filt_vect[i];
-    }
-      else{
-      du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
-      du_max[i] = MAX_PPRZ - actuator_state_filt_vect[i];
-      du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];   
-    }
-    // du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
-    // du_max[i] = MAX_PPRZ - actuator_state_filt_vect[i];
-    // du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];
+//    if (damage_status() && i==DAMAGED_ROTOR_INDEX && fault_limitation==false)
+//    {
+//      du_min[i] = -MAX_PPRZ/fault_factor * act_is_servo[i] - actuator_state_filt_vect[i];
+//      du_max[i] = MAX_PPRZ/fault_factor - actuator_state_filt_vect[i];
+//    }
+//      else{
+//      du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
+//      du_max[i] = MAX_PPRZ - actuator_state_filt_vect[i];
+//      du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];   
+//    }
+     du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
+     du_max[i] = MAX_PPRZ - actuator_state_filt_vect[i];
+     du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];
   }
 
   //State prioritization {W Roll, W pitch, W yaw, TOTAL THRUST}
@@ -456,6 +461,17 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
                  + (g1g2_pseudo_inv[i][2] * indi_v[2])
                  + (g1g2_pseudo_inv[i][3] * indi_v[3]);
   }
+  if (damage_status())
+  {
+    indi_du[DAMAGED_ROTOR_INDEX] = 0;
+    for (i = 0; i < INDI_NUM_ACT; i++){
+      if (i != DAMAGED_ROTOR_INDEX) {
+        indi_du[i] = (g1_damage_inv[i][0] * indi_v[0])
+                    +(g1_damage_inv[i][1] * indi_v[1])
+                    +(g1_damage_inv[i][2] * indi_v[3]);
+      }
+    }
+  }
 #else
   // WLS Control Allocator
   num_iter =
@@ -467,28 +483,28 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
   // Bound the inputs to the actuators
   for (i = 0; i < INDI_NUM_ACT; i++) {
-    if (damage_status() && i==3 && fault_limitation == false){
-        //printf("%f\n",indi_u[i]);
-        if (act_is_servo[i]) {
-        BoundAbs(indi_u[i], MAX_PPRZ/fault_factor);
-      } else {
-        Bound(indi_u[i], 0, MAX_PPRZ/fault_factor);
-      }
-    }
-    else
-    {
-        if (act_is_servo[i]) {
-        BoundAbs(indi_u[i], MAX_PPRZ);
-      } else {
-        Bound(indi_u[i], 0, MAX_PPRZ);
-      }      
- 
-    }
-      // if (act_is_servo[i]) {
-      //   BoundAbs(indi_u[i], MAX_PPRZ);
-      // } else {
-      //   Bound(indi_u[i], 0, MAX_PPRZ);
-      // }
+    //if (damage_status() && i==3 && fault_limitation == false){
+    //    //printf("%f\n",indi_u[i]);
+    //    if (act_is_servo[i]) {
+    //    BoundAbs(indi_u[i], MAX_PPRZ/fault_factor);
+    //  } else {
+    //    Bound(indi_u[i], 0, MAX_PPRZ/fault_factor);
+    //  }
+    //}
+    //else
+    //{
+    //    if (act_is_servo[i]) {
+    //    BoundAbs(indi_u[i], MAX_PPRZ);
+    //  } else {
+    //    Bound(indi_u[i], 0, MAX_PPRZ);
+    //  }      
+ //
+    //}
+       if (act_is_servo[i]) {
+         BoundAbs(indi_u[i], MAX_PPRZ);
+       } else {
+         Bound(indi_u[i], 0, MAX_PPRZ);
+       }
   }
 
   //Don't increment if not flying (not armed)
@@ -500,11 +516,11 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   // Propagate actuator filters
   get_actuator_state();
   
-  if (damage_status()){
-
-    //actuator_state[3] = actuator_state[3]/fault_factor;
-    actuator_state[3] = indi_u[3];
-  }
+  //if (damage_status()){
+//
+  //  //actuator_state[DAMAGED_ROTOR_INDEX] = actuator_state[DAMAGED_ROTOR_INDEX]/fault_factor;
+  //  actuator_state[DAMAGED_ROTOR_INDEX] = indi_u[DAMAGED_ROTOR_INDEX];
+  //}
 
   for (i = 0; i < INDI_NUM_ACT; i++) {
     update_butterworth_2_low_pass(&actuator_lowpass_filters[i], actuator_state[i]);
@@ -526,7 +542,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   for (i = 0; i < INDI_NUM_ACT; i++) {
     actuators_pprz[i] = (int16_t) indi_u[i];
 
-    if (i == 3 && damage_status()){
+    if (i == DAMAGED_ROTOR_INDEX && damage_status()){
       //actuators_pprz[i] = 10;
       actuators_pprz[i] = (int16_t) indi_u[i]*fault_factor;
     }
@@ -731,6 +747,38 @@ void lms_estimation(void)
 
   // Calculate the inverse of (G1+G2)
   calc_g1g2_pseudo_inv();
+}
+
+
+void calc_g1_inv_damage(void)
+{
+    int i0 = 0,j0 = 0;
+    for (int i = 0; i < 4; i++)
+    {
+      if (i != 2)
+      {
+        j0 = 0;
+        for (int j = 0; j < 4; j++)
+        {
+          if (j != DAMAGED_ROTOR_INDEX)
+          { 
+            g1_damage[i0][j0] = g1[i][j];
+            j0++;
+          }
+        }
+        i0++;
+      }
+    }
+    MAT_INV33(g1_damage_inv,g1_damage);
+//    printf("%2.1f %2.1f %2.1f\n%2.1f %2.1f %2.1f\n%2.1f %2.1f %2.1f\n"
+//                    , g1_damage[0][0], g1_damage[0][1], g1_damage[0][2]
+//                    , g1_damage[1][0], g1_damage[1][1], g1_damage[1][2]
+//                    , g1_damage[2][0], g1_damage[2][1], g1_damage[2][2]);
+//    printf("%6.5f %6.5f %6.5f\n%6.5f %6.5f %6.5f\n%6.5f %6.5f %6.5f\n"
+//                    , g1_damage_inv[0][0], g1_damage_inv[0][1], g1_damage_inv[0][2]
+//                    , g1_damage_inv[1][0], g1_damage_inv[1][1], g1_damage_inv[1][2]
+//                    , g1_damage_inv[2][0], g1_damage_inv[2][1], g1_damage_inv[2][2]);
+
 }
 
 /**
