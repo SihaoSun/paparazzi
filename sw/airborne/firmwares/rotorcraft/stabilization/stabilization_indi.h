@@ -38,7 +38,7 @@ struct ReferenceSystem {
   float rate_p;
   float rate_q;
   float rate_r;
-};
+}; 
 
 extern struct ReferenceSystem reference_acceleration;
 

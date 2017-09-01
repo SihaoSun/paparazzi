@@ -167,6 +167,7 @@ Butterworth2LowPass estimation_input_lowpass_filters[INDI_NUM_ACT];
 Butterworth2LowPass measurement_lowpass_filters[3];
 Butterworth2LowPass estimation_output_lowpass_filters[3];
 Butterworth2LowPass acceleration_lowpass_filter;
+Butterworth2LowPass az_lowpass_filter;
 
 struct FloatVect3 body_accel_f;
 
@@ -283,7 +284,8 @@ void init_filters(void)
   }
 
   // Filtering of the accel body z
-  init_butterworth_2_low_pass(&acceleration_lowpass_filter, tau_est, sample_time, 0.0);
+  init_butterworth_2_low_pass(&acceleration_lowpass_filter, tau_est, sample_time, 0.0); 
+  init_butterworth_2_low_pass(&az_lowpass_filter, tau_est*1.2, sample_time, 0.0);
 }
 
 /**
@@ -394,10 +396,23 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
     stabilization_cmd[COMMAND_THRUST] /= num_thrusters;
 
-  } 
-//  else if (guidance_primary_axis_status() == true){
-//      v_thrust = thrust_primary_axis;
-//  }
+  }
+#if PRIMARY_AXIS_THRUST_COMMAND
+#warning "Thrust command from primary axis guidance, which may cause oscilation"   
+  else if (guidance_primary_axis_status() == true){
+      // Get the acceleration in body axes
+      struct Int32Vect3 *body_accel_i;
+      body_accel_i = stateGetAccelBody_i();
+      ACCELS_FLOAT_OF_BFP(body_accel_f, *body_accel_i);
+
+      // Filter the acceleration in z axis
+      update_butterworth_2_low_pass(&az_lowpass_filter, body_accel_f.z);
+
+      v_thrust =  5*(- thrust_primary_axis - (az_lowpass_filter.o[0]+0.25));
+
+ 
+  }
+#endif  
   else {
     // incremental thrust
     for (i = 0; i < INDI_NUM_ACT; i++) {
@@ -413,7 +428,6 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     {
       du_min[i] = -MAX_PPRZ/fault_factor * act_is_servo[i] - actuator_state_filt_vect[i];
       du_max[i] = MAX_PPRZ/fault_factor - actuator_state_filt_vect[i];
-      du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];
     }
       else{
       du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
@@ -486,7 +500,6 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   // Propagate actuator filters
   get_actuator_state();
   
-  float actuator_state_actual = actuator_state[3];
   if (damage_status()){
 
     //actuator_state[3] = actuator_state[3]/fault_factor;

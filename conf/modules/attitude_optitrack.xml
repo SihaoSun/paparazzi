@@ -1,0 +1,15 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="attitude_optitrack">
+  <doc>
+    <description>Get attitude information from Optitrack</description>
+  </doc>
+  <header>
+    <file name="attitude_optitrack.h"/>
+  </header>
+  <periodic fun="get_attitude_optitrack()" autorun="TRUE" freq="512" start="get_attitude_optitrack_init()"/>
+  <makefile>
+    <file name="attitude_optitrack.c"/>
+  </makefile>
+</module>
+

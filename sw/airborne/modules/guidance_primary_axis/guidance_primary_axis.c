@@ -143,13 +143,15 @@ void guidance_primary_axis_run(void)
 //  	sp_accel.y = sinf(psi) * rc_x + cosf(psi) * rc_y;
   	sp_accel.x = rc_x;
   	sp_accel.y = rc_y;
+//  	sp_accel.x = cosf(-33/57.3) * rc_x - sinf(-33/57.3) * rc_y;
+//  	sp_accel.y = sinf(-33/57.3) * rc_x + cosf(-33/57.3) * rc_y; 	
 
   int32_t yaw = radio_control.values[RADIO_YAW];
   DeadBand(yaw, STABILIZATION_ATTITUDE_DEADBAND_R);
   float psi_des =  yaw * STABILIZATION_ATTITUDE_SP_MAX_R / (MAX_PPRZ - STABILIZATION_ATTITUDE_DEADBAND_R);
 
   //for rc vertical control
-  	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-4500)*1.0/9600.0;
+  	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-4500)*8.0/9600.0;
 
 #else
 	float psi_des = guidance_h.sp.heading;
@@ -180,8 +182,9 @@ void guidance_primary_axis_run(void)
 	MAT33_VECT3_MUL(nd_state, R_BI, nd_i_state);
 
 	//Calculate command thrust
-	float thrust;
-	thrust = -mass_Bebop2*(sp_accel.z-g)/cos(phi)/cos(theta);
+	float thrust_specific;
+	thrust_specific = -(sp_accel.z-g)/cos(phi)/cos(theta);
+
 
 	//Compute command p and q using NDI
 	float r, p_des, q_des, r_des;
@@ -218,12 +221,12 @@ void guidance_primary_axis_run(void)
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;
 	rate_cmd_primary_axis[1] = q_des;
-	rate_cmd_primary_axis[2] = r_des;
-	thrust_primary_axis = thrust;
+	rate_cmd_primary_axis[2] = 15.0;
+	thrust_primary_axis = thrust_specific;
 
 //    printf("%6.2f     %6.2f     %6.2f\n", nd_state.x, nd_state.y, nd_state.z);
 //    printf("%6.2f	%6.2f	%6.2f	%6.2f\n",thrust_primary_axis,p_des,q_des,r_des);
 //	printf("%6.2f	%6.2f	%6.2f\n", p_des, q_des, r_des);
-//	printf("%6.2f\n", psi_des);
+//	printf("%6.2f\n", sp_accel.z);
 	return;
 }

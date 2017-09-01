@@ -18,28 +18,27 @@
  * <http://www.gnu.org/licenses/>.
  */
 /**
- * @file "modules/guidance_primary_axis/guidance_primary_axis.h"
+ * @file "modules/attitude_optitrack/attitude_optitrack.h"
  * @author Sihao Sun
- * guidance using primary axf euler angles
+ * Get attitude information from Optitrack
  */
 
+#ifndef ATTITUDE_OPTITRACK_H
+#define ATTITUDE_OPTITRACK_H
 
+struct attitude_optitrack
+{
+	float roll;
+	float pitch;
+	float yaw;
+	float qw;
+	float qx;
+	float qy;
+	float qz;
+};
 
-#ifndef GUIDANCE_PRIMARY_AXIS_H
-#define GUIDANCE_PRIMARY_AXIS_H
+extern void get_attitude_optitrack(void);
+extern void get_attitude_optitrack_init(void);
 
-#include "std.h"
-
-bool primary_axis_status;
-float rate_cmd_primary_axis[3];
-float thrust_primary_axis;
-
-
-
-extern bool guidance_primary_axis_status(void);
-extern void guidance_primary_axis_init(void);
-extern void guidance_primary_axis_end(void);
-extern void guidance_primary_axis_run(void);
-void low_pass_filter_init(void);
 #endif
 

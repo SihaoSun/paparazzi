@@ -32,6 +32,7 @@
 #include "subsystems/imu.h"
 #include "firmwares/rotorcraft/stabilization.h"
 #include "state.h"
+#include "boards/bebop/actuators.h"
 
 /** Set the default File logger path to the USB drive */
 #ifndef FILE_LOGGER_PATH
@@ -61,7 +62,7 @@ void file_logger_start(void)
   if (file_logger != NULL) {
     fprintf(
       file_logger,
-      "counter,gyro_unscaled_p,gyro_unscaled_q,gyro_unscaled_r,accel_unscaled_x,accel_unscaled_y,accel_unscaled_z,mag_unscaled_x,mag_unscaled_y,mag_unscaled_z,COMMAND_THRUST,COMMAND_ROLL,COMMAND_PITCH,COMMAND_YAW,qi,qx,qy,qz\n"
+      "counter,gyro_unscaled_p,gyro_unscaled_q,gyro_unscaled_r,accel_unscaled_x,accel_unscaled_y,accel_unscaled_z,mag_unscaled_x,mag_unscaled_y,mag_unscaled_z,COMMAND_THRUST,COMMAND_ROLL,COMMAND_PITCH,COMMAND_YAW,qi,qx,qy,qz,w1,w2,w3,w4,w1ref,w2ref,w3ref,w4ref\n"
     );
   }
 }
@@ -84,7 +85,7 @@ void file_logger_periodic(void)
   static uint32_t counter;
   struct Int32Quat *quat = stateGetNedToBodyQuat_i();
 
-  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
           counter,
           imu.gyro_unscaled.p,
           imu.gyro_unscaled.q,
@@ -102,7 +103,15 @@ void file_logger_periodic(void)
           quat->qi,
           quat->qx,
           quat->qy,
-          quat->qz
+          quat->qz,
+          (int)actuators_bebop.rpm_obs[0],
+          (int)actuators_bebop.rpm_obs[1],
+          (int)actuators_bebop.rpm_obs[2],
+          (int)actuators_bebop.rpm_obs[3],
+          (int)actuators_bebop.rpm_ref[0],
+          (int)actuators_bebop.rpm_ref[1],
+          (int)actuators_bebop.rpm_ref[2],
+          (int)actuators_bebop.rpm_ref[3]
          );
   counter++;
 }
