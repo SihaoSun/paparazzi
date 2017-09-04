@@ -221,7 +221,7 @@ void guidance_primary_axis_run(void)
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;
 	rate_cmd_primary_axis[1] = q_des;
-	rate_cmd_primary_axis[2] = 10.0;
+	rate_cmd_primary_axis[2] = 0.0;
 	thrust_primary_axis = thrust_specific;
 
 //    printf("%6.2f     %6.2f     %6.2f\n", nd_state.x, nd_state.y, nd_state.z);

@@ -414,7 +414,6 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       update_butterworth_2_low_pass(&az_lowpass_filter, body_accel_f.z);
 
       v_thrust =  5*(- thrust_primary_axis - (az_lowpass_filter.o[0]+0.25));
-
  
   }
 #endif  
@@ -429,16 +428,6 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   // Calculate the min and max increments
 
   for (i = 0; i < INDI_NUM_ACT; i++) {
-//    if (damage_status() && i==DAMAGED_ROTOR_INDEX && fault_limitation==false)
-//    {
-//      du_min[i] = -MAX_PPRZ/fault_factor * act_is_servo[i] - actuator_state_filt_vect[i];
-//      du_max[i] = MAX_PPRZ/fault_factor - actuator_state_filt_vect[i];
-//    }
-//      else{
-//      du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
-//      du_max[i] = MAX_PPRZ - actuator_state_filt_vect[i];
-//      du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];   
-//    }
      du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
      du_max[i] = MAX_PPRZ - actuator_state_filt_vect[i];
      du_pref[i] = act_pref[i] - actuator_state_filt_vect[i];
@@ -471,8 +460,9 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
                     +(g1_damage_inv[i][2] * indi_v[3]);
       }
     }
-    printf("I'm here!\n");
   }
+
+//  printf("%6.2f %6.2f %6.2f %6.2f\n", indi_du[0], indi_du[1], indi_du[2], indi_du[3]);
 #else
   // WLS Control Allocator
   num_iter =
@@ -484,23 +474,6 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
   // Bound the inputs to the actuators
   for (i = 0; i < INDI_NUM_ACT; i++) {
-    //if (damage_status() && i==3 && fault_limitation == false){
-    //    //printf("%f\n",indi_u[i]);
-    //    if (act_is_servo[i]) {
-    //    BoundAbs(indi_u[i], MAX_PPRZ/fault_factor);
-    //  } else {
-    //    Bound(indi_u[i], 0, MAX_PPRZ/fault_factor);
-    //  }
-    //}
-    //else
-    //{
-    //    if (act_is_servo[i]) {
-    //    BoundAbs(indi_u[i], MAX_PPRZ);
-    //  } else {
-    //    Bound(indi_u[i], 0, MAX_PPRZ);
-    //  }      
- //
-    //}
        if (act_is_servo[i]) {
          BoundAbs(indi_u[i], MAX_PPRZ);
        } else {
@@ -516,12 +489,6 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
   // Propagate actuator filters
   get_actuator_state();
-  
-  //if (damage_status()){
-//
-  //  //actuator_state[DAMAGED_ROTOR_INDEX] = actuator_state[DAMAGED_ROTOR_INDEX]/fault_factor;
-  //  actuator_state[DAMAGED_ROTOR_INDEX] = indi_u[DAMAGED_ROTOR_INDEX];
-  //}
 
   for (i = 0; i < INDI_NUM_ACT; i++) {
     update_butterworth_2_low_pass(&actuator_lowpass_filters[i], actuator_state[i]);
@@ -763,7 +730,7 @@ void calc_g1_inv_damage(void)
         {
           if (j != DAMAGED_ROTOR_INDEX)
           { 
-            g1_damage[i0][j0] = g1[i][j];
+            g1_damage[i0][j0] = g1[i][j]/INDI_G_SCALING;
             j0++;
           }
         }
