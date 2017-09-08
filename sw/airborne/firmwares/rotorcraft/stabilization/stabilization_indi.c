@@ -136,9 +136,6 @@ float mu1[INDI_OUTPUTS] = {0.00001, 0.00001, 0.000003, 0.000002};
 // The learning rate for the propeller inertia (scaled by 512 wrt mu1)
 float mu2 = 0.002;
 
-// other variables
-float act_obs[INDI_NUM_ACT];
-
 // Number of actuators used to provide thrust
 int32_t num_thrusters;
 

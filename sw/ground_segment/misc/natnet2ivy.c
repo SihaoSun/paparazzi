@@ -72,7 +72,7 @@ char *ivy_bus                   = "127.255.255.255:2010";
 #endif
 
 /** Sample frequency and derevitive defaults */
-uint32_t freq_transmit          = 30;     ///< Transmitting frequency in Hz
+uint32_t freq_transmit          = 300;     ///< Transmitting frequency in Hz
 uint16_t min_velocity_samples   = 4;      ///< The amount of position samples needed for a valid velocity
 bool small_packets              = FALSE;
 
@@ -693,8 +693,20 @@ gboolean timeout_transmit_callback(gpointer data)
       }
     }
 
+    // Sent Euler angles from ground system to rigid body system  
+    orient.qi = rigidBodies[i].qw; // B     O     Parse
+    orient.qx = rigidBodies[i].qy; // x ->  z ->  y
+    orient.qz = rigidBodies[i].qz; // z -> -y -> -z
+    orient.qy = rigidBodies[i].qx; // y -> -x -> -x 
+    double_eulers_of_quat(&orient_eulers, &orient);
+    orient_eulers.theta = -orient_eulers.theta;
+    orient_eulers.psi = -orient_eulers.psi;
 
-
+    IvySendMsg("0 OPTITRACK_ATT_EULER %d %f %f %f",
+               aircrafts[rigidBodies[i].id].ac_id, // uint8 rigid body ID (1 byte)
+               orient_eulers.phi,                 
+               orient_eulers.theta,
+               orient_eulers.psi);                
 
 
     // Reset the velocity differentiator if we calculated the velocity
@@ -957,3 +969,25 @@ int main(int argc, char **argv)
 
   return 0;
 }
+
+//void double_eulers_of_quat_sihao(struct DoubleEulers *e, struct DoubleQuat *q)
+//{
+//  const double qx2  = q->qx * q->qx;
+//  const double qy2  = q->qy * q->qy;
+//  const double qz2  = q->qz * q->qz;
+//  const double qiqx = q->qi * q->qx;
+//  const double qiqy = q->qi * q->qy;
+//  const double qiqz = q->qi * q->qz;
+//  const double qxqy = q->qx * q->qy;
+//  const double qxqz = q->qx * q->qz;
+//  const double qyqz = q->qy * q->qz;
+//  const double dcm21 = 2.*(qxqy+qzqi);
+//  const double dcm22 = 1. - 2.*(qx2+qz2);
+//  const double dcm23 = 2.*(qyqz-qxqi);
+//  const double dcm13 = 2.*(qxqz+qyqi);
+//  const double dcm33 = 1. - 2.*(qx2+qy2);
+//
+//  e->phi = atan2(dcm21, dcm22);
+//  e->theta = -asin(dcm02);
+//  e->psi = -atan2(dcm13, dcm33);
+//}

@@ -49,9 +49,9 @@
     </module>
     <module name="actuator_terminator"/>
     <module name="guidance_primary_axis">
-      <define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/>
+      <define name="GUIDANCE_PA_RC_DEBUG" value="TRUE"/>
     </module>
-    <!--module name="attitude_optitrack"/-->   
+    <module name="attitude_optitrack"/>   
   </modules>
 
   <commands>
@@ -206,8 +206,8 @@
 
   <section name="AUTOPILOT">
     <define name="MODE_STARTUP" value="AP_MODE_ATTITUDE_Z_HOLD"/>
-    <!--define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/-->
-    <define name="MODE_MANUAL" value="AP_MODE_KILL"/>
+    <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
+    <!--define name="MODE_MANUAL" value="AP_MODE_KILL"/-->
     <define name="MODE_AUTO1" value="AP_MODE_NAV"/>
     <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
 

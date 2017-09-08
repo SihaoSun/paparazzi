@@ -44,7 +44,7 @@
 #include "subsystems/abi.h"
 #include "math/pprz_algebra_int.h"
 #include "math/pprz_algebra_float.h"
-
+#include "modules/attitude_optitrack/attitude_optitrack.h"
 
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
@@ -108,7 +108,6 @@ void guidance_primary_axis_end(void)
 void guidance_primary_axis_run(void)
 {
 	//Necessary parameters
-	float mass_Bebop2 = 0.5; //kg
 	float g = 9.8125;
 
 	//Flag to hack guidance loop
@@ -129,16 +128,24 @@ void guidance_primary_axis_run(void)
 	sp_accel.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain;
 	sp_accel.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
 
+	float phi,theta,psi;
 
-	float phi 	= stateGetNedToBodyEulers_f()->phi;
-	float theta 	= stateGetNedToBodyEulers_f()->theta;
-  	float psi = stateGetNedToBodyEulers_f()->psi;
+	if(attitude_optitrack_status()==true){
+		phi 	= attitude_optitrack.phi;
+	  	theta = attitude_optitrack.theta;
+	  	//psi 	= attitude_optitrack.psi;
+
+	}else {
+		phi 	= stateGetNedToBodyEulers_f()->phi;
+		theta = stateGetNedToBodyEulers_f()->theta;
+	}
+	psi 	= stateGetNedToBodyEulers_f()->psi;	
 
 #if GUIDANCE_PA_RC_DEBUG
 #warning "GUIDANCE_PARC_DEBUG lets you control the accelerations via RC, but disables autonomous flight!"
   //for rc control horizontal, rotate from body axes to NED
-  	float rc_x = -(radio_control.values[RADIO_PITCH]/9600.0)*5.0;
-  	float rc_y = (radio_control.values[RADIO_ROLL]/9600.0)*5.0;
+  	float rc_x = -(radio_control.values[RADIO_PITCH]/9600.0)*2.0;
+  	float rc_y = (radio_control.values[RADIO_ROLL]/9600.0)*2.0;
 //  	sp_accel.x = cosf(psi) * rc_x - sinf(psi) * rc_y;
 //  	sp_accel.y = sinf(psi) * rc_x + cosf(psi) * rc_y;
 //  	sp_accel.x = rc_x;
@@ -221,12 +228,9 @@ void guidance_primary_axis_run(void)
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;
 	rate_cmd_primary_axis[1] = q_des;
-	rate_cmd_primary_axis[2] = 0.0;
+	rate_cmd_primary_axis[2] = 10.0;
 	thrust_primary_axis = thrust_specific;
 
-//    printf("%6.2f     %6.2f     %6.2f\n", nd_state.x, nd_state.y, nd_state.z);
-//    printf("%6.2f	%6.2f	%6.2f	%6.2f\n",thrust_primary_axis,p_des,q_des,r_des);
-//	printf("%6.2f	%6.2f	%6.2f\n", p_des, q_des, r_des);
-//	printf("%6.2f\n", sp_accel.z);
+	//printf("%f 	%f 	%f 	%d\n", phi*57.3,theta*57.3,psi*57.3,attitude_optitrack_status());
 	return;
 }

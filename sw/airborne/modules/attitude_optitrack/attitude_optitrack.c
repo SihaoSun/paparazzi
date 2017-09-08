@@ -24,14 +24,39 @@
  */
 
 #include "modules/attitude_optitrack/attitude_optitrack.h"
+#include "subsystems/datalink/datalink.h"
+
+#include "subsystems/abi.h"
+
+bool attitude_optitrack_status(void)
+{
+	return use_attitude_optitrack;
+}
 
 void get_attitude_optitrack_init(void){
 
+	use_attitude_optitrack = false;
+}
+
+void get_attitude_optitrack_periodic(void)
+{
+	use_attitude_optitrack = true;
 }
 
 void get_attitude_optitrack(void) {
 
+	//printf("%d 	%d\n", DL_OPTITRACK_ATT_EULER_ac_id(dl_buffer), AC_ID);
+	if (DL_OPTITRACK_ATT_EULER_ac_id(dl_buffer) != AC_ID) { return; } // not for this aircraft
 
+	attitude_optitrack.phi 	= 	DL_OPTITRACK_ATT_EULER_phi_optitrack(dl_buffer);
+	attitude_optitrack.theta 	= 	DL_OPTITRACK_ATT_EULER_theta_optitrack(dl_buffer);
+	attitude_optitrack.psi 		=   DL_OPTITRACK_ATT_EULER_psi_optitrack(dl_buffer);
+
+	//printf("%6.3f	%6.3f	%6.3f\n", phi*57.3, theta*57.3, psi*57.3);
 }
+
+
+
+
 
 

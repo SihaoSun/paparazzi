@@ -23,22 +23,20 @@
  * Get attitude information from Optitrack
  */
 
+#include "std.h"
+#include "math/pprz_algebra_float.h"
+
 #ifndef ATTITUDE_OPTITRACK_H
 #define ATTITUDE_OPTITRACK_H
 
-struct attitude_optitrack
-{
-	float roll;
-	float pitch;
-	float yaw;
-	float qw;
-	float qx;
-	float qy;
-	float qz;
-};
+struct FloatEulers attitude_optitrack;
 
 extern void get_attitude_optitrack(void);
 extern void get_attitude_optitrack_init(void);
+extern void get_attitude_optitrack_periodic(void);
+extern bool attitude_optitrack_status(void);
+
+bool use_attitude_optitrack;
 
 #endif
 
