@@ -509,7 +509,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
     if (i == DAMAGED_ROTOR_INDEX && damage_status()){
       //actuators_pprz[i] = 10;
-      actuators_pprz[i] = (int16_t) indi_u[i]*fault_factor;
+      //actuators_pprz[i] = (int16_t) indi_u[i]*fault_factor;
+      actuators_pprz[i] = -MAX_PPRZ;
     }
 //    printf("%6.2f     %6.2f     %6.2f     %6.2f\n",
 //       indi_v[0],indi_v[1],indi_v[2],indi_v[3]);
