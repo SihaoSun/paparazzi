@@ -49,7 +49,7 @@
     </module>
     <module name="actuator_terminator"/>
     <module name="guidance_primary_axis">
-      <define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/>
+      <define name="GUIDANCE_PA_RC_DEBUG" value="TRUE"/>
     </module>
     <module name="attitude_optitrack"/>   
   </modules>
@@ -62,10 +62,10 @@
   </commands>
 
   <servos driver="Default">
-    <servo name="TOP_LEFT" no="0" min="2500" neutral="2500" max="14000"/>
-    <servo name="TOP_RIGHT" no="1" min="2500" neutral="2500" max="14000"/>
-    <servo name="BOTTOM_RIGHT" no="2" min="2500" neutral="2500" max="14000"/>
-    <servo name="BOTTOM_LEFT" no="3" min="2500" neutral="2500" max="14000"/>
+    <servo name="TOP_LEFT" no="0" min="2500" neutral="2500" max="12000"/>
+    <servo name="TOP_RIGHT" no="1" min="2500" neutral="2500" max="12000"/>
+    <servo name="BOTTOM_RIGHT" no="2" min="2500" neutral="2500" max="12000"/>
+    <servo name="BOTTOM_LEFT" no="3" min="2500" neutral="2500" max="12000"/>
   </servos>
 
   <command_laws>

@@ -55,13 +55,13 @@ float guidance_pa_pos_gain = 0.5;
 #ifdef GUIDANCE_PA_SPEED_GAIN
 float guidance_pa_speed_gain = GUIDANCE_INDI_SPEED_GAIN;
 #else
-float guidance_pa_speed_gain = 1.8;
+float guidance_pa_speed_gain = 1.0;
 #endif
 
 #ifdef GUIDANCE_PA_ATT_GAIN 
 float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 #else
-float guidance_pa_att_gain = -12.0;
+float guidance_pa_att_gain = -20.0;
 #endif
 
 struct FloatVect3 n_pa = {0.0,0.0,-1.0};
@@ -133,13 +133,14 @@ void guidance_primary_axis_run(void)
 	if(attitude_optitrack_status()==true){
 		phi 	= attitude_optitrack.phi;
 	  	theta = attitude_optitrack.theta;
-	  	//psi 	= attitude_optitrack.psi;
+	  	psi 	= attitude_optitrack.psi + 0.99; //0.99 is the difference between optitrack uplodaded heading and state heading
 
 	}else {
 		phi 	= stateGetNedToBodyEulers_f()->phi;
 		theta = stateGetNedToBodyEulers_f()->theta;
+		psi 	= stateGetNedToBodyEulers_f()->psi;	
 	}
-	psi 	= stateGetNedToBodyEulers_f()->psi;	
+//	printf("%f 	%f\n", attitude_optitrack.psi*57.3, stateGetNedToBodyEulers_f()->psi*57.3);
 
 #if GUIDANCE_PA_RC_DEBUG
 #warning "GUIDANCE_PARC_DEBUG lets you control the accelerations via RC, but disables autonomous flight!"
@@ -150,8 +151,8 @@ void guidance_primary_axis_run(void)
 //  	sp_accel.y = sinf(psi) * rc_x + cosf(psi) * rc_y;
 //  	sp_accel.x = rc_x;
 //  	sp_accel.y = rc_y;
-  	sp_accel.x = cosf(-33/57.3) * rc_x - sinf(-33/57.3) * rc_y;
-  	sp_accel.y = sinf(-33/57.3) * rc_x + cosf(-33/57.3) * rc_y; 	
+  	sp_accel.x = cosf(-27/57.3) * rc_x - sinf(-27/57.3) * rc_y;
+  	sp_accel.y = sinf(-27/57.3) * rc_x + cosf(-27/57.3) * rc_y; 	
 
   int32_t yaw = radio_control.values[RADIO_YAW];
   DeadBand(yaw, STABILIZATION_ATTITUDE_DEADBAND_R);

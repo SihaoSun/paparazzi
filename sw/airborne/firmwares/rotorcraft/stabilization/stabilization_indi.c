@@ -410,7 +410,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       // Filter the acceleration in z axis
       update_butterworth_2_low_pass(&az_lowpass_filter, body_accel_f.z);
 
-      v_thrust =  5*(- thrust_primary_axis - (az_lowpass_filter.o[0]+0.25));
+      v_thrust =  10*(- thrust_primary_axis - (az_lowpass_filter.o[0]+0.25));
  
   }
 #endif  
