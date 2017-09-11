@@ -228,9 +228,14 @@ void guidance_primary_axis_run(void)
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;
 	rate_cmd_primary_axis[1] = q_des;
-	rate_cmd_primary_axis[2] = 10.0;
+	rate_cmd_primary_axis[2] = 0.0;
 	thrust_primary_axis = thrust_specific;
 
 	//printf("%f 	%f 	%f 	%d\n", phi*57.3,theta*57.3,psi*57.3,attitude_optitrack_status());
 	return;
+}
+
+void primary_axis_status_take_off(void)
+{
+
 }
