@@ -37,6 +37,7 @@ extern void get_attitude_optitrack_periodic(void);
 extern bool attitude_optitrack_status(void);
 
 bool use_attitude_optitrack;
+struct FloatVect3 nd_state;
 
 #endif
 

@@ -9,7 +9,7 @@
 </header>
   <waypoints>
     <waypoint height="1.5" name="HOME" x="0.0" y="0.0"/>
-    <waypoint height="2" name="CLIMB" x="1.2" y="-0.6"/>
+    <waypoint height="2" name="CLIMB" x="0.0" y="0.0"/>
     <waypoint name="GOAL" x="2.0" y="2.0"/>
     <waypoint height="1.342321" name="STDBY" x="-2" y="-2"/>
     <waypoint name="TD" x="-1.5" y="-3.3"/>
@@ -60,7 +60,8 @@
       <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="Standby"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
       <!--stay climb="nav_climb_vspeed" vmode="climb" wp="CLIMB"/-->
-      <stay climb = "0.2" vmode="climb" wp="CLIMB"/>
+      <stay climb = "2.0" vmode="climb" wp="CLIMB"/>
+      <stay wp="HOME"/>
     </block>
     <block key="s" name="Standby" strip_button="Standby" strip_icon="home.png">
       <call_once fun="NavSetWaypointHere(WP_STDBY)"/>

@@ -61,11 +61,10 @@ float guidance_pa_speed_gain = 1.0;
 #ifdef GUIDANCE_PA_ATT_GAIN 
 float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 #else
-float guidance_pa_att_gain = -20.0;
+float guidance_pa_att_gain = -10.0;
 #endif
 
 struct FloatVect3 n_pa = {0.0,0.0,-1.0};
-struct FloatVect3 nd_state;
 struct FloatVect3 nd_i_state;
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
@@ -113,7 +112,7 @@ void guidance_primary_axis_run(void)
 	//Flag to hack guidance loop
 	primary_axis_status = 1;
 
-	//Linear controller to find the acceleration setpoint from position and velocity
+	//Linear controller to find the acceleration setpoint rate_cmd_primary_axis position and velocity
 	float pos_x_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.x) - stateGetPositionNed_f()->x;
 	float pos_y_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.y) - stateGetPositionNed_f()->y;
 	float pos_z_err = POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z);
