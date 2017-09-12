@@ -30,6 +30,8 @@
 #define ATTITUDE_OPTITRACK_H
 
 struct FloatEulers attitude_optitrack;
+struct FloatEulers attitude_optitrack_filter;
+struct FloatRates angular_rate_optitrack;
 
 extern void get_attitude_optitrack(void);
 extern void get_attitude_optitrack_init(void);
@@ -37,7 +39,6 @@ extern void get_attitude_optitrack_periodic(void);
 extern bool attitude_optitrack_status(void);
 
 bool use_attitude_optitrack;
-struct FloatVect3 nd_state;
 
 #endif
 

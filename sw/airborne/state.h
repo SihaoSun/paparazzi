@@ -31,6 +31,7 @@
 #ifndef STATE_H
 #define STATE_H
 
+#include "state.h"
 #include "math/pprz_algebra_int.h"
 #include "math/pprz_algebra_float.h"
 #include "math/pprz_geodetic_int.h"

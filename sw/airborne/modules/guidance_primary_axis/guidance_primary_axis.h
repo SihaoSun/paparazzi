@@ -42,5 +42,7 @@ extern void guidance_primary_axis_run(void);
 extern void guidance_primary_axis_take_off(void);
 
 void low_pass_filter_init(void);
+
+struct FloatVect3 nd_state;
 #endif
 

@@ -23,10 +23,17 @@
  * Get attitude information from Optitrack
  */
 
+#include "state.h"
 #include "modules/attitude_optitrack/attitude_optitrack.h"
 #include "subsystems/datalink/datalink.h"
-
+#include "filters/low_pass_filter.h"
 #include "subsystems/abi.h"
+#include "mcu_periph/sys_time.h"
+#include <stdio.h>
+
+float time_last_optitrack_attitude;
+struct FirstOrderLowPass attitude_optitrack_filter_theta;
+struct FirstOrderLowPass attitude_optitrack_filter_psi;
 
 bool attitude_optitrack_status(void)
 {
@@ -36,6 +43,11 @@ bool attitude_optitrack_status(void)
 void get_attitude_optitrack_init(void){
 
 	use_attitude_optitrack = false;
+
+	float tau = 0.01;
+	float sample_time = 1.0 / DATALINK_NATNET_FREQUENCY;
+	init_first_order_low_pass(&attitude_optitrack_filter_theta,tau,sample_time,0);
+	init_first_order_low_pass(&attitude_optitrack_filter_psi  ,tau,sample_time,0);	
 }
 
 void get_attitude_optitrack_periodic(void)
@@ -45,14 +57,37 @@ void get_attitude_optitrack_periodic(void)
 
 void get_attitude_optitrack(void) {
 
-	//printf("%d 	%d\n", DL_OPTITRACK_ATT_EULER_ac_id(dl_buffer), AC_ID);
 	if (DL_OPTITRACK_ATT_EULER_ac_id(dl_buffer) != AC_ID) { return; } // not for this aircraft
 
-	attitude_optitrack.phi 	= 	DL_OPTITRACK_ATT_EULER_phi_optitrack(dl_buffer);
+	float now = get_sys_time_float();
+
+	float theta_last =  attitude_optitrack.theta; 
+	float psi_last   =	attitude_optitrack.psi;
+
+	attitude_optitrack.phi 		= 	DL_OPTITRACK_ATT_EULER_phi_optitrack(dl_buffer);
 	attitude_optitrack.theta 	= 	DL_OPTITRACK_ATT_EULER_theta_optitrack(dl_buffer);
 	attitude_optitrack.psi 		=   DL_OPTITRACK_ATT_EULER_psi_optitrack(dl_buffer);
 
-	//printf("%6.3f	%6.3f	%6.3f\n", phi*57.3, theta*57.3, psi*57.3);
+	//float theta_last = get_first_order_low_pass(&attitude_optitrack_filter_theta);
+	//float psi_last = get_first_order_low_pass(&attitude_optitrack_filter_psi);
+
+	update_first_order_low_pass(&attitude_optitrack_filter_theta,attitude_optitrack.theta);
+	update_first_order_low_pass(&attitude_optitrack_filter_psi,attitude_optitrack.psi);
+
+	float dtime = now - time_last_optitrack_attitude;
+	time_last_optitrack_attitude = now;
+
+	//float d_theta = (get_first_order_low_pass(&attitude_optitrack_filter_theta) - theta_last) / dtime;
+	//float d_psi   = (get_first_order_low_pass(&attitude_optitrack_filter_psi) - psi_last) / dtime;
+	float d_theta 	= (attitude_optitrack.theta - theta_last) / dtime;
+	float d_psi 	= (attitude_optitrack.psi 	- psi_last)	/ dtime;
+	angular_rate_optitrack.r = -sin(attitude_optitrack.phi)*d_theta 
+							   + cos(attitude_optitrack.phi)*cos(attitude_optitrack.theta)*d_psi;
+
+	struct FloatRates *body_rates = stateGetBodyRates_f();
+	//printf("%f 	%f\n", angular_rate_optitrack.r, body_rates->r);
+	//printf("%f 	%f\n", now,dtime);	
+	printf("%f 	%f\n", d_psi, d_theta);		
 }
 
 
