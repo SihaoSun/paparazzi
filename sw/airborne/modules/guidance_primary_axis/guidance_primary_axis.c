@@ -64,7 +64,7 @@ float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 float guidance_pa_att_gain = -10.0;
 #endif
 
-struct FloatVect3 n_pa = {0.0,0.0,-1.0};
+struct FloatVect3 n_pa = {0.1,0.1,-1.0};
 struct FloatVect3 nd_i_state;
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
@@ -196,8 +196,14 @@ void guidance_primary_axis_run(void)
 	//Compute command p and q using NDI
 	float r, p_des, q_des, r_des;
 	struct FloatRates *body_rates = stateGetBodyRates_f();
-	r = body_rates->r;
-
+  	if (attitude_optitrack_status() == false)
+    	r = body_rates->r; 
+  	else{
+    	if (fabs(body_rates->r) < 17.4) // gyroscope limitation on Bebop2, +-1000deg/sec
+      		r = body_rates->r;
+    	else
+      		r = angular_rate_optitrack.r;
+  	}
 	float nd_i_state_x_last = get_first_order_low_pass(&nd_i_state_x);
 	float nd_i_state_y_last = get_first_order_low_pass(&nd_i_state_y);
 	float nd_i_state_z_last = get_first_order_low_pass(&nd_i_state_z);	
@@ -231,7 +237,6 @@ void guidance_primary_axis_run(void)
 	rate_cmd_primary_axis[2] = 0.0;
 	thrust_primary_axis = thrust_specific;
 
-	//printf("%f 	%f 	%f 	%d\n", phi*57.3,theta*57.3,psi*57.3,attitude_optitrack_status());
 	return;
 }
 

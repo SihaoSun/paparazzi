@@ -52,7 +52,7 @@
       <define name="GUIDANCE_PA_RC_DEBUG" value="true"/>
     </module>
     <module name="attitude_optitrack">
-      <define name="DATALINK_NATNET_FREQUENCY" value="300" unit="Hz"/>
+      <define name="DATALINK_NATNET_FREQUENCY" value="120"/>
     </module>
   </modules>
 

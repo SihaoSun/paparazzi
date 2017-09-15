@@ -377,7 +377,14 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   //calculate the virtual control (reference acceleration) based on a PD controller
   angular_accel_ref.p = (rate_ref.p - body_rates->p) * reference_acceleration.rate_p;
   angular_accel_ref.q = (rate_ref.q - body_rates->q) * reference_acceleration.rate_q;
-  angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
+  if (attitude_optitrack_status() == false)
+    angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
+  else{
+    if (body_rates->r < 17.4) // gyroscope limitation on Bebop2, 1000deg/sec
+      angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
+    else
+      angular_accel_ref.r = (rate_ref.r - angular_rate_optitrack.r) * reference_acceleration.rate_r;
+  }
 
   g2_times_du = 0.0;
   int8_t i;
