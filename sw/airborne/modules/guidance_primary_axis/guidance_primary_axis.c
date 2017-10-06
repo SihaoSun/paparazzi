@@ -49,13 +49,13 @@
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else
-float guidance_pa_pos_gain = 0.5;
+float guidance_pa_pos_gain = 1.0;
 #endif
 
 #ifdef GUIDANCE_PA_SPEED_GAIN
 float guidance_pa_speed_gain = GUIDANCE_INDI_SPEED_GAIN;
 #else
-float guidance_pa_speed_gain = 1.0;
+float guidance_pa_speed_gain = 2.0;
 #endif
 
 #ifdef GUIDANCE_PA_ATT_GAIN 
@@ -64,7 +64,7 @@ float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 float guidance_pa_att_gain = -10.0;
 #endif
 
-struct FloatVect3 n_pa = {0.1,0.1,-1.0};
+struct FloatVect3 n_pa = {0.0,0.0,-1.0};
 struct FloatVect3 nd_i_state;
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
@@ -199,7 +199,7 @@ void guidance_primary_axis_run(void)
   	if (attitude_optitrack_status() == false)
     	r = body_rates->r; 
   	else{
-    	if (fabs(body_rates->r) < 17.4) // gyroscope limitation on Bebop2, +-1000deg/sec
+    	if (fabs(body_rates->r) < 35) // gyroscope limitation on Bebop2, +-2000deg/sec
       		r = body_rates->r;
     	else
       		r = angular_rate_optitrack.r;

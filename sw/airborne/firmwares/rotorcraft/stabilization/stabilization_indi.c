@@ -380,7 +380,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   if (attitude_optitrack_status() == false)
     angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
   else{
-    if (body_rates->r < 17.4) // gyroscope limitation on Bebop2, 1000deg/sec
+    if (body_rates->r < 35.0) // gyroscope limitation on Bebop2, 2000deg/sec
       angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
     else
       angular_accel_ref.r = (rate_ref.r - angular_rate_optitrack.r) * reference_acceleration.rate_r;
@@ -521,7 +521,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
 //    printf("%6.2f     %6.2f     %6.2f     %6.2f\n",
 //       indi_v[0],indi_v[1],indi_v[2],indi_v[3]);
-//    printf("%d\n", indi_thrust_increment_set);
+//printf("%d  %f\n", indi_thrust_increment_set, indi_thrust_increment);
 //    printf("%d   %6.2f   %6.2f   %6.2f\n", stabilization_cmd[COMMAND_THRUST],actuator_state_filt_vect[1],v_thrust,Bwls[3][1]);   
 //      printf("%6.2f %6.2f %6.2f\n", rate_ref.p, rate_ref.q, rate_ref.r);
   }

@@ -50,7 +50,7 @@
     </module>
     <module name="actuator_terminator"/>
     <module name="guidance_primary_axis">
-      <define name="GUIDANCE_PA_RC_DEBUG" value="true"/>
+      <define name="GUIDANCE_PA_RC_DEBUG" value="TRUE"/>
     </module>
     <module name="attitude_optitrack">
       <define name="DATALINK_NATNET_FREQUENCY" value="120"/>
