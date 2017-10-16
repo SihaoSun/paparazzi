@@ -395,7 +395,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   g2_times_du = g2_times_du / INDI_G_SCALING;
 
   float v_thrust = 0.0;
-  if (indi_thrust_increment_set) {
+  if (indi_thrust_increment_set*0) {
     v_thrust = indi_thrust_increment;
 
     //update thrust command such that the current is correctly estimated
@@ -427,6 +427,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       v_thrust +=
         (stabilization_cmd[COMMAND_THRUST] - actuator_state_filt_vect[i]) * Bwls[3][i];
     }
+
+    //printf("%d\n",stabilization_cmd[COMMAND_THRUST]);
   }
 
   // Calculate the min and max increments

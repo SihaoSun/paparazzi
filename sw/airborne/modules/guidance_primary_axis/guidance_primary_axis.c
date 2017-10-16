@@ -64,7 +64,7 @@ float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 float guidance_pa_att_gain = -10.0;
 #endif
 
-struct FloatVect3 n_pa = {0.0,0.0,-1.0};
+struct FloatVect3 n_pa = {0.2,0.2,-1.0};
 struct FloatVect3 nd_i_state;
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
