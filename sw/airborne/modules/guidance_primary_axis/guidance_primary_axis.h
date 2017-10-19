@@ -34,6 +34,10 @@ bool primary_axis_status;
 float rate_cmd_primary_axis[3];
 float thrust_primary_axis;
 
+float primary_axis_n_gain_x;
+float primary_axis_n_gain_y;
+float primary_axis_n_abs;
+
 extern bool guidance_primary_axis_status(void);
 extern void guidance_primary_axis_init(void);
 extern void guidance_primary_axis_end(void);

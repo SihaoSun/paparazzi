@@ -48,9 +48,14 @@
     <module name="logger_file">
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
     </module>
-    <module name="actuator_terminator"/>
+    <module name="actuator_terminator">
+      <define name="DAMAGED_ROTOR_INDEX" value="3"/>
+    </module>
     <module name="guidance_primary_axis">
-      <define name="GUIDANCE_PA_RC_DEBUG" value="TRUE"/>
+      <define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/>
+      <define name="PRIMARY_AXIS_GUIDANCE_NX_GAIN" value="1.0"/>
+      <define name="PRIMARY_AXIS_GUIDANCE_NY_GAIN" value="1.0"/>
+      <define name="PRIMARY_AXIS_GUIDANCE_ABS" value="0.0"/>
     </module>
     <module name="attitude_optitrack">
       <define name="DATALINK_NATNET_FREQUENCY" value="120"/>
@@ -224,5 +229,4 @@
     <define name="LOW_BAT_LEVEL" value="10.8" unit="V"/>
     <define name="MAX_BAT_LEVEL" value="12.4" unit="V"/>
   </section>
-
 </airframe>

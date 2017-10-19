@@ -431,6 +431,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     //printf("%d\n",stabilization_cmd[COMMAND_THRUST]);
   }
 
+  //printf("%d  %f  %f\n", stabilization_cmd[COMMAND_THRUST], actuator_state_filt_vect[0], Bwls[3][0]);
+
   // Calculate the min and max increments
 
   for (i = 0; i < INDI_NUM_ACT; i++) {

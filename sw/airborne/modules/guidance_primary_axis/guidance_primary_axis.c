@@ -64,7 +64,7 @@ float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 float guidance_pa_att_gain = -10.0;
 #endif
 
-struct FloatVect3 n_pa = {0.2,0.2,-1.0};
+struct FloatVect3 n_pa = {0.0,0.0,-1.0};
 struct FloatVect3 nd_i_state;
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
@@ -80,7 +80,9 @@ void guidance_primary_axis_init(void)
 {
 	primary_axis_status = 0;
 	low_pass_filter_init();
-
+	primary_axis_n_gain_x = PRIMARY_AXIS_GUIDANCE_NX_GAIN;
+	primary_axis_n_gain_y = PRIMARY_AXIS_GUIDANCE_NY_GAIN;
+    primary_axis_n_abs    = PRIMARY_AXIS_GUIDANCE_ABS;
 	return;
 }
 
@@ -108,6 +110,8 @@ void guidance_primary_axis_run(void)
 {
 	//Necessary parameters
 	float g = 9.8125;
+	n_pa.x = primary_axis_n_abs * primary_axis_n_gain_x;
+	n_pa.y = primary_axis_n_abs * primary_axis_n_gain_y;
 
 	//Flag to hack guidance loop
 	primary_axis_status = 1;

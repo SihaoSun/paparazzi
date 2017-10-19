@@ -8,7 +8,7 @@
 #include "subsystems/datalink/datalink.h"
 </header>
   <waypoints>
-    <waypoint height="2" name="HOME" x="0.0" y="0.0"/>
+    <waypoint height="2" name="HOME" x="-1.0" y="-2.0"/>
     <waypoint height="2.5" name="CLIMB" x="0.0" y="0.0"/>
     <waypoint name="GOAL" x="0.0" y="0.0"/>
     <waypoint height="2" name="STDBY" x="0.0" y="0.0"/>

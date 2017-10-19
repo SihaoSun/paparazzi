@@ -4,6 +4,15 @@
   <doc>
     <description>guidance using primary axis instead of euler angles</description>
   </doc>
+  <settings>
+    <dl_settings>
+      <dl_settings NAME = "primary_axis">
+        <dl_setting var="primary_axis_n_abs" min="0" step="0.05" max="0.4" shortname="n_abs" param="PRIMARY_AXIS_GUIDANCE_ABS" persistent="true"/>
+        <dl_setting var="primary_axis_n_gain_x" min="0" step="0.2" max="1.0" shortname="n_x_gain" param="PRIMARY_AXIS_GUIDANCE_NX_GAIN" persistent="true"/>
+        <dl_setting var="primary_axis_n_gain_y" min="0" step="0.2" max="1.0" shortname="n_y_gain" param="PRIMARY_AXIS_GUIDANCE_NY_GAIN" persistent="true"/>
+      </dl_settings>
+    </dl_settings>
+  </settings>
   <header>
     <file name="guidance_primary_axis.h"/>
   </header>
