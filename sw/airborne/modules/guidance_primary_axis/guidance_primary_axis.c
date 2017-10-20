@@ -157,9 +157,9 @@ void guidance_primary_axis_run(void)
   	sp_accel.x = cosf(-27/57.3) * rc_x - sinf(-27/57.3) * rc_y;
   	sp_accel.y = sinf(-27/57.3) * rc_x + cosf(-27/57.3) * rc_y; 	
 
-  int32_t yaw = radio_control.values[RADIO_YAW];
-  DeadBand(yaw, STABILIZATION_ATTITUDE_DEADBAND_R);
-  float psi_des =  yaw * STABILIZATION_ATTITUDE_SP_MAX_R / (MAX_PPRZ - STABILIZATION_ATTITUDE_DEADBAND_R);
+  	int32_t yaw = radio_control.values[RADIO_YAW];
+  	DeadBand(yaw, STABILIZATION_ATTITUDE_DEADBAND_R);
+  	float psi_des =  yaw * STABILIZATION_ATTITUDE_SP_MAX_R / (MAX_PPRZ - STABILIZATION_ATTITUDE_DEADBAND_R);
 
   //for rc vertical control
   	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-4500)*8.0/9600.0;
@@ -167,7 +167,6 @@ void guidance_primary_axis_run(void)
 #else
 	float psi_des = guidance_h.sp.heading;
 #endif
-
 
 	//Acceleration projecting on body axis (nd_i)
 	nd_i_state.x = sp_accel.x;
