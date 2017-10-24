@@ -65,11 +65,13 @@ float guidance_pa_att_gain = -10.0;
 #endif
 
 struct FloatVect3 n_pa = {0.0,0.0,-1.0};
-struct FloatVect3 nd_i_state;
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
 struct FirstOrderLowPass nd_i_state_x, nd_i_state_y, nd_i_state_z;
 struct FirstOrderLowPass theta_filt, psi_des_filt;
+struct FirstOrderLowPass sp_accel_filter_x;
+struct FirstOrderLowPass sp_accel_filter_y;
+struct FirstOrderLowPass sp_accel_filter_z;
 
 bool guidance_primary_axis_status(void)
 {
@@ -96,7 +98,9 @@ void low_pass_filter_init(void)
 	init_first_order_low_pass(&nd_i_state_z,tau_nd,sample_time,-1);
 	init_first_order_low_pass(&theta_filt,tau,sample_time,stateGetNedToBodyEulers_f()->theta);
 	init_first_order_low_pass(&psi_des_filt,tau,sample_time,guidance_h.sp.heading);
-
+	init_first_order_low_pass(&sp_accel_filter_x,tau_nd,sample_time,0);
+	init_first_order_low_pass(&sp_accel_filter_y,tau_nd,sample_time,0);
+	init_first_order_low_pass(&sp_accel_filter_z,tau_nd,sample_time,0);	
 	return;
 }
 
@@ -126,11 +130,22 @@ void guidance_primary_axis_run(void)
 	float speed_sp_z = pos_z_err * guidance_pa_pos_gain;
 
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
+	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
 
-	sp_accel.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain;
-	sp_accel.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain;
-	sp_accel.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
+	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain;
+	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain;
+	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
 
+	sp_accel.x = update_first_order_low_pass(&sp_accel_filter_x, sp_accel_raw.x);
+	sp_accel.y = update_first_order_low_pass(&sp_accel_filter_y, sp_accel_raw.y);
+	sp_accel.z = update_first_order_low_pass(&sp_accel_filter_z, sp_accel_raw.z);
+
+	sp_accel_primary_axis.x = sp_accel_raw.x;
+	sp_accel_primary_axis.y = sp_accel_raw.y;
+	sp_accel_primary_axis.z = sp_accel_raw.z;
+	sp_accel_primary_axis_filter.x = sp_accel.x;
+	sp_accel_primary_axis_filter.y = sp_accel.y;
+	sp_accel_primary_axis_filter.z = sp_accel.z;	
 	float phi,theta,psi;
 
 	if(attitude_optitrack_status()==true){
@@ -143,11 +158,13 @@ void guidance_primary_axis_run(void)
 		theta = stateGetNedToBodyEulers_f()->theta;
 		psi 	= stateGetNedToBodyEulers_f()->psi;	
 	}
-//	printf("%f 	%f\n", attitude_optitrack.psi*57.3, stateGetNedToBodyEulers_f()->psi*57.3);
+	
+	float r, p_des, q_des, r_des;
 
-#if GUIDANCE_PA_RC_DEBUG
-#warning "GUIDANCE_PARC_DEBUG lets you control the accelerations via RC, but disables autonomous flight!"
+//#if GUIDANCE_PA_RC_DEBUG
+//#warning "GUIDANCE_PARC_DEBUG lets you control the accelerations via RC, but disables autonomous flight!"
   //for rc control horizontal, rotate from body axes to NED
+if ((autopilot.mode == AP_MODE_ATTITUDE_DIRECT) || (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD)) {
   	float rc_x = -(radio_control.values[RADIO_PITCH]/9600.0)*2.0;
   	float rc_y = (radio_control.values[RADIO_ROLL]/9600.0)*2.0;
 //  	sp_accel.x = cosf(psi) * rc_x - sinf(psi) * rc_y;
@@ -157,16 +174,28 @@ void guidance_primary_axis_run(void)
   	sp_accel.x = cosf(-27/57.3) * rc_x - sinf(-27/57.3) * rc_y;
   	sp_accel.y = sinf(-27/57.3) * rc_x + cosf(-27/57.3) * rc_y; 	
 
-  	int32_t yaw = radio_control.values[RADIO_YAW];
-  	DeadBand(yaw, STABILIZATION_ATTITUDE_DEADBAND_R);
-  	float psi_des =  yaw * STABILIZATION_ATTITUDE_SP_MAX_R / (MAX_PPRZ - STABILIZATION_ATTITUDE_DEADBAND_R);
+    float rd = radio_control.values[RADIO_YAW];
+    DeadBand(rd, STABILIZATION_ATTITUDE_DEADBAND_R);
+    r_des =  rd * STABILIZATION_ATTITUDE_SP_MAX_R / (MAX_PPRZ - STABILIZATION_ATTITUDE_DEADBAND_R);
 
   //for rc vertical control
   	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-4500)*8.0/9600.0;
-
-#else
+}
+else if (autopilot.mode == AP_MODE_NAV){
 	float psi_des = guidance_h.sp.heading;
-#endif
+
+	// Compute command r (check availability);
+	float theta_filt_last = get_first_order_low_pass(&theta_filt);
+	float psi_des_filt_last = get_first_order_low_pass(&psi_des_filt);
+	update_first_order_low_pass(&theta_filt,theta);
+	update_first_order_low_pass(&psi_des_filt,psi_des);
+	float theta_dot = (get_first_order_low_pass(&theta_filt)-theta_filt_last)*PERIODIC_FREQUENCY;
+	float psi_des_dot = (get_first_order_low_pass(&psi_des_filt)-psi_des_filt_last)*PERIODIC_FREQUENCY;
+
+	float psi_dot_cmd = psi_des_dot + 5.0*(psi_des-psi);
+
+	r_des = psi_dot_cmd*cos(phi)*cos(theta)-sin(phi)*theta_dot;
+	}
 
 	//Acceleration projecting on body axis (nd_i)
 	nd_i_state.x = sp_accel.x;
@@ -197,7 +226,6 @@ void guidance_primary_axis_run(void)
 
 
 	//Compute command p and q using NDI
-	float r, p_des, q_des, r_des;
 	struct FloatRates *body_rates = stateGetBodyRates_f();
   	if (attitude_optitrack_status() == false)
     	r = body_rates->r; 
@@ -218,26 +246,13 @@ void guidance_primary_axis_run(void)
 	nd_i_state_dot_i.z = (get_first_order_low_pass(&nd_i_state_z)-nd_i_state_z_last)*PERIODIC_FREQUENCY;
 	
 	MAT33_VECT3_MUL(nd_i_state_dot_b, R_BI, nd_i_state_dot_i);
-	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.y-n_pa.y)+nd_state.x*r - nd_i_state_dot_b.y);
-	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.x-n_pa.x)-nd_state.y*r - nd_i_state_dot_b.x);
+	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.y-n_pa.y)+nd_state.x*r - 0*nd_i_state_dot_b.y);
+	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.x-n_pa.x)-nd_state.y*r - 0*nd_i_state_dot_b.x);
 
-	// Compute command r (check availability);
-	float theta_filt_last = get_first_order_low_pass(&theta_filt);
-	float psi_des_filt_last = get_first_order_low_pass(&psi_des_filt);
-	update_first_order_low_pass(&theta_filt,theta);
-	update_first_order_low_pass(&psi_des_filt,psi_des);
-	float theta_dot = (get_first_order_low_pass(&theta_filt)-theta_filt_last)*PERIODIC_FREQUENCY;
-	float psi_des_dot = (get_first_order_low_pass(&psi_des_filt)-psi_des_filt_last)*PERIODIC_FREQUENCY;
-
-	float psi_dot_cmd = psi_des_dot + 5.0*(psi_des-psi);
-
-	r_des = psi_dot_cmd*cos(phi)*cos(theta)-sin(phi)*theta_dot;
-
-	r_des = (float)radio_control.values[RADIO_YAW]*STABILIZATION_ATTITUDE_SP_MAX_R / (MAX_PPRZ - STABILIZATION_ATTITUDE_DEADBAND_R);
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;
 	rate_cmd_primary_axis[1] = q_des;
-	rate_cmd_primary_axis[2] = 0.0;
+	rate_cmd_primary_axis[2] = r_des;
 	thrust_primary_axis = thrust_specific;
 
 	return;

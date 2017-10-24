@@ -453,7 +453,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 #if STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE
   // Calculate the increment for each actuator
   for (i = 0; i < INDI_NUM_ACT; i++) {
-    indi_du[i] = (g1g2_pseudo_inv[i][0] * indi_v[0])
+    indi_du[i] =   (g1g2_pseudo_inv[i][0] * indi_v[0])
                  + (g1g2_pseudo_inv[i][1] * indi_v[1])
                  + (g1g2_pseudo_inv[i][2] * indi_v[2])
                  + (g1g2_pseudo_inv[i][3] * indi_v[3]);
@@ -470,7 +470,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
   }
 
-//  printf("%6.2f %6.2f %6.2f %6.2f\n", indi_du[0], indi_du[1], indi_du[2], indi_du[3]);
+//  printf("%6.2f\t%6.2f\t%6.2f\t%6.2f\n", indi_du[0], indi_du[1], indi_du[2], indi_du[3]);
 #else
   // WLS Control Allocator
   num_iter =
@@ -747,7 +747,7 @@ void calc_g1_inv_damage(void)
       }
     }
     MAT_INV33(g1_damage_inv,g1_damage);
-//    printf("%2.1f %2.1f %2.1f\n%2.1f %2.1f %2.1f\n%2.1f %2.1f %2.1f\n"
+//    printf("%6.4f %6.4f %6.4f\n%6.4f %6.4f %6.4f\n%6.4f %6.4f %6.4f\n"
 //                    , g1_damage[0][0], g1_damage[0][1], g1_damage[0][2]
 //                    , g1_damage[1][0], g1_damage[1][1], g1_damage[1][2]
 //                    , g1_damage[2][0], g1_damage[2][1], g1_damage[2][2]);

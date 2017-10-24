@@ -48,5 +48,9 @@ extern void guidance_primary_axis_take_off(void);
 void low_pass_filter_init(void);
 
 struct FloatVect3 nd_state;
+struct FloatVect3 nd_i_state;
+struct FloatVect3 sp_accel_primary_axis;
+struct FloatVect3 sp_accel_primary_axis_filter;
+
 #endif
 

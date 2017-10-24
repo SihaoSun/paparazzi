@@ -52,7 +52,7 @@
       <define name="DAMAGED_ROTOR_INDEX" value="3"/>
     </module>
     <module name="guidance_primary_axis">
-      <define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/>
+      <!--define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/-->
       <define name="PRIMARY_AXIS_GUIDANCE_NX_GAIN" value="1.0"/>
       <define name="PRIMARY_AXIS_GUIDANCE_NY_GAIN" value="1.0"/>
       <define name="PRIMARY_AXIS_GUIDANCE_ABS" value="0.0"/>
