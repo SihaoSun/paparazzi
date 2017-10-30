@@ -396,7 +396,6 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
   float v_thrust = 0.0;
   if (indi_thrust_increment_set*0) {
-//  if (indi_thrust_increment_set) {    
     v_thrust = indi_thrust_increment;
 
     //update thrust command such that the current is correctly estimated
@@ -428,9 +427,12 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       v_thrust +=
         (stabilization_cmd[COMMAND_THRUST] - actuator_state_filt_vect[i]) * Bwls[3][i];
     }
+
+    //printf("%d\n",stabilization_cmd[COMMAND_THRUST]);
   }
 
-//  printf("%f\n",v_thrust);
+  //printf("%d  %f  %f\n", stabilization_cmd[COMMAND_THRUST], actuator_state_filt_vect[0], Bwls[3][0]);
+
   // Calculate the min and max increments
 
   for (i = 0; i < INDI_NUM_ACT; i++) {
@@ -451,7 +453,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 #if STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE
   // Calculate the increment for each actuator
   for (i = 0; i < INDI_NUM_ACT; i++) {
-    indi_du[i] = (g1g2_pseudo_inv[i][0] * indi_v[0])
+    indi_du[i] =   (g1g2_pseudo_inv[i][0] * indi_v[0])
                  + (g1g2_pseudo_inv[i][1] * indi_v[1])
                  + (g1g2_pseudo_inv[i][2] * indi_v[2])
                  + (g1g2_pseudo_inv[i][3] * indi_v[3]);
@@ -468,7 +470,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
   }
 
-//  printf("%6.2f %6.2f %6.2f %6.2f\n", indi_du[0], indi_du[1], indi_du[2], indi_du[3]);
+//  printf("%6.2f\t%6.2f\t%6.2f\t%6.2f\n", indi_du[0], indi_du[1], indi_du[2], indi_du[3]);
 #else
   // WLS Control Allocator
   num_iter =
@@ -516,39 +518,17 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   for (i = 0; i < INDI_NUM_ACT; i++) {
     actuators_pprz[i] = (int16_t) indi_u[i];
 
-    if ((i == DAMAGED_ROTOR_INDEX ) && damage_status()){
+    if (i == DAMAGED_ROTOR_INDEX && damage_status()){
       //actuators_pprz[i] = 10;
       //actuators_pprz[i] = (int16_t) indi_u[i]*fault_factor;
       actuators_pprz[i] = -MAX_PPRZ;
-
     }
-
-//    if ( (i == DAMAGED_ROTOR_INDEX2 ) && (actuator_terminator_running == 1)){
-//       actuators_pprz[i] = -MAX_PPRZ;     
-//
-//
-//    }
-
 //    printf("%6.2f     %6.2f     %6.2f     %6.2f\n",
 //       indi_v[0],indi_v[1],indi_v[2],indi_v[3]);
 //printf("%d  %f\n", indi_thrust_increment_set, indi_thrust_increment);
 //    printf("%d   %6.2f   %6.2f   %6.2f\n", stabilization_cmd[COMMAND_THRUST],actuator_state_filt_vect[1],v_thrust,Bwls[3][1]);   
 //      printf("%6.2f %6.2f %6.2f\n", rate_ref.p, rate_ref.q, rate_ref.r);
-
   }
-  if(actuator_terminator_running == 1){
-    // so FrontLeft to CoG = 14.5 cm
-    //and RightBack to CoG = 16 cm  
-    // mind you: it is not a straight line, under a slight angle. Probably neglectable.
-    //Bound(actuators_pprz[1], 0, 500);
-
-    if(actuators_pprz[1] >= -550){
-actuators_pprz[1] = -550;
-
-    }
-    actuators_pprz[3] = -MAX_PPRZ;
-  }
-   printf("%d %d %d %d \n", actuator_terminator_running,  actuators_pprz[0], actuators_pprz[1], actuators_pprz[2]);
 }
 
 /**
@@ -767,7 +747,7 @@ void calc_g1_inv_damage(void)
       }
     }
     MAT_INV33(g1_damage_inv,g1_damage);
-//    printf("%2.1f %2.1f %2.1f\n%2.1f %2.1f %2.1f\n%2.1f %2.1f %2.1f\n"
+//    printf("%6.4f %6.4f %6.4f\n%6.4f %6.4f %6.4f\n%6.4f %6.4f %6.4f\n"
 //                    , g1_damage[0][0], g1_damage[0][1], g1_damage[0][2]
 //                    , g1_damage[1][0], g1_damage[1][1], g1_damage[1][2]
 //                    , g1_damage[2][0], g1_damage[2][1], g1_damage[2][2]);
