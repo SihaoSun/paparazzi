@@ -18,45 +18,25 @@
  * <http://www.gnu.org/licenses/>.
  */
 /**
- * @file "modules/actuator_terminator/actuator_terminator.c"
+ * @file "modules/actuator_terminator/actuator_terminator.h"
  * @author sihao sun
  * Simple triger to terminate one actuator for damage flight test
  */
 
-#include "modules/actuator_terminator/actuator_terminator.h"
-#include "stdio.h"
+#ifndef ACTUATOR_TERMINATOR_H
+#define ACTUATOR_TERMINATOR_H
 
+#include "std.h"
 
-bool damage_status(){
-	return damage_flag;
-}
-bool damage_status2(){
-	return damage_flag2;
-}
-void actuator_terminator_init(){
-	damage_flag = 0;
-	fault_limitation = 1;
-	fault_factor = 0.0;	
-    actuator_terminator_running = FALSE;
-}
+//#define DAMAGED_ROTOR_INDEX 3 //0 1 2 3
 
-void actuator_terminator(){
-    damage_flag	= 1;
-    //damage_flag2 = 1;
-    
- 
-	//printf("This is a actuator_terminator_running: %d \n", actuator_terminator_running);
+bool damage_flag;
+bool fault_limitation;
+float fault_factor;
 
-}
-
-void actuator_terminator_print(){
-
-	int a = (int) damage_status();
-	printf("%d\n",a);
-
-}
-
-
-
-
+extern void actuator_terminator(void);
+extern void actuator_terminator_init(void);
+extern bool damage_status(void);
+extern void actuator_terminator_print(void);
+#endif
 

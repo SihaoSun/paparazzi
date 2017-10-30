@@ -28,11 +28,15 @@
 
 #include "std.h"
 
-//#define DAMAGED_ROTOR_INDEX 3 //0 1 2 3
+#define DAMAGED_ROTOR_INDEX 3 //0 1 2 3
 
 bool damage_flag;
+bool damage_flag2;
+
 bool fault_limitation;
 float fault_factor;
+
+bool actuator_terminator_running;
 
 extern void actuator_terminator(void);
 extern void actuator_terminator_init(void);

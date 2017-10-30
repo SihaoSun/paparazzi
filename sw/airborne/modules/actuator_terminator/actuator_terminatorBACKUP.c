@@ -26,27 +26,21 @@
 #include "modules/actuator_terminator/actuator_terminator.h"
 #include "stdio.h"
 
-
 bool damage_status(){
 	return damage_flag;
 }
-bool damage_status2(){
-	return damage_flag2;
-}
+
 void actuator_terminator_init(){
 	damage_flag = 0;
 	fault_limitation = 1;
 	fault_factor = 0.0;	
-    actuator_terminator_running = FALSE;
 }
 
 void actuator_terminator(){
-    damage_flag	= 1;
-    //damage_flag2 = 1;
-    
- 
-	//printf("This is a actuator_terminator_running: %d \n", actuator_terminator_running);
 
+	//printf("this is a trial!\n");
+	//actuator_pprz[3] = 5000;
+	damage_flag = 1;
 }
 
 void actuator_terminator_print(){
