@@ -32,6 +32,10 @@
 #include "subsystems/imu.h"
 #include "firmwares/rotorcraft/stabilization.h"
 #include "state.h"
+#include "boards/bebop/actuators.h"
+#include "firmwares/rotorcraft/stabilization/stabilization_indi.h"
+#include "modules/attitude_optitrack/attitude_optitrack.h"
+#include "modules/guidance_primary_axis/guidance_primary_axis.h"
 
 /** Set the default File logger path to the USB drive */
 #ifndef FILE_LOGGER_PATH
@@ -61,7 +65,11 @@ void file_logger_start(void)
   if (file_logger != NULL) {
     fprintf(
       file_logger,
-      "counter,gyro_unscaled_p,gyro_unscaled_q,gyro_unscaled_r,accel_unscaled_x,accel_unscaled_y,accel_unscaled_z,mag_unscaled_x,mag_unscaled_y,mag_unscaled_z,COMMAND_THRUST,COMMAND_ROLL,COMMAND_PITCH,COMMAND_YAW,qi,qx,qy,qz\n"
+      "counter,gyro_unscaled_p,gyro_unscaled_q,gyro_unscaled_r,accel_unscaled_x,accel_unscaled_y,accel_unscaled_z,"
+      "mag_unscaled_x,mag_unscaled_y,mag_unscaled_z,COMMAND_THRUST,COMMAND_ROLL,COMMAND_PITCH,COMMAND_YAW,qi,qx,qy,qz,"
+      "w1obs,w2obs,w3obs,w4obs,w1ref,w2ref,w3ref,w4ref,w1obs_indi,w2obs_indi,w3obs_indi,w4obs_indi,"
+      "p,q,r,phi,theta,psi,Acc^b_x,Acc^b_y,Acc^b_z,phi_ot,theta_ot,psi_ot,r_ot,"
+      "p_des,q_des,r_des,h1,h2,ndi_x,ndi_y,ndi_z,acc_des_x,acc_des_y,acc_des_z,acc_des_x_filter,acc_des_y_filter,acc_des_z_filter\n"
     );
   }
 }
@@ -84,7 +92,7 @@ void file_logger_periodic(void)
   static uint32_t counter;
   struct Int32Quat *quat = stateGetNedToBodyQuat_i();
 
-  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
           counter,
           imu.gyro_unscaled.p,
           imu.gyro_unscaled.q,
@@ -102,7 +110,46 @@ void file_logger_periodic(void)
           quat->qi,
           quat->qx,
           quat->qy,
-          quat->qz
+          quat->qz,
+          (int)actuators_bebop.rpm_obs[0],
+          (int)actuators_bebop.rpm_obs[1],
+          (int)actuators_bebop.rpm_obs[2],
+          (int)actuators_bebop.rpm_obs[3],
+          (int)actuators_bebop.rpm_ref[0],
+          (int)actuators_bebop.rpm_ref[1],
+          (int)actuators_bebop.rpm_ref[2],
+          (int)actuators_bebop.rpm_ref[3],
+          act_obs[0],
+          act_obs[1],
+          act_obs[2],
+          act_obs[3],
+          stateGetBodyRates_f()->p,
+          stateGetBodyRates_f()->q,
+          stateGetBodyRates_f()->r,
+          stateGetNedToBodyEulers_f()->phi,
+          stateGetNedToBodyEulers_f()->theta,
+          stateGetNedToBodyEulers_f()->psi,
+          stateGetAccelBody_i()->x,
+          stateGetAccelBody_i()->y,
+          stateGetAccelBody_i()->z,
+          attitude_optitrack.phi,
+          attitude_optitrack.theta,
+          attitude_optitrack.psi,
+          angular_rate_optitrack.r,
+          rate_cmd_primary_axis[0],
+          rate_cmd_primary_axis[1],
+          rate_cmd_primary_axis[2],
+          nd_state.x,
+          nd_state.y,
+          nd_i_state.x,
+          nd_i_state.y,
+          nd_i_state.z,
+          sp_accel_primary_axis.x,
+          sp_accel_primary_axis.y,
+          sp_accel_primary_axis.z,
+          sp_accel_primary_axis_filter.x,
+          sp_accel_primary_axis_filter.y,
+          sp_accel_primary_axis_filter.z
          );
   counter++;
 }

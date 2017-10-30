@@ -33,7 +33,7 @@ bool damage_status(){
 void actuator_terminator_init(){
 	damage_flag = 0;
 	fault_limitation = 1;
-	fault_factor = 0.01;	
+	fault_factor = 0.0;	
 }
 
 void actuator_terminator(){

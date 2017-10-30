@@ -1,0 +1,35 @@
+[1mdiff --git a/sw/airborne/firmwares/rotorcraft/stabilization/stabilization_indi.c b/sw/airborne/firmwares/rotorcraft/stabilization/stabilization_indi.c[m
+[1mindex 003a150..4a57e53 100644[m
+[1m--- a/sw/airborne/firmwares/rotorcraft/stabilization/stabilization_indi.c[m
+[1m+++ b/sw/airborne/firmwares/rotorcraft/stabilization/stabilization_indi.c[m
+[36m@@ -395,7 +395,7 @@[m [mstatic void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con[m
+   g2_times_du = g2_times_du / INDI_G_SCALING;[m
+ [m
+   float v_thrust = 0.0;[m
+[31m-  if (indi_thrust_increment_set) {[m
+[32m+[m[32m  if (indi_thrust_increment_set*0) {[m
+     v_thrust = indi_thrust_increment;[m
+ [m
+     //update thrust command such that the current is correctly estimated[m
+[36m@@ -427,6 +427,8 @@[m [mstatic void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con[m
+       v_thrust +=[m
+         (stabilization_cmd[COMMAND_THRUST] - actuator_state_filt_vect[i]) * Bwls[3][i];[m
+     }[m
+[32m+[m
+[32m+[m[32m    //printf("%d\n",stabilization_cmd[COMMAND_THRUST]);[m
+   }[m
+ [m
+   // Calculate the min and max increments[m
+[1mdiff --git a/sw/airborne/modules/guidance_primary_axis/guidance_primary_axis.c b/sw/airborne/modules/guidance_primary_axis/guidance_primary_axis.c[m
+[1mindex 379492e..5345218 100644[m
+[1m--- a/sw/airborne/modules/guidance_primary_axis/guidance_primary_axis.c[m
+[1m+++ b/sw/airborne/modules/guidance_primary_axis/guidance_primary_axis.c[m
+[36m@@ -64,7 +64,7 @@[m [mfloat guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN[m
+ float guidance_pa_att_gain = -10.0;[m
+ #endif[m
+ [m
+[31m-struct FloatVect3 n_pa = {0.0,0.0,-1.0};[m
+[32m+[m[32mstruct FloatVect3 n_pa = {0.2,0.2,-1.0};[m
+ struct FloatVect3 nd_i_state;[m
+ struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};[m
+ struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};[m

@@ -29,7 +29,7 @@ class Bebop(ParrotUtils):
     address = '192.168.42.1'
     version_file = '/version.txt'
     upload_path = '/data/ftp/'
-    check_version_before_run = True
+    check_version_before_run = False
     update_time_before_run = True
 
     def uav_status(self):

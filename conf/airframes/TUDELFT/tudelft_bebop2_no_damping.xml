@@ -95,7 +95,6 @@
     <define name="SONAR_UPDATE_ON_AGL" value="TRUE"/>
   </section>
 
-
   <section name="RC_SETPOINT" prefix="STABILIZATION_ATTITUDE_">
     <!-- setpoint limits for attitude stabilization rc flight -->
     <define name="SP_MAX_PHI" value="45" unit="deg"/>

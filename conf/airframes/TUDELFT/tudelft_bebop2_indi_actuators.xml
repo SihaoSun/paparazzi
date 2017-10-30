@@ -35,7 +35,10 @@
       <define name="GUIDANCE_INDI_SPECIFIC_FORCE_GAIN" value="-500.0"/>
       <define name="GUIDANCE_INDI_THRUST_DYNAMICS" value="0.1"/>
       <define name="GUIDANCE_INDI_RC_DEBUG" value="FALSE"/> 
+      <define name="STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE" value="TRUE"/>
+      <define name="PRIMARY_AXIS_THRUST_COMMAND" value="FALSE"/>
     </module>
+    <define name="BEBOP_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_2000"/>
   </firmware>
 
   <modules main_freq="512">
@@ -45,10 +48,18 @@
     <module name="logger_file">
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
     </module>
-    <module name="actuator_terminator"/>
+    <module name="actuator_terminator">
+      <define name="DAMAGED_ROTOR_INDEX" value="3"/>
+    </module>
     <module name="guidance_primary_axis">
-      <define name="GUIDANCE_PA_RC_DEBUG" value="TRUE"/>
-    </module>   
+      <!--define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/-->
+      <define name="PRIMARY_AXIS_GUIDANCE_NX_GAIN" value="1.0"/>
+      <define name="PRIMARY_AXIS_GUIDANCE_NY_GAIN" value="1.0"/>
+      <define name="PRIMARY_AXIS_GUIDANCE_ABS" value="0.0"/>
+    </module>
+    <module name="attitude_optitrack">
+      <define name="DATALINK_NATNET_FREQUENCY" value="120"/>
+    </module>
   </modules>
 
   <commands>
@@ -66,16 +77,10 @@
   </servos>
 
   <command_laws>
-    <!--set servo="TOP_LEFT"     value="0"/>
-    <set servo="TOP_RIGHT"    value="0"/>
-    <set servo="BOTTOM_RIGHT" value="0"/>
-    <set servo="BOTTOM_LEFT"  value="2000"/-->
-
     <set servo="TOP_LEFT"     value="autopilot_get_motors_on() ? actuators_pprz[0] : -MAX_PPRZ"/>
     <set servo="TOP_RIGHT"    value="autopilot_get_motors_on() ? actuators_pprz[1] : -MAX_PPRZ"/>
     <set servo="BOTTOM_RIGHT" value="autopilot_get_motors_on() ? actuators_pprz[2] : -MAX_PPRZ"/>
     <set servo="BOTTOM_LEFT"  value="autopilot_get_motors_on() ? actuators_pprz[3] : -MAX_PPRZ"/>
-
   </command_laws>
 
   <section name="AIR_DATA" prefix="AIR_DATA_">
@@ -144,38 +149,11 @@
     <define name="REF_MAX_RDOT" value="RadOfDeg(8000.)"/>
   </section>
 
-  <!--section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
-    <define name="G1_P" value="0.05"/>
-    <define name="G1_Q" value="0.025"/>
-    <define name="G1_R" value="0.0022"/>
-
-    <define name="FILTER_ROLL_RATE" value="TRUE"/>
-    <define name="FILTER_PITCH_RATE" value="FALSE"/>
-    <define name="FILTER_YAW_RATE" value="FALSE"/>
-
-    <define name="REF_ERR_P" value="170.0"/>
-    <define name="REF_ERR_Q" value="600.0"/>
-    <define name="REF_ERR_R" value="600.0"/>
-    <define name="REF_RATE_P" value="14.3"/>
-    <define name="REF_RATE_Q" value="28.0"/>
-    <define name="REF_RATE_R" value="28.0"/>
-
-    <define name="FILT_CUTOFF" value="3.2"/>
-    <define name="FILT_CUTOFF_R" value="3.2"/>
-
-    <define name="ACT_DYN_P" value="0.06"/>
-    <define name="ACT_DYN_Q" value="0.06"/>
-    <define name="ACT_DYN_R" value="0.06"/>
-
-    <define name="USE_ADAPTIVE" value="FALSE"/>
-    <define name="ADAPTIVE_MU" value="0.0001"/>
-  </section-->
-
   <section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
     <!-- control effectiveness -->
     <define name="G1_ROLL" value="{15 , -15, -15 , 15 }"/>
     <define name="G1_PITCH" value="{14 , 14, -14 , -14 }"/>
-    <define name="G1_YAW" value="{-.25, .25, -.25, .25}"/>
+    <define name="G1_YAW" value="{.25, -.25, .25, -.25}"/>
     <define name="G1_THRUST" value="{-.65, -.65, -.65, -.65}"/>
     <!--Counter torque effect of spinning up a rotor-->
     <define name="G2" value="{120,   -120,  120,   -120}"/>
@@ -200,7 +178,7 @@
     <define name="ACT_DYN" value="{0.06, 0.06, 0.06, 0.06}"/>
 
     <!-- Adaptive Learning Rate -->
-    <define name="USE_ADAPTIVE" value="TRUE"/>
+    <define name="USE_ADAPTIVE" value="FALSE"/>
     <define name="ADAPTIVE_MU" value="0.0001"/>
   </section>
 
@@ -237,6 +215,7 @@
   <section name="AUTOPILOT">
     <define name="MODE_STARTUP" value="AP_MODE_ATTITUDE_Z_HOLD"/>
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
+    <!--define name="MODE_MANUAL" value="AP_MODE_KILL"/-->
     <define name="MODE_AUTO1" value="AP_MODE_NAV"/>
     <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
 

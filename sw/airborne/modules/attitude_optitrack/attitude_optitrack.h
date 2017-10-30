@@ -18,39 +18,27 @@
  * <http://www.gnu.org/licenses/>.
  */
 /**
- * @file "modules/guidance_primary_axis/guidance_primary_axis.h"
+ * @file "modules/attitude_optitrack/attitude_optitrack.h"
  * @author Sihao Sun
- * guidance using primary axf euler angles
+ * Get attitude information from Optitrack
  */
 
-
-
-#ifndef GUIDANCE_PRIMARY_AXIS_H
-#define GUIDANCE_PRIMARY_AXIS_H
-
 #include "std.h"
+#include "math/pprz_algebra_float.h"
 
-bool primary_axis_status;
-float rate_cmd_primary_axis[3];
-float thrust_primary_axis;
+#ifndef ATTITUDE_OPTITRACK_H
+#define ATTITUDE_OPTITRACK_H
 
-float primary_axis_n_gain_x;
-float primary_axis_n_gain_y;
-float primary_axis_n_abs;
+struct FloatEulers attitude_optitrack;
+struct FloatEulers attitude_optitrack_filter;
+struct FloatRates angular_rate_optitrack;
 
-extern bool guidance_primary_axis_status(void);
-extern void guidance_primary_axis_init(void);
-extern void guidance_primary_axis_end(void);
-extern void guidance_primary_axis_run(void);
+extern void get_attitude_optitrack(void);
+extern void get_attitude_optitrack_init(void);
+extern void get_attitude_optitrack_periodic(void);
+extern bool attitude_optitrack_status(void);
 
-extern void guidance_primary_axis_take_off(void);
-
-void low_pass_filter_init(void);
-
-struct FloatVect3 nd_state;
-struct FloatVect3 nd_i_state;
-struct FloatVect3 sp_accel_primary_axis;
-struct FloatVect3 sp_accel_primary_axis_filter;
+bool use_attitude_optitrack;
 
 #endif
 
