@@ -16,6 +16,8 @@
     <waypoint height="1.9" name="BACKWARD" x="0.0" y="-2.0"/>
     <waypoint height="1.9" name="LEFT" x="-2.5" y="0.5"/>
     <waypoint height="1.9" name="RIGHT" x="2.5" y="0.5"/>
+    <waypoint height="3.0" name="UP"   x="0.0" y="0.5"/>
+    <waypoint height="1.0" name="DOWN"   x="0.0" y="0.5"/>
     <waypoint name="TD" x="0.0" y="0.0"/>
 
     <!--waypoint lat="51.9906213" lon="4.3768628" name="_CZ1"/>
@@ -101,24 +103,32 @@
 		<set value="ANGLE_BFP_OF_REAL(0.0/57.295779)" var="nav_heading"/>
 		<stay wp="CENTER"/>
 	</block>
-	
-  <block name="Looping heading altitude doublet">
-	<stay wp="CENTER" until="stage_time>3"/>
-		<for var="j" from="1" to="4"> <!-- 4 maneuvres, varying speed -->
-		<stay climb="$j*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.6"/>
-		<stay climb="-$j*0.15" vmode="climb" wp="CENTER" until="1.9>GetPosAlt()"/>
-		<stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>2.0"/>
-		<stay climb="-$j*0.2" vmode="climb" wp="CENTER" until="1.8>GetPosAlt()"/>
-		<stay climb="$j*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.3"/>
-		<stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>1.0"/>
-		</for>
+
+  <block name="Loop heading longitude doublet">
+  <stay wp="CENTER" until="stage_time>3"/>
+  <for var="i" from="0" to="1"> 
+    <stay wp="FORWARD" alt="2.4" until="GetPosY()>0.4" />
+    <stay wp="BACKWARD" alt="2.4" until="-0.05>GetPosY()" />
+    <stay wp="CENTER" alt="2.4" until="stage_time>3"/>
+    <stay wp="BACKWARD" alt="2.4" until="-0.05>GetPosY()" />
+    <stay wp="FORWARD" alt="2.4" until="GetPosY()>0.4" />
+    <stay wp="CENTER" alt="2.4" until="stage_time>3.0"/>
+  </for>
   </block>
 
-  <block name="Loop heading latitude doublet">
+  <block name="Looping heading altitude doublet">
 	<stay wp="CENTER" until="stage_time>3"/>
-	<for var="i" from="0" to="0"> <!-- 8 angles-->
+  <for var="i" from="0" to="1"> <!-- 5 angles-->
+    <stay wp="UP" until="stage_time>3"/>
+    <stay wp="DOWN" until="stage_time>3"/>
+  </for>
+  </block>
+
+  <!--block name="Loop heading latitude doublet">
+	<stay wp="CENTER" until="stage_time>3"/>
+	<for var="i" from="0" to="0"> 
 		<set value="ANGLE_BFP_OF_REAL($i*15/57.295779)" var="nav_heading"/>
-		<for var="j" from="0" to="2"> <!-- 3 maneuvres-->
+		<for var="j" from="0" to="2"> 
 		<stay wp="LEFT" until="-0.4>GetPosX()"/>
 		<stay wp="RIGHT" until="GetPosX()>0.1"/>
 		<stay wp="CENTER" until="stage_time>2.5"/>
@@ -127,30 +137,14 @@
 		<stay wp="CENTER" until="stage_time>3.0"/>
 		</for>
 	</for>
-  </block>
-
-  <block name="Loop heading longitude doublet">
-	<!--call_once fun="gh_set_max_speed(0.7)"/-->
-	<stay wp="CENTER" until="stage_time>3"/>
-	<for var="i" from="0" to="0"> <!-- 5 angles-->
-		<set value="ANGLE_BFP_OF_REAL($i*45/57.295779)" var="nav_heading"/>
-		<for var="j" from="0" to="2"> <!-- 5 maneuvres-->
-		<stay wp="FORWARD" alt="2.4" until="GetPosY()>0.6" />
-		<stay wp="BACKWARD" alt="2.4" until="-0.0>GetPosY()" />
-		<stay wp="CENTER" alt="2.4" until="stage_time>3"/>
-		<stay wp="BACKWARD" alt="2.4" until="-0.0>GetPosY()" />
-		<stay wp="FORWARD" alt="2.4" until="GetPosY()>0.6" />
-		<stay wp="CENTER" alt="2.4" until="stage_time>3.0"/>
-		</for>
-	</for>
-    </block>
+  </block-->
 
 	<block name="go_center">
 		<stay wp="CENTER"/>
 	</block>
 
   <block key="s" name="Standby" strip_button="Standby" strip_icon="home.png">
-    <!--exception cond="block_time>2.0" deroute="go_center"/-->
+    <exception cond="block_time>2.0" deroute="go_center"/>
     <call_once fun="NavSetWaypointHere(WP_STDBY)"/>
     <stay wp="STDBY"/>
   </block>
