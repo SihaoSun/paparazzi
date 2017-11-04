@@ -461,7 +461,6 @@ void run_hover_loop(bool in_flight)
 
   /* bound the result */
   Bound(guidance_v_delta_t, 0, MAX_PPRZ);
-
 }
 
 void guidance_v_from_nav(bool in_flight)

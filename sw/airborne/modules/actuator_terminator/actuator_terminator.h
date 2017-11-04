@@ -28,7 +28,7 @@
 
 #include "std.h"
 
-#define DAMAGED_ROTOR_INDEX 3 //0 1 2 3
+//#define DAMAGED_ROTOR_INDEX 3 //0 1 2 3
 
 bool damage_flag;
 bool damage_flag2;

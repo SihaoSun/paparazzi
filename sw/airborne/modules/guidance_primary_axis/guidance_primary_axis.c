@@ -49,13 +49,13 @@
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else
-float guidance_pa_pos_gain = 1.0;
+float guidance_pa_pos_gain = 1.5;
 #endif
 
 #ifdef GUIDANCE_PA_SPEED_GAIN
 float guidance_pa_speed_gain = GUIDANCE_INDI_SPEED_GAIN;
 #else
-float guidance_pa_speed_gain = 2.0;
+float guidance_pa_speed_gain = 3.0;
 #endif
 
 #ifdef GUIDANCE_PA_ATT_GAIN 
@@ -69,9 +69,12 @@ struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
 struct FirstOrderLowPass nd_i_state_x, nd_i_state_y, nd_i_state_z;
 struct FirstOrderLowPass theta_filt, psi_des_filt;
-struct FirstOrderLowPass sp_accel_filter_x;
-struct FirstOrderLowPass sp_accel_filter_y;
-struct FirstOrderLowPass sp_accel_filter_z;
+//struct FirstOrderLowPass sp_accel_filter_x;
+//struct FirstOrderLowPass sp_accel_filter_y;
+//struct FirstOrderLowPass sp_accel_filter_z;
+Butterworth2LowPass sp_accel_filter_x;
+Butterworth2LowPass sp_accel_filter_y;
+Butterworth2LowPass sp_accel_filter_z;
 
 bool guidance_primary_axis_status(void)
 {
@@ -91,16 +94,16 @@ void guidance_primary_axis_init(void)
 void low_pass_filter_init(void)
 {	
 	float tau = 1.0 / (2.0 * M_PI * 8.0);
-	float tau_nd = 1.0/(2.0 * M_PI * 20.0);
+	float tau_nd = 1.0/(2.0 * M_PI * 2.5);
 	float sample_time = 1.0 / PERIODIC_FREQUENCY;
 	init_first_order_low_pass(&nd_i_state_x,tau_nd,sample_time,0);
 	init_first_order_low_pass(&nd_i_state_y,tau_nd,sample_time,0);
 	init_first_order_low_pass(&nd_i_state_z,tau_nd,sample_time,-1);
 	init_first_order_low_pass(&theta_filt,tau,sample_time,stateGetNedToBodyEulers_f()->theta);
 	init_first_order_low_pass(&psi_des_filt,tau,sample_time,guidance_h.sp.heading);
-	init_first_order_low_pass(&sp_accel_filter_x,tau_nd,sample_time,0);
-	init_first_order_low_pass(&sp_accel_filter_y,tau_nd,sample_time,0);
-	init_first_order_low_pass(&sp_accel_filter_z,tau_nd,sample_time,0);	
+	init_butterworth_2_low_pass(&sp_accel_filter_x,tau_nd,sample_time,0);
+	init_butterworth_2_low_pass(&sp_accel_filter_y,tau_nd,sample_time,0);
+	init_butterworth_2_low_pass(&sp_accel_filter_z,tau_nd,sample_time,0);	
 	return;
 }
 
@@ -134,11 +137,11 @@ void guidance_primary_axis_run(void)
 
 	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain;
 	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain;
-	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
+	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain*0.5;
 
-	sp_accel.x = update_first_order_low_pass(&sp_accel_filter_x, sp_accel_raw.x);
-	sp_accel.y = update_first_order_low_pass(&sp_accel_filter_y, sp_accel_raw.y);
-	sp_accel.z = update_first_order_low_pass(&sp_accel_filter_z, sp_accel_raw.z);
+	sp_accel.x = update_butterworth_2_low_pass(&sp_accel_filter_x, sp_accel_raw.x);
+	sp_accel.y = update_butterworth_2_low_pass(&sp_accel_filter_y, sp_accel_raw.y);
+	sp_accel.z = update_butterworth_2_low_pass(&sp_accel_filter_z, sp_accel_raw.z);
 
 	sp_accel_primary_axis.x = sp_accel_raw.x;
 	sp_accel_primary_axis.y = sp_accel_raw.y;
@@ -195,12 +198,12 @@ else if (autopilot.mode == AP_MODE_NAV){
 	float psi_dot_cmd = psi_des_dot + 5.0*(psi_des-psi);
 
 	r_des = psi_dot_cmd*cos(phi)*cos(theta)-sin(phi)*theta_dot;
-	}
+}
 
 	//Acceleration projecting on body axis (nd_i)
 	nd_i_state.x = sp_accel.x;
 	nd_i_state.y = sp_accel.y;
-	nd_i_state.z = sp_accel.z- g;
+	nd_i_state.z = sp_accel.z<0 ? sp_accel.z-g : -g;
 
 	float norm_nd = sqrtf(nd_i_state.x*nd_i_state.x+nd_i_state.y*nd_i_state.y+nd_i_state.z*nd_i_state.z);
 	nd_i_state.x =  nd_i_state.x/norm_nd;
@@ -246,15 +249,16 @@ else if (autopilot.mode == AP_MODE_NAV){
 	nd_i_state_dot_i.z = (get_first_order_low_pass(&nd_i_state_z)-nd_i_state_z_last)*PERIODIC_FREQUENCY;
 	
 	MAT33_VECT3_MUL(nd_i_state_dot_b, R_BI, nd_i_state_dot_i);
-	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.y-n_pa.y)+nd_state.x*r - 0*nd_i_state_dot_b.y);
-	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.x-n_pa.x)-nd_state.y*r - 0*nd_i_state_dot_b.x);
+	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.y-n_pa.y)+nd_state.x*r - 0.0*nd_i_state_dot_b.y);
+	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.x-n_pa.x)-nd_state.y*r - 0.0*nd_i_state_dot_b.x);
 
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;
 	rate_cmd_primary_axis[1] = q_des;
-	rate_cmd_primary_axis[2] = r_des;
+	rate_cmd_primary_axis[2] = 0;
 	thrust_primary_axis = thrust_specific;
 
+	//printf("%f\t%f\n",nd_state.x,nd_state.y);
 	return;
 }
 

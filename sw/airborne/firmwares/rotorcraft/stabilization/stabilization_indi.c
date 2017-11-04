@@ -169,6 +169,8 @@ Butterworth2LowPass measurement_lowpass_filters[3];
 Butterworth2LowPass estimation_output_lowpass_filters[3];
 Butterworth2LowPass acceleration_lowpass_filter;
 Butterworth2LowPass az_lowpass_filter;
+Butterworth2LowPass p_des_filter;
+Butterworth2LowPass q_des_filter;
 
 struct FloatVect3 body_accel_f;
 
@@ -271,6 +273,7 @@ void init_filters(void)
   // tau = 1/(2*pi*Fc)
   float tau = 1.0 / (2.0 * M_PI * STABILIZATION_INDI_FILT_CUTOFF);
   float tau_est = 1.0 / (2.0 * M_PI * STABILIZATION_INDI_ESTIMATION_FILT_CUTOFF);
+  float tau_pq_des = 1.0 / (2.0 * M_PI * 10.0);
   float sample_time = 1.0 / PERIODIC_FREQUENCY;
   // Filtering of the gyroscope
   int8_t i;
@@ -288,6 +291,10 @@ void init_filters(void)
   // Filtering of the accel body z
   init_butterworth_2_low_pass(&acceleration_lowpass_filter, tau_est, sample_time, 0.0); 
   init_butterworth_2_low_pass(&az_lowpass_filter, tau_est*1.2, sample_time, 0.0);
+
+  // Filtering of the p q designed value from Praimary Guidance
+  init_butterworth_2_low_pass(&p_des_filter, tau_pq_des, sample_time, 0.0);
+  init_butterworth_2_low_pass(&q_des_filter, tau_pq_des, sample_time, 0.0);
 }
 
 /**
@@ -372,12 +379,32 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     /*BoundAbs(rate_ref.r, 5.0);*/
   }
 
+  //printf("%d\n", guidance_primary_axis_status());
+
   struct FloatRates *body_rates = stateGetBodyRates_f();
 
   //calculate the virtual control (reference acceleration) based on a PD controller
-  angular_accel_ref.p = (rate_ref.p - body_rates->p) * reference_acceleration.rate_p;
-  angular_accel_ref.q = (rate_ref.q - body_rates->q) * reference_acceleration.rate_q;
-  if (attitude_optitrack_status() == false)
+  if(guidance_primary_axis_status()==true) {
+      update_butterworth_2_low_pass(&p_des_filter,rate_ref.p);
+      update_butterworth_2_low_pass(&q_des_filter,rate_ref.q);
+      float p_des_dot = (p_des_filter.o[0] - p_des_filter.o[1])*PERIODIC_FREQUENCY;
+      float q_des_dot = (q_des_filter.o[0] - q_des_filter.o[1])*PERIODIC_FREQUENCY;
+    //  p_des_dot = 0;
+    //  q_des_dot = 0;
+      angular_accel_ref.p = (rate_ref.p - body_rates->p) * reference_acceleration.rate_p + p_des_dot ;
+      angular_accel_ref.q = (rate_ref.q - body_rates->q) * reference_acceleration.rate_q + q_des_dot ;    
+
+      p_des_dot_logger = p_des_dot;
+      q_des_dot_logger = q_des_dot;
+
+      p_des_filter_logger = p_des_filter.o[0];
+      q_des_filter_logger = q_des_filter.o[0];   
+  }
+  else {
+      angular_accel_ref.p = (rate_ref.p - body_rates->p) * reference_acceleration.rate_p;
+      angular_accel_ref.q = (rate_ref.q - body_rates->q) * reference_acceleration.rate_q;
+  }
+  if (attitude_optitrack_status() == false) 
     angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
   else{
     if (body_rates->r < 35.0) // gyroscope limitation on Bebop2, 2000deg/sec
@@ -459,16 +486,18 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   if (damage_status())
   {
     indi_du[DAMAGED_ROTOR_INDEX] = 0;
+    int8_t i0 = 0;
     for (i = 0; i < INDI_NUM_ACT; i++){
       if (i != DAMAGED_ROTOR_INDEX) {
-        indi_du[i] = (g1_damage_inv[i][0] * indi_v[0])
-                    +(g1_damage_inv[i][1] * indi_v[1])
-                    +(g1_damage_inv[i][2] * indi_v[3]);
+        indi_du[i] = (g1_damage_inv[i0][0] * indi_v[0])
+                    +(g1_damage_inv[i0][1] * indi_v[1])
+                    +(g1_damage_inv[i0][2] * indi_v[3]);
+      i0++;
       }
     }
   }
 
-//  printf("%6.2f %6.2f %6.2f %6.2f\n", indi_du[0], indi_du[1], indi_du[2], indi_du[3]);
+  //printf("%6.2f\t%6.2f\t%6.2f\t%6.2f\n", indi_du[0], indi_du[1], indi_du[2], indi_du[3]);
 #else
   // WLS Control Allocator
   num_iter =
@@ -522,33 +551,13 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       actuators_pprz[i] = -MAX_PPRZ;
 
     }
-
-//    if ( (i == DAMAGED_ROTOR_INDEX2 ) && (actuator_terminator_running == 1)){
-//       actuators_pprz[i] = -MAX_PPRZ;     
-//
-//
-//    }
-
-//    printf("%6.2f     %6.2f     %6.2f     %6.2f\n",
-//       indi_v[0],indi_v[1],indi_v[2],indi_v[3]);
-//printf("%d  %f\n", indi_thrust_increment_set, indi_thrust_increment);
-//    printf("%d   %6.2f   %6.2f   %6.2f\n", stabilization_cmd[COMMAND_THRUST],actuator_state_filt_vect[1],v_thrust,Bwls[3][1]);   
-//      printf("%6.2f %6.2f %6.2f\n", rate_ref.p, rate_ref.q, rate_ref.r);
-
   }
-  if(actuator_terminator_running == 1){
-    // so FrontLeft to CoG = 14.5 cm
-    //and RightBack to CoG = 16 cm  
-    // mind you: it is not a straight line, under a slight angle. Probably neglectable.
-    //Bound(actuators_pprz[1], 0, 500);
-
-    if(actuators_pprz[1] >= -550){
-actuators_pprz[1] = -550;
-
-    }
-    actuators_pprz[3] = -MAX_PPRZ;
-  }
-   printf("%d %d %d %d \n", actuator_terminator_running,  actuators_pprz[0], actuators_pprz[1], actuators_pprz[2]);
+ // printf("%d\n",stateGetPositionNed_i()->z);
+  
+//  if (stateGetPositionNed_i()->z >= -100 && damage_status()){
+//      actuators_pprz[1] = -MAX_PPRZ;
+//  }
+   //printf("%d %d %d %d \n", actuator_terminator_running,  actuators_pprz[0], actuators_pprz[1], actuators_pprz[2]);
 }
 
 /**

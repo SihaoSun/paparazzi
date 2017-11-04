@@ -89,7 +89,6 @@ void actuators_bebop_commit(void)
   if (actuators_bebop.i2c_trans.buf[11] == 2 && actuators_bebop.i2c_trans.buf[10] != 1) {
     autopilot_set_motors_on(FALSE);
   }
-
   // Start the motors
   if (actuators_bebop.i2c_trans.buf[10] != 4 && actuators_bebop.i2c_trans.buf[10] != 2 && autopilot_get_motors_on()) {
     // Reset the error

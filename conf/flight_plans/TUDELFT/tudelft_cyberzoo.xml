@@ -20,8 +20,8 @@
     <waypoint lat="51.9906737" lon="4.3768074" name="_CZ4"/>
     <waypoint height="0.6" lat="51.9906083" lon= "4.3767676" name="Infront Fan"/>
     <waypoint height="0.6" lat="51.9906128" lon= "4.3767828" name="Outside Fan"/>    
-    <waypoint height="1" name="p1" x="-1.5" y="-0.5"/>
-    <waypoint height="1" name="p2" x="1.5" y="0.5"/>
+    <waypoint height="1" name="p1" lat = "51.9906242" lon = "4.3768321"/>
+    <waypoint height="3" name="p2" lat = "51.9906360" lon = "4.3767517"/>
   </waypoints>
   <sectors>
     <sector color="red" name="CyberZoo">
@@ -61,8 +61,8 @@
 
     <block key="t" name="Take off high speed " strip_button="Takeoff" strip_icon="takeoff.png">
       <set value = "TRUE" var = "actuator_terminator_running"/>
-      <exception cond="stateGetPositionEnu_f()->z > 0.20" deroute="Take off low speed"/>
-      <!--exception cond="stateGetPositionEnu_f()->z > 0.4" deroute="Standby"/-->
+      <!--exception cond="stateGetPositionEnu_f()->z > 0.9" deroute="Take off low speed"/-->
+      <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="Standby"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
       <stay climb="1.0" vmode="climb" wp="CLIMB"/>
       <stay wp="HOME"/>
@@ -70,7 +70,7 @@
 
     <block name="Take off low speed">
       <set value = "FALSE" var = "actuator_terminator_running" />
-      <exception cond="stateGetPositionEnu_f()->z > 0.40" deroute="Standby"/>
+      <exception cond="stateGetPositionEnu_f()->z > 1.00" deroute="Standby"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
       <stay climb="0.6" vmode="climb" wp="CLIMB"/>
       <stay wp="HOME"/>
@@ -94,6 +94,12 @@
     </block>
     <block name="go_path">
       <go from="p1" hmode="route" wp="p2"/>
+    </block>
+    <block name="go_p1">
+	<stay wp="p1"/>
+    </block>
+    <block name="go_p2">
+	<stay wp="p2"/>
     </block>
     <block key="l" name="Land here" strip_button="Land Here" strip_icon="land-right.png">
       <call_once fun="NavSetWaypointHere(WP_TD)"/>
