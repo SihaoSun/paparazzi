@@ -379,7 +379,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   g2_times_du = g2_times_du / INDI_G_SCALING;
 
   float v_thrust = 0.0;
-  if (indi_thrust_increment_set) {
+  if (indi_thrust_increment_set*0) {
     v_thrust = indi_thrust_increment;
 
     //update thrust command such that the current is correctly estimated
@@ -445,7 +445,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   // Bound the inputs to the actuators
   for (i = 0; i < INDI_NUM_ACT; i++) {
     if (damage_status() && i==3 && fault_limitation == false){
-        printf("%f\n",indi_u[i]);
+        //printf("%f\n",indi_u[i]);
         if (act_is_servo[i]) {
         BoundAbs(indi_u[i], MAX_PPRZ/fault_factor);
       } else {
@@ -508,8 +508,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       //actuators_pprz[i] = 10;
       actuators_pprz[i] = (int16_t) indi_u[i]*fault_factor;
     }
-    printf("%6.2f     %6.2f     %6.2f     %d\n",
-        actuator_state[3],indi_u[3],actuator_state_actual,actuators_pprz[3]);
+    //printf("%6.2f     %6.2f     %6.2f     %d\n",
+    //    actuator_state[3],indi_u[3],actuator_state_actual,actuators_pprz[3]);
   }
 }
 

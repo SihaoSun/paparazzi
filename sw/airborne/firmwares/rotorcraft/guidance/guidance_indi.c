@@ -187,6 +187,8 @@ void guidance_indi_run(bool in_flight, float heading_sp) {
   //zero psi command, because a roll/pitch quat will be constructed later
   guidance_euler_cmd.psi = 0;
 
+  printf("%f\t%f\t%f\n",guidance_euler_cmd.phi*57.3,guidance_euler_cmd.theta*57.3,guidance_euler_cmd.psi*57.3);
+
 #ifdef GUIDANCE_INDI_SPECIFIC_FORCE_GAIN
   guidance_indi_filter_thrust();
 
