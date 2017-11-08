@@ -92,14 +92,14 @@
     <block key="t" name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
       <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="go_center"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
-      <stay climb="2.0" vmode="climb" wp="CLIMB"/>
+      <stay climb="1.0" vmode="climb" wp="CLIMB"/>
     </block>
     <block name="Start engine and go standby">
       <call_once fun="NavResurrect()"/>
       <attitude pitch="0" roll="0" throttle="0" until="stage_time>0.25" vmode="throttle"/>
       <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="go_center"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
-      <stay climb="2.0" vmode="climb" wp="CLIMB"/>
+      <stay climb="1.0" vmode="climb" wp="CLIMB"/>
     </block>
 	<block name="Set heading to 0">
 		<set value="ANGLE_BFP_OF_REAL(0.0/57.295779)" var="nav_heading"/>
@@ -108,12 +108,12 @@
 	
     <block name="Looping heading altitude doublet">
 	<stay wp="CENTER" until="stage_time>2"/>
-	<for var="i" from="0" to="7"> <!-- 8 angles-->
-		<set value="ANGLE_BFP_OF_REAL(-$i*45/57.295779)" var="nav_heading"/>
+	<for var="i" from="0" to="6"> <!-- 8 angles-->
+		<set value="ANGLE_BFP_OF_REAL(-$i*15/57.295779)" var="nav_heading"/>
 		<stay wp="CENTER" until="stage_time>2"/>
-		<for var="j" from="1" to="4"> <!-- 4 maneuvres, varying speed -->
-		<stay climb="$j*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.6"/>
-		<stay climb="-$j*0.5" vmode="climb" wp="CENTER" until="1.9>GetPosAlt()"/>
+		<for var="j" from="1" to="1">
+		<stay climb="$j*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.5"/>
+		<stay climb="-$j*0.5" vmode="climb" wp="CENTER" until="1.8>GetPosAlt()"/>
 		<stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>2.0"/>
 		<stay climb="-$j*0.5" vmode="climb" wp="CENTER" until="1.8>GetPosAlt()"/>
 		<stay climb="$j*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.3"/>
@@ -125,16 +125,16 @@
     </block>
     <block name="Loop heading latitude doublet">
 	<stay wp="CENTER" until="stage_time>2"/>
-	<for var="i" from="0" to="7"> <!-- 8 angles-->
-		<set value="ANGLE_BFP_OF_REAL(-$i*45/57.295779)" var="nav_heading"/>
-		<stay wp="CENTER" until="stage_time>2"/>
+	<for var="i" from="0" to="6"> <!-- 8 angles-->
+		<set value="ANGLE_BFP_OF_REAL(-$i*15/57.295779)" var="nav_heading"/>
+		<stay wp="CENTER" alt="2.0"  until="stage_time>2"/>
 		<for var="j" from="0" to="2"> <!-- 3 maneuvres-->
-		<stay wp="LEFT" until="-0.4>GetPosX()"/>
-		<stay wp="RIGHT" until="GetPosX()>0.1"/>
-		<stay wp="CENTER" until="stage_time>1.5"/>
-		<stay wp="RIGHT" until="GetPosX()>0.4"/>
-		<stay wp="LEFT" until="-0.1>GetPosX()"/>
-		<stay wp="CENTER" until="stage_time>2.0"/>
+		<stay wp="LEFT" alt="2.0"  until="-0.4>GetPosX()"/>
+		<stay wp="RIGHT" alt="2.0"  until="GetPosX()>0.1"/>
+		<stay wp="CENTER" alt="2.0"  until="stage_time>1.5"/>
+		<stay wp="RIGHT" alt="2.0"  until="GetPosX()>0.4"/>
+		<stay wp="LEFT" alt="2.0"  until="-0.1>GetPosX()"/>
+		<stay wp="CENTER" alt="2.0" until="stage_time>2.0"/>
 		</for>
 	</for>
     </block>
@@ -142,15 +142,15 @@
     <block name="Loop heading longitude doublet">
 	<!--call_once fun="gh_set_max_speed(0.7)"/-->
 	<stay wp="CENTER" until="stage_time>2"/>
-	<for var="i" from="0" to="7"> <!-- 5 angles-->
-		<set value="ANGLE_BFP_OF_REAL(-$i*45/57.295779)" var="nav_heading"/>
+	<for var="i" from="0" to="6"> <!-- 5 angles-->
+		<set value="ANGLE_BFP_OF_REAL(-$i*15/57.295779)" var="nav_heading"/>
 		<for var="j" from="0" to="2"> <!-- 5 maneuvres-->
-		<stay wp="FORWARD" alt="2.4" until="GetPosY()>0.4" />
-		<stay wp="BACKWARD" alt="2.4" until="-0.05>GetPosY()" />
-		<stay wp="CENTER" alt="2.4" until="stage_time>3"/>
-		<stay wp="BACKWARD" alt="2.4" until="-0.05>GetPosY()" />
-		<stay wp="FORWARD" alt="2.4" until="GetPosY()>0.4" />
-		<stay wp="CENTER" alt="2.4" until="stage_time>3.0"/>
+		<stay wp="FORWARD" alt="2.0" until="GetPosY()>0.4" />
+		<stay wp="BACKWARD" alt="2.0" until="-0.05>GetPosY()" />
+		<stay wp="CENTER" alt="2.0" until="stage_time>3"/>
+		<stay wp="BACKWARD" alt="2.0" until="-0.05>GetPosY()" />
+		<stay wp="FORWARD" alt="2.0" until="GetPosY()>0.4" />
+		<stay wp="CENTER" alt="2.0" until="stage_time>3.0"/>
 		</for>
 	</for>
     </block>
