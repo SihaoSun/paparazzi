@@ -1,6 +1,6 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="1.9" ground_alt="0" lat0="51.990634" lon0="4.376789" max_dist_from_home="5" name="TUDelft Cyberzoo" security_height="0.4" qfu="0">
+<flight_plan alt="0.0" ground_alt="0.0" lat0="51.990634" lon0="4.376789" max_dist_from_home="3" name="TUDelft Cyberzoo" security_height="0.0" qfu="0">
   <header>
 #include "autopilot.h"
 #include "subsystems/ahrs.h"
@@ -8,65 +8,37 @@
 #include "subsystems/datalink/datalink.h"
 </header>
   <waypoints>
-    <waypoint height="0" name="HOME" x=" -0.0" y="1.0"/>
-    <waypoint height="1.0" name="CLIMB" x="0.0" y="1.0"/>
-    <waypoint height="1.0" name="STDBY" x="-0.0" y="0.5"/>
-    <waypoint height="1.0" name="CENTER" x="0.0" y="1.5"/>
-    <waypoint height="1.0" name="FORWARD" x="0.0" y="2.5"/>
-    <waypoint height="1.0" name="BACKWARD" x="0.0" y="-0.0"/>
-    <waypoint height="1.0" name="LEFT" x="-2.5" y="1.5"/>
-    <waypoint height="1.0" name="RIGHT" x="2.5" y="1.5"/>
-    <waypoint height="2.0" name="UP"   x="0.0" y="1.5"/>
-    <waypoint height="1.0" name="DOWN"   x="0.0" y="1.5"/>
-    <waypoint name="TD" x="0.0" y="2.5"/>
+    <waypoint height = "2.00" name="HOME" x=" -0.0" y="1.5"/>
+    <waypoint height = "2.00" name="CLIMB" x="0.0" y="1.5"/>
+    <waypoint height = "2.00" name="STDBY" x="-0.0" y="1.5"/>
+    <waypoint height = "2.00" name="CENTER" x="0.0" y="1.0"/>
+    <waypoint height = "2.00" name="FORWARD" x="0.0" y="2.0"/>
+    <waypoint height = "2.00" name="BACKWARD" x="0.0" y="-0.0"/>
+    <waypoint height = "2.50" name="UP"   x="0.0" y="0.8"/>
+    <waypoint height = "1.00" name="DOWN"   x="0.0" y="0.8"/>
+    <waypoint height = "0.00" name="TD" x="0.0" y="1.5"/>
 
-    <!--waypoint lat="51.9906213" lon="4.3768628" name="_CZ1"/>
-    <waypoint lat="51.9905874" lon="4.3767766" name="_CZ2"/>
-    <waypoint lat="51.9906409" lon="4.3767226" name="_CZ3"/>
-    <waypoint lat="51.9906670" lon="4.3768060" name="_CZ4"/>
-    <waypoint lat="51.990624" lon="4.376845" name="_OZ1"/>
-    <waypoint lat="51.990601" lon="4.376782" name="_OZ2"/>
-    <waypoint lat="51.990638" lon="4.376748" name="_OZ3"/>
-    <waypoint lat="51.990657" lon="4.376804" name="_OZ4"/-->
-	<waypoint name="_CZ1" x="-2.5" y="-3.0"/>
-	<waypoint name="_CZ2" x="-2.5" y="3.0"/>
-	<waypoint name="_CZ3" x="2.5" y="3.0"/>
-	<waypoint name="_CZ4" x="2.5" y="-3.0"/>
-	<waypoint name="_OZ1" x="-1.5" y="-2.0"/>
-	<waypoint name="_OZ2" x="-1.5" y="2.5"/>
-	<waypoint name="_OZ3" x="1.5" y="2.5"/>
-	<waypoint name="_OZ4" x="1.5" y="-2.0"/>
-	<waypoint name="_TZ1" x="-1.5" y="-2.0"/>
-	<waypoint name="_TZ2" x="-1.5" y="2.5"/>
-	<waypoint name="_TZ3" x="1.5" y="2.5"/>
-	<waypoint name="_TZ4" x="1.5" y="-2.0"/>
-  
+    <waypoint lat="51.9906559" lon="4.3767757" name="_TZ1"/>
+    <waypoint lat="51.9906278" lon="4.3767760" name="_TZ2"/>
+    <waypoint lat="51.9906282" lon="4.3768048" name="_TZ3"/>
+    <waypoint lat="51.9906567" lon="4.3768047" name="_TZ4"/>
   </waypoints>
+
   <sectors>
-    <sector color="red" name="CyberZoo">
-      <corner name="_CZ1"/>
-      <corner name="_CZ2"/>
-      <corner name="_CZ3"/>
-      <corner name="_CZ4"/>
-    </sector>
-    <sector color="#FF9922" name="SafeZone">
-      <corner name="_OZ1"/>
-      <corner name="_OZ2"/>
-      <corner name="_OZ3"/>
-      <corner name="_OZ4"/>
-    </sector>
-    <sector color="green" name="TestZone">
+    <sector color="green" name="SafeZone">
       <corner name="_TZ1"/>
       <corner name="_TZ2"/>
       <corner name="_TZ3"/>
       <corner name="_TZ4"/>
     </sector>
   </sectors>
+
   <exceptions>
-    <exception cond="!InsideCyberZoo(GetPosX(), GetPosY())" deroute="Land here"/>
-    <!--exception cond="!InsideSafeZone(GetPosX(), GetPosY())" deroute="go_center"/-->
-    <exception cond="GetPosAlt()>3.6" deroute="go_center"/>
-    <exception cond="GetPosAlt()>4.0" deroute="Land here"/>
+    <!--exception cond="!InsideCyberZoo(GetPosX(), GetPosY())" deroute="Land here"/-->
+    <exception cond="InsideSafeZone(GetPosX(), GetPosY())" deroute="go_center"/>
+    <!--exception cond="GetPosAlt()>3.6" deroute="go_center"/-->
+    <!--exception cond="GetPosAlt()>4.0" deroute="Land here"/-->
+    <exception cond="!GetPosAlt()>-0.0 && (nav_block == IndexOfBlock('go_center')) && (nav_block == IndexOfBlock('HOME')) && (nav_block == IndexOfBlock('Standby')) && (nav_block == IndexOfBlock('Altitude doublet')) && (nav_block == IndexOfBlock('Longitudinal doublet'))" deroute="Landed"/>
     <exception cond="electrical.bat_critical && !(nav_block == IndexOfBlock('Land here')) && !(nav_block == IndexOfBlock('Land')) && !(nav_block == IndexOfBlock('Flare')) && !(nav_block == IndexOfBlock('Landed'))" deroute="Land here"/>
     <!--exception cond="datalink_time > 2" deroute="Land here"/>
     <exception cond="electrical.bat_low && !(nav_block == IndexOfBlock('Land')) && !(nav_block == IndexOfBlock('Flare')) && !(nav_block == IndexOfBlock('Landed'))" deroute="Land"/>
@@ -99,45 +71,25 @@
     <stay climb="1.0" vmode="climb" wp="CLIMB"/>
   </block>
 
-	<block name="Set heading to 0">
-		<set value="ANGLE_BFP_OF_REAL(0.0/57.295779)" var="nav_heading"/>
-		<stay wp="CENTER"/>
-	</block>
 
-  <block name="Loop heading longitude doublet">
+  <block name="Longitudinal doublet">
   <stay wp="CENTER" until="stage_time>3"/>
   <for var="i" from="0" to="1"> 
-    <stay wp="FORWARD" alt="2.4" until="GetPosY()>0.4" />
-    <stay wp="BACKWARD" alt="2.4" until="-0.05>GetPosY()" />
-    <stay wp="CENTER" alt="2.4" until="stage_time>3"/>
-    <stay wp="BACKWARD" alt="2.4" until="-0.05>GetPosY()" />
-    <stay wp="FORWARD" alt="2.4" until="GetPosY()>0.4" />
-    <stay wp="CENTER" alt="2.4" until="stage_time>3.0"/>
+    <stay wp="FORWARD"  until="stage_time>3" />
+    <stay wp="BACKWARD"  until="stage_time>3" />
+    <!--stay wp="CENTER"  until="stage_time>3"/-->
   </for>
+  <stay wp="CENTER" until="stage_time>5"/>
   </block>
 
-  <block name="Looping heading altitude doublet">
+  <block name="Altitude doublet">
 	<stay wp="CENTER" until="stage_time>3"/>
   <for var="i" from="0" to="1"> <!-- 5 angles-->
     <stay wp="UP" until="stage_time>3"/>
     <stay wp="DOWN" until="stage_time>3"/>
   </for>
+  <stay wp="CENTER" until="stage_time>5"/>
   </block>
-
-  <!--block name="Loop heading latitude doublet">
-	<stay wp="CENTER" until="stage_time>3"/>
-	<for var="i" from="0" to="0"> 
-		<set value="ANGLE_BFP_OF_REAL($i*15/57.295779)" var="nav_heading"/>
-		<for var="j" from="0" to="2"> 
-		<stay wp="LEFT" until="-0.4>GetPosX()"/>
-		<stay wp="RIGHT" until="GetPosX()>0.1"/>
-		<stay wp="CENTER" until="stage_time>2.5"/>
-		<stay wp="RIGHT" until="GetPosX()>0.4"/>
-		<stay wp="LEFT" until="-0.1>GetPosX()"/>
-		<stay wp="CENTER" until="stage_time>3.0"/>
-		</for>
-	</for>
-  </block-->
 
 	<block name="go_center">
 		<stay wp="CENTER"/>

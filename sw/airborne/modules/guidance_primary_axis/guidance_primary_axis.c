@@ -49,13 +49,13 @@
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else
-float guidance_pa_pos_gain = 1.5;
+float guidance_pa_pos_gain = 1.0;
 #endif
 
 #ifdef GUIDANCE_PA_SPEED_GAIN
 float guidance_pa_speed_gain = GUIDANCE_INDI_SPEED_GAIN;
 #else
-float guidance_pa_speed_gain = 3.0;
+float guidance_pa_speed_gain = 2.0;
 #endif
 
 #ifdef GUIDANCE_PA_ATT_GAIN 
