@@ -52,13 +52,13 @@
 #ifdef GUIDANCE_INDI_POS_GAIN
 float guidance_indi_pos_gain = GUIDANCE_INDI_POS_GAIN;
 #else
-float guidance_indi_pos_gain = 0.5;
+float guidance_indi_pos_gain = 1.5;
 #endif
 
 #ifdef GUIDANCE_INDI_SPEED_GAIN
 float guidance_indi_speed_gain = GUIDANCE_INDI_SPEED_GAIN;
 #else
-float guidance_indi_speed_gain = 1.8;
+float guidance_indi_speed_gain = 4.0;
 #endif
 
 struct FloatVect3 sp_accel = {0.0,0.0,0.0};
@@ -165,8 +165,8 @@ void guidance_indi_run(bool in_flight, float heading_sp) {
   struct FloatVect3 a_diff = { sp_accel.x - filt_accel_ned[0].o[0], sp_accel.y -filt_accel_ned[1].o[0], sp_accel.z -filt_accel_ned[2].o[0]};
 
   //Bound the acceleration error so that the linearization still holds
-  Bound(a_diff.x, -6.0, 6.0);
-  Bound(a_diff.y, -6.0, 6.0);
+  Bound(a_diff.x, -10.0, 10.0);
+  Bound(a_diff.y, -10.0, 10.0);
   Bound(a_diff.z, -9.0, 9.0);
 
   //If the thrust to specific force ratio has been defined, include vertical control
@@ -187,7 +187,7 @@ void guidance_indi_run(bool in_flight, float heading_sp) {
   //zero psi command, because a roll/pitch quat will be constructed later
   guidance_euler_cmd.psi = 0;
 
-  printf("%f\t%f\t%f\n",guidance_euler_cmd.phi*57.3,guidance_euler_cmd.theta*57.3,guidance_euler_cmd.psi*57.3);
+  //printf("%f\t%f\t%f\n",guidance_euler_cmd.phi*57.3,guidance_euler_cmd.theta*57.3,guidance_euler_cmd.psi*57.3);
 
 #ifdef GUIDANCE_INDI_SPECIFIC_FORCE_GAIN
   guidance_indi_filter_thrust();

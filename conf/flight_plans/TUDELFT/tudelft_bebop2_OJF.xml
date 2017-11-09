@@ -8,14 +8,14 @@
 #include "subsystems/datalink/datalink.h"
 </header>
   <waypoints>
-    <waypoint height="0" name="HOME" x="0.0" y="0.0"/>
-    <waypoint height="1.0" name="CLIMB" x="0.0" y="0.0"/>
-    <waypoint height="1.0" name="STDBY" x="-0.0" y="-0.5"/>
-    <waypoint height="1.9" name="CENTER" x="0.0" y="0.5"/>
-    <waypoint height="1.9" name="FORWARD" x="0.0" y="2.8"/>
-    <waypoint height="1.9" name="BACKWARD" x="0.0" y="-2.0"/>
-    <waypoint height="1.9" name="LEFT" x="-1.5" y="0.5"/>
-    <waypoint height="1.9" name="RIGHT" x="1.5" y="0.5"/>
+    <waypoint height="2.0" name="HOME" x="0.5" y="1.5"/>
+    <waypoint height="2.0" name="CLIMB" x="0.5" y="0.0"/>
+    <waypoint height="2.0" name="STDBY" x="0.5" y="0.5"/>
+    <waypoint height="2.0" name="CENTER" x="0.0" y="1.0"/>
+    <waypoint height="2.0" name="FORWARD" x="0.0" y="2.5"/>
+    <waypoint height="2.0" name="BACKWARD" x="0.0" y="0.0"/>
+    <waypoint height="2.0" name="LEFT" x="-1.0" y="1.0"/>
+    <waypoint height="2.0" name="RIGHT" x="1.0" y="1.0"/>
     <waypoint name="TD" x="0.0" y="0.0"/>
 
     <!--waypoint lat="51.9906213" lon="4.3768628" name="_CZ1"/>
@@ -111,31 +111,24 @@
 	<for var="i" from="0" to="6"> <!-- 8 angles-->
 		<set value="ANGLE_BFP_OF_REAL(-$i*15/57.295779)" var="nav_heading"/>
 		<stay wp="CENTER" until="stage_time>2"/>
-		<for var="j" from="1" to="1">
+		<for var="j" from="1" to="2">
 		<stay climb="$j*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.5"/>
-		<stay climb="-$j*0.5" vmode="climb" wp="CENTER" until="1.8>GetPosAlt()"/>
-		<stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>2.0"/>
-		<stay climb="-$j*0.5" vmode="climb" wp="CENTER" until="1.8>GetPosAlt()"/>
-		<stay climb="$j*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.3"/>
-		<stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>1.0"/>
+		<stay climb="-$j*0.5" vmode="climb" wp="CENTER" until="2.0>GetPosAlt()"/>
 		</for>
+    <stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>1.0"/>
 	</for>
-	<set value="ANGLE_BFP_OF_REAL(180/57.295779)" var="nav_heading"/>
 	<stay wp="CENTER" until="stage_time>2"/>
     </block>
+
     <block name="Loop heading latitude doublet">
 	<stay wp="CENTER" until="stage_time>2"/>
 	<for var="i" from="0" to="6"> <!-- 8 angles-->
 		<set value="ANGLE_BFP_OF_REAL(-$i*15/57.295779)" var="nav_heading"/>
-		<stay wp="CENTER" alt="2.0"  until="stage_time>2"/>
-		<for var="j" from="0" to="2"> <!-- 3 maneuvres-->
-		<stay wp="LEFT" alt="2.0"  until="-0.4>GetPosX()"/>
-		<stay wp="RIGHT" alt="2.0"  until="GetPosX()>0.1"/>
-		<stay wp="CENTER" alt="2.0"  until="stage_time>1.5"/>
-		<stay wp="RIGHT" alt="2.0"  until="GetPosX()>0.4"/>
-		<stay wp="LEFT" alt="2.0"  until="-0.1>GetPosX()"/>
-		<stay wp="CENTER" alt="2.0" until="stage_time>2.0"/>
+		<for var="j" from="0" to="1"> <!-- 2 maneuvres-->
+		<stay wp="LEFT"  until="-0.2>GetPosX()"/>
+		<stay wp="RIGHT"  until="GetPosX()>0.2"/>
 		</for>
+    <stay wp="CENTER"  until="stage_time>2"/>
 	</for>
     </block>
 
@@ -144,14 +137,11 @@
 	<stay wp="CENTER" until="stage_time>2"/>
 	<for var="i" from="0" to="6"> <!-- 5 angles-->
 		<set value="ANGLE_BFP_OF_REAL(-$i*15/57.295779)" var="nav_heading"/>
-		<for var="j" from="0" to="2"> <!-- 5 maneuvres-->
-		<stay wp="FORWARD" alt="2.0" until="GetPosY()>0.4" />
-		<stay wp="BACKWARD" alt="2.0" until="-0.05>GetPosY()" />
-		<stay wp="CENTER" alt="2.0" until="stage_time>3"/>
-		<stay wp="BACKWARD" alt="2.0" until="-0.05>GetPosY()" />
-		<stay wp="FORWARD" alt="2.0" until="GetPosY()>0.4" />
-		<stay wp="CENTER" alt="2.0" until="stage_time>3.0"/>
+		<for var="j" from="0" to="1"> <!-- 2 maneuvres--> 
+		<stay wp="FORWARD" until="GetPosY()>2.0" />
+		<stay wp="BACKWARD" until="0.3>GetPosY()" />
 		</for>
+    <stay wp="CENTER" until="stage_time>2"/>
 	</for>
     </block>
 
