@@ -50,5 +50,9 @@ extern void stabilization_indi_set_earth_cmd_i(struct Int32Vect2 *cmd, int32_t h
 extern void stabilization_indi_run(bool in_flight, bool rate_control);
 extern void stabilization_indi_read_rc(bool in_flight, bool in_carefree, bool coordinated_turn);
 
+// other variables
+float act_obs[4];
+
 #endif /* STABILIZATION_INDI */
+
 

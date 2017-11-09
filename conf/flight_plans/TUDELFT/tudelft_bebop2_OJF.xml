@@ -112,10 +112,10 @@
 		<set value="ANGLE_BFP_OF_REAL(-$i*15/57.295779)" var="nav_heading"/>
 		<stay wp="CENTER" until="stage_time>2"/>
 		<for var="j" from="1" to="2">
-		<stay climb="$j*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.5"/>
+		<stay climb="$j*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.2"/>
 		<stay climb="-$j*0.5" vmode="climb" wp="CENTER" until="2.0>GetPosAlt()"/>
 		</for>
-    <stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>1.0"/>
+    <stay wp="CENTER" vmode="alt"until="stage_time>1.0"/>
 	</for>
 	<stay wp="CENTER" until="stage_time>2"/>
     </block>
