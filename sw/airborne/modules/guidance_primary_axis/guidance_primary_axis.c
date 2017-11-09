@@ -94,7 +94,7 @@ void guidance_primary_axis_init(void)
 void low_pass_filter_init(void)
 {	
 	float tau = 1.0 / (2.0 * M_PI * 8.0);
-	float tau_nd = 1.0/(2.0 * M_PI * 2.5);
+	float tau_nd = 1.0/(2.0 * M_PI * 1.5);
 	float sample_time = 1.0 / PERIODIC_FREQUENCY;
 	init_first_order_low_pass(&nd_i_state_x,tau_nd,sample_time,0);
 	init_first_order_low_pass(&nd_i_state_y,tau_nd,sample_time,0);
@@ -118,7 +118,7 @@ void guidance_primary_axis_run(void)
 	//Necessary parameters
 	float g = 9.8125;
 	n_pa.x = primary_axis_n_abs * primary_axis_n_gain_x;
-	n_pa.y = primary_axis_n_abs * primary_axis_n_gain_y;
+	n_pa.y =  - primary_axis_n_abs * primary_axis_n_gain_y;
 
 	//Flag to hack guidance loop
 	primary_axis_status = 1;
