@@ -165,8 +165,8 @@ void guidance_indi_run(bool in_flight, float heading_sp) {
   struct FloatVect3 a_diff = { sp_accel.x - filt_accel_ned[0].o[0], sp_accel.y -filt_accel_ned[1].o[0], sp_accel.z -filt_accel_ned[2].o[0]};
 
   //Bound the acceleration error so that the linearization still holds
-  Bound(a_diff.x, -10.0, 10.0);
-  Bound(a_diff.y, -10.0, 10.0);
+  Bound(a_diff.x, -20.0, 20.0);
+  Bound(a_diff.y, -20.0, 20.0);
   Bound(a_diff.z, -9.0, 9.0);
 
   //If the thrust to specific force ratio has been defined, include vertical control
