@@ -49,7 +49,7 @@
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
     </module>
     <module name="actuator_terminator">
-      <define name="DAMAGED_ROTOR_INDEX" value="2"/>
+      <define name="DAMAGED_ROTOR_INDEX" value="3"/>
     </module>
     <module name="guidance_primary_axis">
       <!--define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/-->

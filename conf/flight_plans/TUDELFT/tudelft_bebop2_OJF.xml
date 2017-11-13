@@ -8,15 +8,15 @@
 #include "subsystems/datalink/datalink.h"
 </header>
   <waypoints>
-    <waypoint height="0" name="HOME" x="0.0" y="0.0"/>
-    <waypoint height="1.0" name="CLIMB" x="0.0" y="0.0"/>
-    <waypoint height="1.0" name="STDBY" x="-0.0" y="-0.5"/>
-    <waypoint height="2.0" name="CENTER" x="0.0" y="1.0"/>
-    <waypoint height="1.9" name="FORWARD" x="0.0" y="2.8"/>
-    <waypoint height="1.9" name="BACKWARD" x="0.0" y="-2.0"/>
-    <waypoint height="1.9" name="LEFT" x="-1.5" y="0.5"/>
-    <waypoint height="1.9" name="RIGHT" x="1.5" y="0.5"/>
-    <waypoint name="TD" x="0.0" y="0.0"/>
+    <waypoint height="1.5" name="HOME" x="1.0" y="1.5"/>
+    <waypoint height="1.5" name="CLIMB" x="1.0" y="1.5"/>
+    <waypoint height="1.5" name="STDBY" x="1.0" y="-0.5"/>
+    <waypoint height="1.5" name="CENTER" x="0.0" y="1.0"/>
+    <waypoint height="1.5" name="FORWARD" x="0.0" y="3.0"/>
+    <waypoint height="1.5" name="BACKWARD" x="0.0" y="-1.0"/>
+    <waypoint height="1.5" name="LEFT" x="-1.5" y="0.5"/>
+    <waypoint height="1.5" name="RIGHT" x="1.5" y="0.5"/>
+    <waypoint name="TD" x="1.0" y="1.5"/>
 
     <!--waypoint lat="51.9906213" lon="4.3768628" name="_CZ1"/>
     <waypoint lat="51.9905874" lon="4.3767766" name="_CZ2"/>
@@ -92,7 +92,7 @@
     <block key="t" name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
       <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="go_center"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
-      <stay climb="2.0" vmode="climb" wp="CLIMB"/>
+      <stay climb="1.0" vmode="climb" wp="CLIMB"/>
     </block>
     <block name="Start engine and go standby">
       <call_once fun="NavResurrect()"/>
@@ -131,61 +131,16 @@
 	<set value="ANGLE_BFP_OF_REAL(180/57.295779)" var="nav_heading"/>
 	<stay wp="CENTER" until="stage_time>2"/>
     </block>
-    <block name="Loop heading latitude doublet">
-	<stay wp="CENTER" until="stage_time>2"/>
-	<for var="i" from="0" to="7"> <!-- 8 angles-->
-		<set value="ANGLE_BFP_OF_REAL(-$i*45/57.295779)" var="nav_heading"/>
-		<stay wp="CENTER" until="stage_time>2"/>
-		<for var="j" from="0" to="2"> <!-- 3 maneuvres-->
-		<stay wp="LEFT" until="-0.4>GetPosX()"/>
-		<stay wp="RIGHT" until="GetPosX()>0.1"/>
-		<stay wp="CENTER" until="stage_time>1.5"/>
-		<stay wp="RIGHT" until="GetPosX()>0.4"/>
-		<stay wp="LEFT" until="-0.1>GetPosX()"/>
-		<stay wp="CENTER" until="stage_time>2.0"/>
-		</for>
-	</for>
-    </block>
 
     <block name="Loop heading longitude doublet">
 	<!--call_once fun="gh_set_max_speed(0.7)"/-->
 	<stay wp="CENTER" until="stage_time>2"/>
-	<for var="i" from="0" to="7"> <!-- 5 angles-->
-		<set value="ANGLE_BFP_OF_REAL(-$i*45/57.295779)" var="nav_heading"/>
-		<for var="j" from="0" to="2"> <!-- 5 maneuvres-->
-		<stay wp="FORWARD" alt="2.4" until="GetPosY()>0.4" />
-		<stay wp="BACKWARD" alt="2.4" until="-0.05>GetPosY()" />
-		<stay wp="CENTER" alt="2.4" until="stage_time>3"/>
-		<stay wp="BACKWARD" alt="2.4" until="-0.05>GetPosY()" />
-		<stay wp="FORWARD" alt="2.4" until="GetPosY()>0.4" />
-		<stay wp="CENTER" alt="2.4" until="stage_time>3.0"/>
+		<for var="j" from="0" to="200"> <!--  almost infinite maneuvres -->
+		<stay wp="FORWARD" until="GetPosY()>0.8" />
+		<stay wp="CENTER" until="stage_time>5"/>
 		</for>
-	</for>
     </block>
 
-    <block name="Yaw +45 angle changes">
-	<stay wp="CENTER" until="stage_time>2"/>
-	<for var="i" from="0" to="8">
-		<set value="ANGLE_BFP_OF_REAL($i*45/57.295779)" var="nav_heading"/>
-		<stay wp="CENTER" until="stage_time>1"/>
-	</for>
-    </block>
-    <block name="Yaw -45 angle changes">
-		<stay wp="CENTER" until="stage_time>2"/>
-		<for var="i" from="0" to="8"> 
-		<set value="ANGLE_BFP_OF_REAL(-$i*45/57.295779)" var="nav_heading"/>
-		<stay wp="CENTER" until="stage_time>1"/>
-	</for>
-    </block>
-    <block name="Yaw 180 doublets">
-	<stay wp="CENTER" until="stage_time>2"/>
-	<for var="i" from="0" to="8"> 
-		<set value="ANGLE_BFP_OF_REAL(($i*45+90)/57.295779)" var="nav_heading"/>
-		<stay wp="CENTER" until="stage_time>1.0"/>
-		<set value="ANGLE_BFP_OF_REAL(($i*45-90)/57.295779)" var="nav_heading"/>
-		<stay wp="CENTER" until="stage_time>2"/>
-	</for>
-    </block>
 	<block name="go_center">
 		<stay wp="CENTER"/>
 	</block>
