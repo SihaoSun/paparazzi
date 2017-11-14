@@ -11,11 +11,11 @@
     <waypoint height = "2.00" name="HOME" x=" -1.0" y="1.5"/>
     <waypoint height = "2.00" name="CLIMB" x="1.0" y="1.5"/>
     <waypoint height = "2.00" name="STDBY" x="-1.0" y="1.5"/>
-    <waypoint height = "2.00" name="CENTER" x="0.0" y="1.5"/>
+    <waypoint height = "2.00" name="CENTER" x="0.0" y="1.0"/>
     <waypoint height = "2.00" name="FORWARD" x="0.0" y="2.0"/>
     <waypoint height = "2.00" name="BACKWARD" x="0.0" y="-0.0"/>
-    <waypoint height = "2.50" name="UP"   x="0.0" y="0.8"/>
-    <waypoint height = "1.00" name="DOWN"   x="0.0" y="0.8"/>
+    <waypoint height = "4.00" name="UP"   x="0.0" y="1.0"/>
+    <waypoint height = "0.00" name="DOWN"   x="0.0" y="1.0"/>
     <waypoint height = "0.00" name="TD" x="0.0" y="1.5"/>
 
     <waypoint lat="51.9906559" lon="4.3767757" name="_TZ1"/>
@@ -85,8 +85,8 @@
   <block name="Altitude doublet">
 	<stay wp="CENTER" until="stage_time>3"/>
   <for var="i" from="0" to="1"> <!-- 5 angles-->
-    <stay wp="UP" until="stage_time>3"/>
-    <stay wp="DOWN" until="stage_time>3"/>
+    <stay wp="UP" until="GetPosAlt()>2.5"/>
+    <stay wp="DOWN" until="2.2>GetPosAlt()"/>
   </for>
   <stay wp="CENTER" until="stage_time>5"/>
   </block>

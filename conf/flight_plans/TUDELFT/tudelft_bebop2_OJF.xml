@@ -115,17 +115,17 @@
 		<stay climb="0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.6"/>
 		<stay climb="-0.5" vmode="climb" wp="CENTER" until="1.9>GetPosAlt()"/>
 		<stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>2.0"/>
-		<stay climb="-0.5" vmode="climb" wp="CENTER" until="1.8>GetPosAlt()"/>
 		<stay climb="0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.3"/>
-		<stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>1.0"/>
+    <stay climb="-0.5" vmode="climb" wp="CENTER" until="1.9>GetPosAlt()"/>
+		<stay wp="CENTER" until="stage_time>2.0"/>
 		<!--/for-->
     <!--for var="j" from="2" to="2"> <!-- 4 maneuvres, varying speed -->
-    <stay climb="2*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.2"/>
-    <stay climb="-2*0.5" vmode="climb" wp="CENTER" until="2.1>GetPosAlt()"/>
+    <stay climb="2*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.11"/>
+    <stay climb="-2*0.5" vmode="climb" wp="CENTER" until="2.09>GetPosAlt()"/>
     <!--stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>2.0"/-->
-    <stay climb="-2*0.5" vmode="climb" wp="CENTER" until="2.1>GetPosAlt()"/>
-    <stay climb="2*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.2"/>
-    <stay wp="CENTER" vmode="alt" alt="1.9" until="stage_time>1.0"/>
+    <stay climb="2*0.5" vmode="climb" wp="CENTER" until="GetPosAlt()>2.11"/>
+    <stay climb="-2*0.5" vmode="climb" wp="CENTER" until="2.09>GetPosAlt()"/>
+    <stay wp="CENTER" until="stage_time>2.0"/>
     <!--/for-->    
 	</for>
 	<set value="ANGLE_BFP_OF_REAL(180/57.295779)" var="nav_heading"/>
