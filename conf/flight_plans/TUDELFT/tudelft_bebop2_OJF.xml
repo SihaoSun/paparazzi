@@ -8,16 +8,16 @@
 #include "subsystems/datalink/datalink.h"
 </header>
   <waypoints>
-    <waypoint height="1.45" name="HOME" x="0.5" y="1.5"/>
-    <waypoint height="1.45" name="CLIMB" x="0.5" y="0.0"/>
-    <waypoint height="1.45" name="STDBY" x="0.5" y="0.5"/>
-    <waypoint height="1.45" name="CENTER" x="0.0" y="1.0"/>
+    <waypoint height="2.0" name="HOME" x="0.0" y="1.5"/>
+    <waypoint height="2.0" name="CLIMB" x="0.5" y="0.0"/>
+    <waypoint height="2.0" name="STDBY" x="0.0" y="0.5"/>
+    <waypoint height="2.0" name="CENTER" x="0.0" y="1.0"/>
     <!--waypoint height="1.45" name="FORWARD" x="0.0" y="2.5"/-->
-    <waypoint height="1.45" name="FORWARD" x="0.0" y="2.0"/> <!--for lower wind speed -->
-    <waypoint height="1.45" name="BACKWARD" x="0.0" y="-2.0"/>
-    <waypoint height="1.45" name="LEFT" x="-1.5" y="1.0"/>
-    <waypoint height="1.45" name="RIGHT" x="1.5" y="1.0"/>
-    <waypoint height="0.45" name="TD" x="0.0" y="1.5"/>
+    <waypoint height="2.0" name="FORWARD" x="0.0" y="2.0"/> <!--for lower wind speed -->
+    <waypoint height="2.0" name="BACKWARD" x="0.0" y="-2.0"/>
+    <waypoint height="2.0" name="LEFT" x="-3.5" y="1.0"/>
+    <waypoint height="2.0" name="RIGHT" x="3.5" y="1.0"/>
+    <waypoint height="2.0" name="TD" x="0.0" y="1.5"/>
 
     <!--waypoint lat="51.9906213" lon="4.3768628" name="_CZ1"/>
     <waypoint lat="51.9905874" lon="4.3767766" name="_CZ2"/>
@@ -102,11 +102,35 @@
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
       <stay climb="1.0" vmode="climb" wp="CLIMB"/>
     </block>
-	<block name="Set heading to 0">
-		<set value="ANGLE_BFP_OF_REAL(0.0/57.295779)" var="nav_heading"/>
+  <block name="Set heading to 0">
+    <set value="ANGLE_BFP_OF_REAL(0.0/57.295779)" var="nav_heading"/>
+    <stay wp="CENTER"/>
+  </block>
+
+	<block name="Set heading to -45">
+		<set value="ANGLE_BFP_OF_REAL(-75.0/57.295779)" var="nav_heading"/>
 		<stay wp="CENTER"/>
 	</block>
-	
+
+    <block name="longitude doublet">
+	<for var="i" from="0" to="2">
+	<stay wp="FORWARD" until="GetPosY()>1.5" />
+	<stay wp="BACKWARD" until="0.3>GetPosY()" />
+	</for>
+	</block>
+
+    <block name="longitude doublet_high_speed">
+  <for var="i" from="0" to="2">
+  <stay wp="HOME" until="stage_time>2.0" />
+  <stay wp="STDBY" until="stage_time>2.0" />
+  </for>
+  </block>
+
+
+	<block name="go_center">
+		<stay wp="CENTER"/>
+	</block>	
+
     <block name="Looping heading altitude doublet">
 	<stay wp="CENTER" until="stage_time>2"/>
 	<for var="i" from="0" to="6"> <!-- 8 angles-->
@@ -169,9 +193,7 @@
 		<stay wp="CENTER" until="stage_time>2"/>
 	</for>
     </block>
-	<block name="go_center">
-		<stay wp="CENTER"/>
-	</block>
+    
     <block key="s" name="Standby" strip_button="Standby" strip_icon="home.png">
       <call_once fun="NavSetWaypointHere(WP_STDBY)"/>
       <stay wp="STDBY"/>
