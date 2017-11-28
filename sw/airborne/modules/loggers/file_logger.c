@@ -86,7 +86,7 @@ void file_logger_periodic(void)
   static uint32_t counter;
   struct Int32Quat *quat = stateGetNedToBodyQuat_i();
 
-  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f\n",
+  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
           counter,      
           imu.gyro_unscaled.p,
           imu.gyro_unscaled.q,
@@ -116,7 +116,16 @@ void file_logger_periodic(void)
           act_obs[0],
           act_obs[1],
           act_obs[2],
-          act_obs[3]
+          act_obs[3],
+          stateGetBodyRates_f()->p,
+          stateGetBodyRates_f()->q,
+          stateGetBodyRates_f()->r,
+          stateGetNedToBodyEulers_f()->phi,
+          stateGetNedToBodyEulers_f()->theta,
+          stateGetNedToBodyEulers_f()->psi,
+          stateGetAccelBody_i()->x,
+          stateGetAccelBody_i()->y,
+          stateGetAccelBody_i()->z
          );
   counter++;
 }
