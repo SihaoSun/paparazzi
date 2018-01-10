@@ -163,6 +163,10 @@ float g2_init[INDI_NUM_ACT];
 float g1_damage[3][3];
 float g1_damage_inv[3][3];
 
+float p_des_dot;
+float q_des_dot;
+float r_des_dot;
+
 Butterworth2LowPass actuator_lowpass_filters[INDI_NUM_ACT];
 Butterworth2LowPass estimation_input_lowpass_filters[INDI_NUM_ACT];
 Butterworth2LowPass measurement_lowpass_filters[3];
@@ -171,6 +175,7 @@ Butterworth2LowPass acceleration_lowpass_filter;
 Butterworth2LowPass az_lowpass_filter;
 Butterworth2LowPass p_des_filter;
 Butterworth2LowPass q_des_filter;
+Butterworth2LowPass r_des_filter;
 
 struct FloatVect3 body_accel_f;
 
@@ -295,6 +300,7 @@ void init_filters(void)
   // Filtering of the p q designed value from Praimary Guidance
   init_butterworth_2_low_pass(&p_des_filter, tau_pq_des, sample_time, 0.0);
   init_butterworth_2_low_pass(&q_des_filter, tau_pq_des, sample_time, 0.0);
+  init_butterworth_2_low_pass(&r_des_filter, tau_pq_des, sample_time, 0.0);
 }
 
 /**
@@ -379,31 +385,35 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     /*BoundAbs(rate_ref.r, 5.0);*/
   }
 
-  //printf("%d\n", guidance_primary_axis_status());
-
   struct FloatRates *body_rates = stateGetBodyRates_f();
 
   //calculate the virtual control (reference acceleration) based on a PD controller
   if(guidance_primary_axis_status()==true) {
       update_butterworth_2_low_pass(&p_des_filter,rate_ref.p);
       update_butterworth_2_low_pass(&q_des_filter,rate_ref.q);
-      float p_des_dot = (p_des_filter.o[0] - p_des_filter.o[1])*PERIODIC_FREQUENCY;
-      float q_des_dot = (q_des_filter.o[0] - q_des_filter.o[1])*PERIODIC_FREQUENCY;
+      update_butterworth_2_low_pass(&r_des_filter,rate_ref.r);      
+      p_des_dot = (p_des_filter.o[0] - p_des_filter.o[1])*PERIODIC_FREQUENCY;
+      q_des_dot = (q_des_filter.o[0] - q_des_filter.o[1])*PERIODIC_FREQUENCY;
+      r_des_dot = (r_des_filter.o[0] - r_des_filter.o[1])*PERIODIC_FREQUENCY;
     //  p_des_dot = 0;
     //  q_des_dot = 0;
+    //  r_des_dot = 0;
       angular_accel_ref.p = (rate_ref.p - body_rates->p) * reference_acceleration.rate_p + p_des_dot ;
       angular_accel_ref.q = (rate_ref.q - body_rates->q) * reference_acceleration.rate_q + q_des_dot ;    
 
       p_des_dot_logger = p_des_dot;
       q_des_dot_logger = q_des_dot;
+      r_des_dot_logger = r_des_dot;
 
       p_des_filter_logger = p_des_filter.o[0];
-      q_des_filter_logger = q_des_filter.o[0];   
+      q_des_filter_logger = q_des_filter.o[0]; 
+      r_des_filter_logger = r_des_filter.o[0];  
   }
   else {
       angular_accel_ref.p = (rate_ref.p - body_rates->p) * reference_acceleration.rate_p;
       angular_accel_ref.q = (rate_ref.q - body_rates->q) * reference_acceleration.rate_q;
   }
+  
   if (attitude_optitrack_status() == false) 
     angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
   else{
@@ -430,6 +440,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     stabilization_cmd[COMMAND_THRUST] = 0;
     for (i = 0; i < INDI_NUM_ACT; i++) {
       stabilization_cmd[COMMAND_THRUST] += actuator_state[i] * -((int32_t) act_is_servo[i] - 1);
+
     }
     stabilization_cmd[COMMAND_THRUST] /= num_thrusters;
 
@@ -544,20 +555,79 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   /*Commit the actuator command*/
   for (i = 0; i < INDI_NUM_ACT; i++) {
     actuators_pprz[i] = (int16_t) indi_u[i];
-
     if ((i == DAMAGED_ROTOR_INDEX ) && damage_status()){
-      //actuators_pprz[i] = 10;
-      //actuators_pprz[i] = (int16_t) indi_u[i]*fault_factor;
       actuators_pprz[i] = -MAX_PPRZ;
-
     }
   }
- // printf("%d\n",stateGetPositionNed_i()->z);
-  
-//  if (stateGetPositionNed_i()->z >= -100 && damage_status()){
-//      actuators_pprz[1] = -MAX_PPRZ;
-//  }
-   //printf("%d %d %d %d \n", actuator_terminator_running,  actuators_pprz[0], actuators_pprz[1], actuators_pprz[2]);
+
+  if (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD){
+    //if(1){
+      float nu[4],omega_ref;
+      float kp,kq,kr;
+      kp = 50.0;
+      kq = 50.0;
+      kr = 10.0;
+      float Ix, Iy,Iz;
+      Ix = 0.0016616;
+      Iy = 0.0013659;
+      Iz = 0.0028079;
+
+      omega_ref = (float)stabilization_cmd[COMMAND_THRUST];
+      omega_ref *=((float)(get_servo_max(0) - get_servo_min(0)))/(float)MAX_PPRZ;
+      omega_ref += (float)get_servo_min(0);
+      //printf("%f  %f\n", (float)stabilization_cmd[COMMAND_THRUST], omega_ref);
+      nu[0] = p_des_dot + kp*(p_des_filter.o[1]-body_rates->p);
+      nu[1] = q_des_dot + kq*(q_des_filter.o[1]-body_rates->q);
+      nu[2] = r_des_dot + kr*(r_des_filter.o[1]-body_rates->r);
+      nu[3] = omega_ref * omega_ref/1e6;
+
+      nu[0] -= body_rates->q*body_rates->r*(Iz-Iy)/Ix;
+      nu[1] -= body_rates->p*body_rates->r*(Ix-Iz)/Iy;
+      nu[2] -= body_rates->p*body_rates->q*(Iy-Ix)/Iz;
+      //printf("%f\t%f\t%f\t%f\n", p_des_filter.o[1], q_des_filter.o[1],r_des_filter.o[1]);
+
+     // float G_inv[4][4]={    4.4333,    3.4909,  115.9936/10,  0.1101,
+     //                       -4.8167,    5.6033, -142.4522/10,  0.1214,
+     //                       -3.7910,   -5.3569,  150.4645/10,  0.1076,
+     //                        3.6549,   -3.6319, -108.4452/10,  0.1071}; //G_inv is scaled by 1e-5
+        /*CMD_THRST = NU[3]*/  
+  //    float G_inv[4][4]={    4.1706,    4.3919,  125.8106/10,    0.1115,
+  //                          -4.1706,    4.3919, -125.8106/10,    0.1115,
+  //                          -4.1706,   -4.3919,  125.8106/10,    0.1115,
+  //                           4.1706,   -4.3919, -125.8106/10,    0.1115};
+      float G_inv[4][4]={    4.1706,    4.3919,  125.8106,   10.1187,
+                            -4.1706,    4.3919, -125.8106,   10.1187,
+                            -4.1706,   -4.3919,  125.8106,   10.1187,
+                             4.1706,   -4.3919, -125.8106,   10.1187};
+      float w2[4] = {0.0,0.0,0.0,0.0}; //rpm^2
+      float w[4] = {0.0,0.0,0.0,0.0}; //rpm
+
+      for (int i = 0; i < 4; i++)
+      {
+        for (int j = 0; j < 4; j++)
+        {
+          w2[i] += G_inv[i][j]*nu[j]*1e5;
+          Bound(w2[i],0,get_servo_max(i)*get_servo_max(i));
+          w[i] = sqrtf(w2[i]);
+        }
+      }
+//      for (int j = 0; j < 4; j++)
+//      {
+//        w2[0] += G_inv[0][j]*nu[j]*1e5;
+//        w[0] = sqrtf(w2[0]);
+//      }
+      //printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", w2[0],w[0], w2[1],w[1], w2[2],w[2], w2[3],w[3]);
+      //printf("%f\n", nu[3]);  
+      float act_cmd[4];
+      for (i = 0; i < 4; i++) {
+        act_cmd[i] = (w[i] - get_servo_min(i));
+        act_cmd[i] *= (MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
+        Bound(act_cmd[i], 0, MAX_PPRZ);
+        actuators_pprz[i] = (int16_t)act_cmd[i];
+      }
+      //printf("%f\t%f\t%f\t%f\n", act_cmd[0]);//,act_cmd[1],act_cmd[2],act_cmd[3]);
+  }
+
 }
 
 /**

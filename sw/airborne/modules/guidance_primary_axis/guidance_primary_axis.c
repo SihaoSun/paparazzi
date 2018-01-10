@@ -171,8 +171,8 @@ void guidance_primary_axis_run(void)
 //#warning "GUIDANCE_PARC_DEBUG lets you control the accelerations via RC, but disables autonomous flight!"
   //for rc control horizontal, rotate from body axes to NED
 if ((autopilot.mode == AP_MODE_ATTITUDE_DIRECT) || (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD)) {
-  	float rc_x = -(radio_control.values[RADIO_PITCH]/9600.0)*2.0;
-  	float rc_y = (radio_control.values[RADIO_ROLL]/9600.0)*2.0;
+  	float rc_x = -(radio_control.values[RADIO_PITCH]/9600.0)*10.0;
+  	float rc_y = (radio_control.values[RADIO_ROLL]/9600.0)*10.0;
 //  	sp_accel.x = cosf(psi) * rc_x - sinf(psi) * rc_y;
 //  	sp_accel.y = sinf(psi) * rc_x + cosf(psi) * rc_y;
 //  	sp_accel.x = rc_x;
@@ -258,7 +258,7 @@ else if (autopilot.mode == AP_MODE_NAV){
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;
 	rate_cmd_primary_axis[1] = q_des;
-	rate_cmd_primary_axis[2] = 0;
+	rate_cmd_primary_axis[2] = r_des;
 	thrust_primary_axis = thrust_specific;
 
 	//printf("%f\t%f\n",nd_state.x,nd_state.y);

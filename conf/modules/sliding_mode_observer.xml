@@ -1,0 +1,16 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="sliding_mode_observer">
+  <doc>
+    <description>Sliding mode observer for observing model uncertainty and disturbance in the equation of motion</description>
+  </doc>
+  <header>
+    <file name="sliding_mode_observer.h"/>
+  </header>
+  <init fun="init_sliding_mode_observer()"/>
+  <periodic fun="periodic_sliding_mode_observer()" freq="512" autorun="FALSE"/>
+  <makefile>
+    <file name="sliding_mode_observer.c"/>
+  </makefile>
+</module>
+
