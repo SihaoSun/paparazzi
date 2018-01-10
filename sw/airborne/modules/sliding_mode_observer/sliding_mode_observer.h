@@ -33,7 +33,7 @@ extern void init_sliding_mode_observer(void);
 
 extern void periodic_sliding_mode_observer(void);
 
-extern void call_sliding_mode_observer(float* nu0, float* nu_est, float* z_dot,
+extern void call_sliding_mode_observer(float* z_dot,
 									 float* e, float* k, float* ks, int output_num);
 
 bool SMDO_status;
@@ -42,5 +42,7 @@ float SMDO_s[4];
 float SMDO_sigma_integral[4];
 float SMDO_z[4];
 float SMDO_fc[4];
+float SMDO_nu0[4];
+float SMDO_nu_est[4];
 #endif
 

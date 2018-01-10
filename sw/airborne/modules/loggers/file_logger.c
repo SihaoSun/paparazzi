@@ -36,7 +36,7 @@
 #include "firmwares/rotorcraft/stabilization/stabilization_indi.h"
 #include "modules/attitude_optitrack/attitude_optitrack.h"
 #include "modules/guidance_primary_axis/guidance_primary_axis.h"
-
+#include "modules/sliding_mode_observer/sliding_mode_observer.h"
 /** Set the default File logger path to the USB drive */
 #ifndef FILE_LOGGER_PATH
 #define FILE_LOGGER_PATH /data/video/usb
@@ -156,7 +156,15 @@ void file_logger_periodic(void)
           r_des_dot_logger,
           p_des_filter_logger,
           q_des_filter_logger,
-          r_des_filter_logger
+          r_des_filter_logger,
+          SMDO_nu0[0],
+          SMDO_nu0[1],
+          SMDO_nu0[2],
+          SMDO_nu0[3],
+          SMDO_nu_est[0],
+          SMDO_nu_est[1],
+          SMDO_nu_est[2],
+          SMDO_nu_est[3]
          );
   counter++;
 }

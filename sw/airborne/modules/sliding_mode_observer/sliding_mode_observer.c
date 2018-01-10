@@ -52,6 +52,8 @@ void init_sliding_mode_observer(void) {
 	{
 		SMDO_sigma_integral[i] = 0;
 		SMDO_z[i] = 0;
+		SMDO_nu0[i] = 0;
+		SMDO_nu_est[i] = 0;
 	}
 	return;
 }
@@ -62,7 +64,7 @@ void periodic_sliding_mode_observer(void){
 	return;
 }
 
-void call_sliding_mode_observer(float* nu0, float* nu_est, float* z_dot,
+void call_sliding_mode_observer(float* z_dot,
 									 float* e, float* k, float* ks, int output_num) {
 
 	for (int i = 0; i < output_num; i++)
@@ -71,22 +73,30 @@ void call_sliding_mode_observer(float* nu0, float* nu_est, float* z_dot,
 		SMDO_sigma[i] = e[i] + SMDO_sigma_integral[i];
 		SMDO_z[i] += z_dot[i]/PERIODIC_FREQUENCY;
 		SMDO_s[i] = SMDO_z[i] + SMDO_sigma[i];
-		nu0[i] = signf(SMDO_s[i])*ks[i];
+		SMDO_nu0[i] = signf(SMDO_s[i])*ks[i];
 	}
 
-	update_first_order_low_pass(&nu_est0,nu0[0]);
-	update_first_order_low_pass(&nu_est1,nu0[1]);
-	update_first_order_low_pass(&nu_est2,nu0[2]);
-	update_first_order_low_pass(&nu_est3,nu0[3]);
+//    printf("%f,%f,%f,%f\n",SMDO_nu0[0]
+//    					  ,SMDO_nu0[1]
+//    					  ,SMDO_nu0[2]
+//    					  ,SMDO_nu0[3]);
 
-	nu_est[0] = get_first_order_low_pass(&nu_est0);
-	nu_est[1] = get_first_order_low_pass(&nu_est1);
-	nu_est[2] = get_first_order_low_pass(&nu_est2);
-	nu_est[3] = get_first_order_low_pass(&nu_est3);
+	update_first_order_low_pass(&nu_est0,SMDO_nu0[0]);
+	update_first_order_low_pass(&nu_est1,SMDO_nu0[1]);
+	update_first_order_low_pass(&nu_est2,SMDO_nu0[2]);
+	update_first_order_low_pass(&nu_est3,SMDO_nu0[3]);
+
+	SMDO_nu_est[0] = get_first_order_low_pass(&nu_est0);
+	SMDO_nu_est[1] = get_first_order_low_pass(&nu_est1);
+	SMDO_nu_est[2] = get_first_order_low_pass(&nu_est2);
+	SMDO_nu_est[3] = get_first_order_low_pass(&nu_est3);
 	
 }
 
 float signf(float x){
- 	return x/fabsf(x);
+	if (x>=0)
+ 		return 1.0;
+ 	else 
+ 		return -1.0;
 }
 

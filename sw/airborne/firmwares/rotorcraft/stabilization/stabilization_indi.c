@@ -45,6 +45,7 @@
 #include "filters/low_pass_filter.h"
 #include "wls/wls_alloc.h"
 #include "modules/actuator_terminator/actuator_terminator.h"
+#include "modules/sliding_mode_observer/sliding_mode_observer.h"
 #include <stdio.h>
 
 //only 4 actuators supported for now
@@ -166,6 +167,7 @@ float g1_damage_inv[3][3];
 float p_des_dot;
 float q_des_dot;
 float r_des_dot;
+double ET_integral;
 
 Butterworth2LowPass actuator_lowpass_filters[INDI_NUM_ACT];
 Butterworth2LowPass estimation_input_lowpass_filters[INDI_NUM_ACT];
@@ -251,6 +253,8 @@ void stabilization_indi_init(void)
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INDI_G, send_indi_g);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_AHRS_REF_QUAT, send_ahrs_ref_quat);
 #endif
+
+  ET_integral = 0;
 }
 
 /**
@@ -268,7 +272,7 @@ void stabilization_indi_enter(void)
 
   float_vect_zero(du_estimation, INDI_NUM_ACT);
   float_vect_zero(ddu_estimation, INDI_NUM_ACT);
-}
+}          
 
 /**
  * Function that resets the filters to zeros
@@ -413,7 +417,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       angular_accel_ref.p = (rate_ref.p - body_rates->p) * reference_acceleration.rate_p;
       angular_accel_ref.q = (rate_ref.q - body_rates->q) * reference_acceleration.rate_q;
   }
-  
+
   if (attitude_optitrack_status() == false) 
     angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
   else{
@@ -423,14 +427,15 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       angular_accel_ref.r = (rate_ref.r - angular_rate_optitrack.r) * reference_acceleration.rate_r;
   }
 
-  g2_times_du = 0.0;
   int8_t i;
+  g2_times_du = 0.0;
   for (i = 0; i < INDI_NUM_ACT; i++) {
     g2_times_du += g2[i] * indi_du[i];
   }
   //G2 is scaled by INDI_G_SCALING to make it readable
   g2_times_du = g2_times_du / INDI_G_SCALING;
 
+//////////////////////////////// INDI ////////////////////////////////////////
   float v_thrust = 0.0;
   if (indi_thrust_increment_set*0) {
 //  if (indi_thrust_increment_set) {    
@@ -468,9 +473,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
   }
 
-//  printf("%f\n",v_thrust);
   // Calculate the min and max increments
-
   for (i = 0; i < INDI_NUM_ACT; i++) {
      du_min[i] = -MAX_PPRZ * act_is_servo[i] - actuator_state_filt_vect[i];
      du_max[i] = MAX_PPRZ - actuator_state_filt_vect[i];
@@ -479,6 +482,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
   //State prioritization {W Roll, W pitch, W yaw, TOTAL THRUST}
   static float Wv[INDI_OUTPUTS] = {1000, 1000, 1, 100};
+
 
   // The control objective in array format
   indi_v[0] = (angular_accel_ref.p - angular_acceleration[0]);
@@ -560,13 +564,17 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
   }
 
+//////////////////////////////// NDI ////////////////////////////////////////
+
   if (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD){
-    //if(1){
+//    if(0){
       float nu[4],omega_ref;
       float kp,kq,kr;
       kp = 50.0;
       kq = 50.0;
       kr = 10.0;
+      float K[4]; 
+      K[0] = kp; K[1]=kq; K[2] = kr; K[3] = 1;
       float Ix, Iy,Iz;
       Ix = 0.0016616;
       Iy = 0.0013659;
@@ -574,7 +582,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
       omega_ref = (float)stabilization_cmd[COMMAND_THRUST];
       omega_ref *=((float)(get_servo_max(0) - get_servo_min(0)))/(float)MAX_PPRZ;
-      omega_ref += (float)get_servo_min(0);
+      omega_ref += (float)get_servo_min(0); // omega_ref unit is rpm
+
       //printf("%f  %f\n", (float)stabilization_cmd[COMMAND_THRUST], omega_ref);
       nu[0] = p_des_dot + kp*(p_des_filter.o[1]-body_rates->p);
       nu[1] = q_des_dot + kq*(q_des_filter.o[1]-body_rates->q);
@@ -584,6 +593,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       nu[0] -= body_rates->q*body_rates->r*(Iz-Iy)/Ix;
       nu[1] -= body_rates->p*body_rates->r*(Ix-Iz)/Iy;
       nu[2] -= body_rates->p*body_rates->q*(Iy-Ix)/Iz;
+
       //printf("%f\t%f\t%f\t%f\n", p_des_filter.o[1], q_des_filter.o[1],r_des_filter.o[1]);
 
      // float G_inv[4][4]={    4.4333,    3.4909,  115.9936/10,  0.1101,
@@ -599,34 +609,62 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
                             -4.1706,    4.3919, -125.8106,   10.1187,
                             -4.1706,   -4.3919,  125.8106,   10.1187,
                              4.1706,   -4.3919, -125.8106,   10.1187};
+      float G[4][4] = {    0.0599,   -0.0599,   -0.0599,   0.0599,
+                           0.0569,    0.0569,   -0.0569,  -0.0569,
+                           0.0020,   -0.0020,    0.0020,  -0.0020,
+                           0.0247,    0.0247,    0.0247,   0.0247}; //G is scaled by 1e5
       float w2[4] = {0.0,0.0,0.0,0.0}; //rpm^2
       float w[4] = {0.0,0.0,0.0,0.0}; //rpm
 
       for (int i = 0; i < 4; i++)
       {
         for (int j = 0; j < 4; j++)
-        {
-          w2[i] += G_inv[i][j]*nu[j]*1e5;
+        { 
+          w2[i] += G_inv[i][j]*(nu[j] + SMDO_nu_est[j])*1e5;
           Bound(w2[i],0,get_servo_max(i)*get_servo_max(i));
           w[i] = sqrtf(w2[i]);
         }
       }
-//      for (int j = 0; j < 4; j++)
-//      {
-//        w2[0] += G_inv[0][j]*nu[j]*1e5;
-//        w[0] = sqrtf(w2[0]);
-//      }
-      //printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", w2[0],w[0], w2[1],w[1], w2[2],w[2], w2[3],w[3]);
-      //printf("%f\n", nu[3]);  
+      printf("%f,%f,%f,%f\n",SMDO_nu_est[0],
+                             SMDO_nu_est[1],
+                             SMDO_nu_est[2],
+                             SMDO_nu_est[3]);
       float act_cmd[4];
-      for (i = 0; i < 4; i++) {
+      for (int i = 0; i < 4; i++) {
         act_cmd[i] = (w[i] - get_servo_min(i));
         act_cmd[i] *= (MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
         Bound(act_cmd[i], 0, MAX_PPRZ);
         actuators_pprz[i] = (int16_t)act_cmd[i];
       }
-      //printf("%f\t%f\t%f\t%f\n", act_cmd[0]);//,act_cmd[1],act_cmd[2],act_cmd[3]);
-  }
+
+        //Call SMDC. Now psi0 = nu;
+        float Ks[4] = {30,10,5,10};
+        float Error[4];
+        float SMDO_z_dot[4];
+        float X_thrust = 0;
+        for (int i = 0; i < 4; ++i)
+        {
+          for (int j = 0; j < 4; ++j)
+          {
+            SMDO_z_dot[i] = -nu[i] + G[i][j]*w2[j] - SMDO_nu0[i];
+          } 
+        }
+        Error[0] = p_des_filter.o[1]-body_rates->p;
+        Error[1] = q_des_filter.o[1]-body_rates->q;
+        Error[2] = r_des_filter.o[1]-body_rates->r;
+  
+        for (int i = 0; i < 4; ++i)
+        {
+          X_thrust += actuator_state[i]*((float)(get_servo_max(i) - get_servo_min(i)))/(float)MAX_PPRZ
+                      + (float)get_servo_min(i);
+        }
+        ET_integral += (omega_ref*omega_ref/1e6 - X_thrust*X_thrust/16e6)/PERIODIC_FREQUENCY;
+        Error[3] = ET_integral;
+        //printf("%f,%f,%f,%f\n",Error[0],Error[1],Error[2],Error[3]);
+      if (sliding_mode_observer_status() == true){
+        call_sliding_mode_observer(SMDO_z_dot, Error, K, Ks, 4);
+      }
+    }
 
 }
 

@@ -45,7 +45,7 @@
 #include "math/pprz_algebra_int.h"
 #include "math/pprz_algebra_float.h"
 #include "modules/attitude_optitrack/attitude_optitrack.h"
-
+#include "modules/sliding_mode_observer/sliding_mode_observer.h"
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else

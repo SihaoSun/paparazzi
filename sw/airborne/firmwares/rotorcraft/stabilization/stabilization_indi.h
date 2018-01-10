@@ -60,6 +60,6 @@ float q_des_dot_logger;
 float r_des_dot_logger;
 float p_des_filter_logger;
 float q_des_filter_logger;
-float r_des_filter_logger;   
+float r_des_filter_logger;  
 #endif /* STABILIZATION_INDI */
 
