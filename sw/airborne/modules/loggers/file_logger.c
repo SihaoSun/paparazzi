@@ -70,7 +70,8 @@ void file_logger_start(void)
       "w1obs,w2obs,w3obs,w4obs,w1ref,w2ref,w3ref,w4ref,w1obs_indi,w2obs_indi,w3obs_indi,w4obs_indi,"
       "p,q,r,phi,theta,psi,Acc^b_x,Acc^b_y,Acc^b_z,phi_ot,theta_ot,psi_ot,r_ot,"
       "p_des,q_des,r_des,h1,h2,ndi_x,ndi_y,ndi_z,acc_des_x,acc_des_y,acc_des_z,acc_des_x_filter,acc_des_y_filter,acc_des_z_filter,"
-      "p_des_dot, q_des_dot, r_des_dot, p_des_filter, q_des_filter, r_des_filter\n"
+      "p_des_dot, q_des_dot, r_des_dot, p_des_filter, q_des_filter, r_des_filter,"
+      "nu0_1,nu0_2,nu0_3,nu0_4,nu_est1,nu_est2,nu_est3,nu_est4,PSI0_1,PSI0_2,PSI0_3,PSI0_4,z_dot1,z_dot2,z_dot3,z_dot4,sigma1,sigma2,sigma3,sigma4,s1,s2,s3,s4,nx_des,ny_des\n"
     );
   }
 }
@@ -93,7 +94,7 @@ void file_logger_periodic(void)
   static uint32_t counter;
   struct Int32Quat *quat = stateGetNedToBodyQuat_i();
 
-  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
           counter,
           imu.gyro_unscaled.p,
           imu.gyro_unscaled.q,
@@ -164,7 +165,25 @@ void file_logger_periodic(void)
           SMDO_nu_est[0],
           SMDO_nu_est[1],
           SMDO_nu_est[2],
-          SMDO_nu_est[3]
+          SMDO_nu_est[3],
+          NDI_PSI0[0],
+          NDI_PSI0[1],
+          NDI_PSI0[2],
+          NDI_PSI0[3],
+          SMDO_z_dot[0],
+          SMDO_z_dot[1],
+          SMDO_z_dot[2],
+          SMDO_z_dot[3],
+          SMDO_sigma[0],
+          SMDO_sigma[1],
+          SMDO_sigma[2],
+          SMDO_sigma[3],
+          SMDO_s[0],
+          SMDO_s[1],
+          SMDO_s[2],
+          SMDO_s[3],
+          nx_desire_step,
+          ny_desire_step
          );
   counter++;
 }

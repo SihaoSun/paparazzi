@@ -77,7 +77,7 @@ void get_attitude_optitrack(void) {
 	
 	attitude_optitrack.phi 		= 	DL_OPTITRACK_ATT_EULER_phi_optitrack(dl_buffer);
 	attitude_optitrack.theta 	= 	DL_OPTITRACK_ATT_EULER_theta_optitrack(dl_buffer);
-	attitude_optitrack.psi 		=   DL_OPTITRACK_ATT_EULER_psi_optitrack(dl_buffer);
+	attitude_optitrack.psi 		=   DL_OPTITRACK_ATT_EULER_psi_optitrack(dl_buffer) + OPTITRACK_PSI_SHIFT_CYBERZOO;
 
 
 	//update_first_order_low_pass(&attitude_optitrack_filter_theta,attitude_optitrack.theta);

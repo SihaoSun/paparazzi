@@ -1,0 +1,16 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="step_input">
+  <doc>
+    <description>Module containing step input functions with user defined magnitude and frequency</description>
+  </doc>
+  <header>
+    <file name="step_input.h"/>
+  </header>
+  <init fun="init_step_input()"/>
+  <periodic fun="periodic_step_input()"  freq="512" autorun="FALSE" stop = "init_step_input()"/>
+  <makefile>
+    <file name="step_input.c"/>
+  </makefile>
+</module>
+

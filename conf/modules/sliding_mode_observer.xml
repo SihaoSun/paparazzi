@@ -8,7 +8,7 @@
     <file name="sliding_mode_observer.h"/>
   </header>
   <init fun="init_sliding_mode_observer()"/>
-  <periodic fun="periodic_sliding_mode_observer()" freq="512" autorun="FALSE"/>
+  <periodic fun="periodic_sliding_mode_observer()" freq="512" autorun="FALSE" stop = "init_sliding_mode_observer()"/>
   <makefile>
     <file name="sliding_mode_observer.c"/>
   </makefile>

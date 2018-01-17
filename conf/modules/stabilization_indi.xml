@@ -31,12 +31,14 @@
       <define name="ACT_RATE_LIMIT" value="{9600,9600,9600,9600}" description="rate limit in PPRZ units per timestep (depends on control frequency)"/>
       <define name="ACT_PREF" value="{0.0, 0.0, 0.0, 0.0}" description="preferred (low energy) actuator value. Important when the system is over-determined!"/>
       <define name="USE_ADAPTIVE" value="FALSE|TRUE" description="enable adaptive gains"/>
+      <define name="USE_NDI"  value="FALSE|TRUE" description="enable NDI to replace INDI"/>
       <define name="ADAPTIVE_MU" value="0.0001" description="adaptation parameter"/>
     </section>
   </doc>
   <settings>
     <dl_settings>
       <dl_settings NAME="indi">
+        <dl_setting var="indi_use_ndi" min="0" step="1" max="1" shortname="use_ndi" values="FALSE|TRUE" param="STABILIZATION_INDI_USE_NDI" type="uint8" persistent="true"/>
         <dl_setting var="reference_acceleration.err_p" min="0" step="1" max="2500" shortname="kp_p" param="STABILIZATION_INDI_REF_ERR_P" persistent="true"/>
         <dl_setting var="reference_acceleration.rate_p" min="0" step="0.1" max="100" shortname="kd_p" param="STABILIZATION_INDI_REF_RATE_P" persistent="true"/>
         <dl_setting var="reference_acceleration.err_q" min="0" step="1" max="2500" shortname="kp_q" param="STABILIZATION_INDI_REF_ERR_Q" persistent="true"/>

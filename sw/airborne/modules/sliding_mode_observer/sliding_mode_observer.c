@@ -2,7 +2,6 @@
  * Copyright (C) Sihao SUn
  *
  * This file is part of paparazzi
- *
  * paparazzi is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
@@ -32,7 +31,10 @@
 
 float signf(float x);
 
-struct FirstOrderLowPass nu_est0,nu_est1,nu_est2,nu_est3;
+struct FirstOrderLowPass nu_est0;
+struct FirstOrderLowPass nu_est1;
+struct FirstOrderLowPass nu_est2;
+struct FirstOrderLowPass nu_est3;
 
 bool sliding_mode_observer_status(void){
 	return SMDO_status;
@@ -42,11 +44,18 @@ void init_sliding_mode_observer(void) {
 
  	SMDO_status = false;
 
+    SMDO_t[0] = 0.05;
+    SMDO_t[1] = 0.07;
+    SMDO_t[2] = 0.10;
+    SMDO_t[3] = 0.05; 
+
  	float sample_time = 1.0 / PERIODIC_FREQUENCY;
-	init_first_order_low_pass(&nu_est0,1.0/(2.0 * M_PI * SMDO_fc[0]),sample_time,0);
-	init_first_order_low_pass(&nu_est1,1.0/(2.0 * M_PI * SMDO_fc[1]),sample_time,0);
-	init_first_order_low_pass(&nu_est2,1.0/(2.0 * M_PI * SMDO_fc[2]),sample_time,0);
-	init_first_order_low_pass(&nu_est3,1.0/(2.0 * M_PI * SMDO_fc[3]),sample_time,0);
+	init_first_order_low_pass(&nu_est0,SMDO_t[0],sample_time,0);
+	init_first_order_low_pass(&nu_est1,SMDO_t[1],sample_time,0);
+	init_first_order_low_pass(&nu_est2,SMDO_t[2],sample_time,0);
+	init_first_order_low_pass(&nu_est3,SMDO_t[3],sample_time,0);
+	
+	//printf("%f\n", SMDO_t[0]);
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -76,11 +85,6 @@ void call_sliding_mode_observer(float* z_dot,
 		SMDO_nu0[i] = signf(SMDO_s[i])*ks[i];
 	}
 
-//    printf("%f,%f,%f,%f\n",SMDO_nu0[0]
-//    					  ,SMDO_nu0[1]
-//    					  ,SMDO_nu0[2]
-//    					  ,SMDO_nu0[3]);
-
 	update_first_order_low_pass(&nu_est0,SMDO_nu0[0]);
 	update_first_order_low_pass(&nu_est1,SMDO_nu0[1]);
 	update_first_order_low_pass(&nu_est2,SMDO_nu0[2]);
@@ -91,6 +95,10 @@ void call_sliding_mode_observer(float* z_dot,
 	SMDO_nu_est[2] = get_first_order_low_pass(&nu_est2);
 	SMDO_nu_est[3] = get_first_order_low_pass(&nu_est3);
 	
+    //printf("%f,%f,%f,%f\n",nu_est0.last_out
+    //					  ,SMDO_nu_est[1]
+    //					  ,SMDO_nu_est[2]
+    //					  ,SMDO_nu_est[3]);
 }
 
 float signf(float x){

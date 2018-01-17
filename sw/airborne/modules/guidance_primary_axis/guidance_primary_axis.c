@@ -46,6 +46,8 @@
 #include "math/pprz_algebra_float.h"
 #include "modules/attitude_optitrack/attitude_optitrack.h"
 #include "modules/sliding_mode_observer/sliding_mode_observer.h"
+#include "modules/step_input/step_input.h"
+
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else
@@ -129,18 +131,19 @@ void guidance_primary_axis_run(void)
 	float pos_y_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.y) - stateGetPositionNed_f()->y;
 	float pos_z_err = POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z);
 
+	//printf("%d\t%d\t%f\n", guidance_v_z_ref, stateGetPositionNed_i()->z,stateGetPositionEnu_f()->z);
 	//printf("%d\t%f\t%d\t%f\n",guidance_h.ref.pos.x, stateGetPositionNed_f()->x, guidance_h.ref.pos.y, stateGetPositionNed_f()->y);
 	
 	float speed_sp_x = pos_x_err * guidance_pa_pos_gain;
 	float speed_sp_y = pos_y_err * guidance_pa_pos_gain;
-	float speed_sp_z = pos_z_err * guidance_pa_pos_gain;
+	float speed_sp_z = pos_z_err * guidance_pa_pos_gain*0.5;
 
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
 	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
 
 	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain;
 	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain;
-	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain*0.5;
+	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
 
 	sp_accel.x = update_butterworth_2_low_pass(&sp_accel_filter_x, sp_accel_raw.x);
 	sp_accel.y = update_butterworth_2_low_pass(&sp_accel_filter_y, sp_accel_raw.y);
@@ -157,7 +160,7 @@ void guidance_primary_axis_run(void)
 	if(attitude_optitrack_status()==true){
 		phi 	= attitude_optitrack.phi;
 	  	theta = attitude_optitrack.theta;
-	  	psi 	= attitude_optitrack.psi + 0.99; //0.99 is the difference between optitrack uplodaded heading and state heading
+	  	psi 	= attitude_optitrack.psi;
 
 	}else {
 		phi 	= stateGetNedToBodyEulers_f()->phi;
@@ -184,8 +187,13 @@ if ((autopilot.mode == AP_MODE_ATTITUDE_DIRECT) || (autopilot.mode == AP_MODE_AT
     DeadBand(rd, STABILIZATION_ATTITUDE_DEADBAND_R);
     r_des =  rd * STABILIZATION_ATTITUDE_SP_MAX_R / (MAX_PPRZ - STABILIZATION_ATTITUDE_DEADBAND_R);
 
-  //for rc vertical control
-  	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-4500)*8.0/9600.0;
+    if (autopilot.mode == AP_MODE_ATTITUDE_DIRECT)
+    {
+	  //for rc vertical control
+	  	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-4500)*16.0/9600.0;
+    }
+
+//printf("%f\n", sp_accel.z);
 }
 else if (autopilot.mode == AP_MODE_NAV){
 	float psi_des = guidance_h.sp.heading;
@@ -202,6 +210,7 @@ else if (autopilot.mode == AP_MODE_NAV){
 
 	r_des = psi_dot_cmd*cos(phi)*cos(theta)-sin(phi)*theta_dot;
 }
+	
 
 	//Acceleration projecting on body axis (nd_i)
 	nd_i_state.x = sp_accel.x;
@@ -212,6 +221,17 @@ else if (autopilot.mode == AP_MODE_NAV){
 	nd_i_state.x =  nd_i_state.x/norm_nd;
 	nd_i_state.y =  nd_i_state.y/norm_nd; 	
 	nd_i_state.z =  nd_i_state.z/norm_nd;
+
+	//psi = -27.0/57.3;
+	if(step_input_status() == true && (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD || autopilot.mode == AP_MODE_NAV))
+	{
+		call_step_input(&nx_desire_step, 0.342, 0.1, 0.6, 1.2); //30deg
+		//call_step_input(&y_desire, 0.342, 2.1, 2.6, 3.2);
+		nd_i_state.x = nx_desire_step;
+		nd_i_state.y = y_desire;
+		nd_i_state.z = -sqrtf(1.0-x_desire*x_desire);
+		psi = 0.0;
+	}	
 
 	struct FloatMat33 R_BI;
 	MAT33_ELMT(R_BI,0,0) = cos(theta)*cos(psi);
@@ -226,10 +246,12 @@ else if (autopilot.mode == AP_MODE_NAV){
 
 	MAT33_VECT3_MUL(nd_state, R_BI, nd_i_state);
 
+
 	//Calculate command thrust
 	float thrust_specific;
 	thrust_specific = -(sp_accel.z-g)/cos(phi)/cos(theta);
 
+	//printf("%f\t%f\t%f\n", speed_sp_z, stateGetSpeedNed_f()->z,thrust_specific);
 
 	//Compute command p and q using NDI
 	struct FloatRates *body_rates = stateGetBodyRates_f();

@@ -1,4 +1,4 @@
-/*
+float x_desire,y_desire;/*
  * Copyright (C) Sihao Sun
  *
  * This file is part of paparazzi
@@ -51,6 +51,6 @@ struct FloatVect3 nd_state;
 struct FloatVect3 nd_i_state;
 struct FloatVect3 sp_accel_primary_axis;
 struct FloatVect3 sp_accel_primary_axis_filter;
-
+float nx_desire_step,ny_desire_step;
 #endif
 

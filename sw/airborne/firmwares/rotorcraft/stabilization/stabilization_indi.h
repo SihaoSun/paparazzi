@@ -33,6 +33,7 @@ extern struct Int32Quat   stab_att_sp_quat;  ///< with #INT32_QUAT_FRAC
 extern struct Int32Eulers stab_att_sp_euler; ///< with #INT32_ANGLE_FRAC
 
 extern bool indi_use_adaptive;
+extern bool indi_use_ndi;
 
 struct ReferenceSystem {
   float err_p;
@@ -60,6 +61,7 @@ float q_des_dot_logger;
 float r_des_dot_logger;
 float p_des_filter_logger;
 float q_des_filter_logger;
-float r_des_filter_logger;  
+float r_des_filter_logger;
+float NDI_PSI0[4];
 #endif /* STABILIZATION_INDI */
 

@@ -36,7 +36,7 @@
       <define name="GUIDANCE_INDI_THRUST_DYNAMICS" value="0.1"/>
       <define name="GUIDANCE_INDI_RC_DEBUG" value="FALSE"/> 
       <define name="STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE" value="TRUE"/>
-      <define name="PRIMARY_AXIS_THRUST_COMMAND" value="FALSE"/>
+      <define name="PRIMARY_AXIS_THRUST_COMMAND" value="TRUE"/>
     </module>
     <define name="BEBOP_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_2000"/>
   </firmware>
@@ -59,8 +59,10 @@
     </module>
     <module name="attitude_optitrack">
       <define name="DATALINK_NATNET_FREQUENCY" value="120"/>
+      <define name="OPTITRACK_PSI_SHIFT_CYBERZOO" value="0.99"/>
     </module>
   <module name="sliding_mode_observer"/>
+  <module name="step_input"/>
   </modules>
 
   <commands>
@@ -181,6 +183,9 @@
     <!-- Adaptive Learning Rate -->
     <define name="USE_ADAPTIVE" value="FALSE"/>
     <define name="ADAPTIVE_MU" value="0.0001"/>
+
+    <!-- NDI test-->
+    <define name="USE_NDI" value="FALSE"/>
   </section>
 
   <section name="GUIDANCE_V" prefix="GUIDANCE_V_">
@@ -218,7 +223,7 @@
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
     <!--define name="MODE_MANUAL" value="AP_MODE_KILL"/-->
     <define name="MODE_AUTO1" value="AP_MODE_ATTITUDE_Z_HOLD"/>
-    <define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/>
+    <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
 
     <define name="NO_RC_THRUST_LIMIT" value="TRUE"/>
   </section>

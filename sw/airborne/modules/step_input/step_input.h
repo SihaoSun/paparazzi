@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Sihao SUn
+ * Copyright (C) SihaoSun
  *
  * This file is part of paparazzi
  *
@@ -18,32 +18,21 @@
  * <http://www.gnu.org/licenses/>.
  */
 /**
- * @file "modules/sliding_mode_observer/sliding_mode_observer.h"
- * @author Sihao SUn
- * Sliding mode observer for observing model uncertainty and disturbance in the equation of motion
+ * @file "modules/step_input/step_input.h"
+ * @author SihaoSun
+ * Module containing step input functions with user defined magnitude and frequency
  */
 
-#ifndef SLIDING_MODE_OBSERVER_H
-#define SLIDING_MODE_OBSERVER_H
+#ifndef STEP_INPUT_H
+#define STEP_INPUT_H
 
 #include "std.h"
 
-extern bool sliding_mode_observer_status(void);
-extern void init_sliding_mode_observer(void);
+extern void init_step_input(void);
+extern bool step_input_status(void);
+extern void periodic_step_input(void);
+extern void call_step_input(float *output, float magnitude, float t1, float t2, float t3);
 
-extern void periodic_sliding_mode_observer(void);
 
-extern void call_sliding_mode_observer(float* z_dot,
-									 float* e, float* k, float* ks, int output_num);
-
-bool SMDO_status;
-float SMDO_sigma[4];
-float SMDO_s[4];
-float SMDO_sigma_integral[4];
-float SMDO_z[4];
-float SMDO_t[4];
-float SMDO_nu0[4];
-float SMDO_nu_est[4];
-float SMDO_z_dot[4];
 #endif
 
