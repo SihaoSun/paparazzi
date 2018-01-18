@@ -89,11 +89,13 @@ bool indi_use_adaptive = true;
 bool indi_use_adaptive = false;
 #endif
 
-#if STABILIZATION_INDI_USE_NDI
-bool indi_use_ndi = true;
-#else
+//#if STABILIZATION_INDI_USE_NDI
+//bool indi_use_ndi = true;
+//#else
+//bool indi_use_ndi = false;
+//#endif
+
 bool indi_use_ndi = false;
-#endif
 
 #ifdef STABILIZATION_INDI_ACT_RATE_LIMIT
 float act_rate_limit[INDI_NUM_ACT] = STABILIZATION_INDI_ACT_RATE_LIMIT;
@@ -185,6 +187,7 @@ Butterworth2LowPass az_lowpass_filter;
 Butterworth2LowPass p_des_filter;
 Butterworth2LowPass q_des_filter;
 Butterworth2LowPass r_des_filter;
+Butterworth2LowPass rate_lowpass_filters[3];
 
 struct FloatVect3 body_accel_f;
 
@@ -291,6 +294,7 @@ void init_filters(void)
   float tau_est = 1.0 / (2.0 * M_PI * STABILIZATION_INDI_ESTIMATION_FILT_CUTOFF);
   float tau_pq_des = 1.0 / (2.0 * M_PI * 10.0);
   float sample_time = 1.0 / PERIODIC_FREQUENCY;
+  float tau_pqr_mea = 1.0 / (2.0 * M_PI * 16.0);
   // Filtering of the gyroscope
   int8_t i;
   for (i = 0; i < 3; i++) {
@@ -312,6 +316,12 @@ void init_filters(void)
   init_butterworth_2_low_pass(&p_des_filter, tau_pq_des, sample_time, 0.0);
   init_butterworth_2_low_pass(&q_des_filter, tau_pq_des, sample_time, 0.0);
   init_butterworth_2_low_pass(&r_des_filter, tau_pq_des, sample_time, 0.0);
+
+  // Filtering of the p q r measured value
+  for (int i = 0; i < 3; ++i)
+  {
+    init_butterworth_2_low_pass(&rate_lowpass_filters[i], tau_pqr_mea, sample_time, 0.0);
+  }
 }
 
 /**
@@ -535,17 +545,17 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     wls_alloc(indi_du, indi_v, du_min, du_max, Bwls, INDI_NUM_ACT, INDI_OUTPUTS, 0, 0, Wv, 0, du_min, 10000, 10);
 #endif
 
-  //// call sliding mode observer
-  //for (i = 0; i < 4; ++i)
-  //{
-  //  SMDO_z_dot[i] = -indi_v[i]- SMDO_nu0[i];
-  //  for (j = 0; j < 4; ++j)
-  //  {
-  //     SMDO_z_dot[i] += g1[i][j]*indi_du[j];
-  //     if (i == 2)
-  //      SMDO_z_dot[i] += g2[j]*indi_du[j];
-  //  } 
-  //}
+  // call sliding mode observer
+  for (i = 0; i < 4; ++i)
+  {
+    SMDO_z_dot[i] = -indi_v[i]- SMDO_nu0[i];
+    for (j = 0; j < 4; ++j)
+    {
+       SMDO_z_dot[i] += g1[i][j]*indi_du[j];
+       if (i == 2)
+        SMDO_z_dot[i] += g2[j]*indi_du[j];
+    } 
+  }
 
 
   // Add the increments to the actuators
@@ -594,9 +604,9 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   }
 
 //////////////////////////////// NDI ////////////////////////////////////////
-
+    indi_use_ndi = autopilot_mode_status;
 //  if (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD){
-    if(indi_use_ndi){
+    if(indi_use_ndi == true){
       float nu[4],omega_ref;
       float kp,kq,kr;
       kp = 30.0;
@@ -609,15 +619,19 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       Iy = 0.0013659;
       Iz = 0.0028079;
 
+      float p_filter,q_filter,r_filter;
+      p_filter = rate_lowpass_filters[0].o[0];
+      q_filter = rate_lowpass_filters[1].o[0];
+      r_filter = rate_lowpass_filters[2].o[0];
       //printf("%f  %f\n", (float)stabilization_cmd[COMMAND_THRUST], omega_ref);
-      nu[0] = p_des_dot + kp*(p_des_filter.o[1]-body_rates->p);
-      nu[1] = q_des_dot + kq*(q_des_filter.o[1]-body_rates->q);
-      nu[2] = r_des_dot + kr*(r_des_filter.o[1]-body_rates->r);
+      nu[0] = p_des_dot + kp*(p_des_filter.o[0]-p_filter);
+      nu[1] = q_des_dot + kq*(q_des_filter.o[0]-q_filter);
+      nu[2] = r_des_dot + kr*(r_des_filter.o[0]-r_filter);
       nu[3] = rpm_cmd_pa * rpm_cmd_pa/1e6;
 
-      nu[0] -= body_rates->q*body_rates->r*(Iz-Iy)/Ix;
-      nu[1] -= body_rates->p*body_rates->r*(Ix-Iz)/Iy;
-      nu[2] -= body_rates->p*body_rates->q*(Iy-Ix)/Iz;
+      nu[0] -= q_filter*r_filter*(Iz-Iy)/Ix;
+      nu[1] -= p_filter*r_filter*(Ix-Iz)/Iy;
+      nu[2] -= p_filter*q_filter*(Iy-Ix)/Iz;
 
       //printf("%f\t%f\t%f\t%f\n", p_des_filter.o[1], q_des_filter.o[1],r_des_filter.o[1]);
 
@@ -642,10 +656,10 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       float w2[4] = {0.0,0.0,0.0,0.0}; //rpm^2
       float w[4] = {0.0,0.0,0.0,0.0}; //rpm
 
-      for (int i = 0; i < 4; i++)
+      for (i = 0; i < 4; i++)
       {
         NDI_PSI0[i] = nu[i];
-        for (int j = 0; j < 4; j++)
+        for (j = 0; j < 4; j++)
         { 
           if (j==3)
             w2[i] += G_inv[i][j]*(nu[j])*1e5;
@@ -658,7 +672,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       }
       
       float act_cmd[4];
-      for (int i = 0; i < 4; i++) {
+      for (i = 0; i < 4; i++) {
         act_cmd[i] = (w[i] - get_servo_min(i));
         act_cmd[i] *= (MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
         Bound(act_cmd[i], 0, MAX_PPRZ);
@@ -666,21 +680,21 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       }
 
         //Call SMDC. Now psi0 = nu;
-        float Ks[4] = {30,10,5,10};
+        float Ks[4] = {50,50,5,10};
         float Error[4];
         float X_thrust = 0;
-        for (int i = 0; i < 4; ++i)
+        for (i = 0; i < 4; ++i)
         {
           SMDO_z_dot[i] = -nu[i] - SMDO_nu0[i]; 
-          for (int j = 0; j < 4; ++j)
+          for (j = 0; j < 4; ++j)
           {
             SMDO_z_dot[i] += G[i][j]*w2[j]*1e-5;
           } 
         }
 
-        Error[0] = p_des_filter.o[1]-body_rates->p;
-        Error[1] = q_des_filter.o[1]-body_rates->q;
-        Error[2] = r_des_filter.o[1]-body_rates->r;
+        Error[0] = p_des_filter.o[0]-p_filter;
+        Error[1] = q_des_filter.o[0]-q_filter;
+        Error[2] = r_des_filter.o[0]-r_filter;
   
         for (int i = 0; i < 4; ++i)
         {
@@ -714,6 +728,7 @@ void stabilization_indi_run(bool in_flight, bool rate_control)
   for (i = 0; i < 3; i++) {
     update_butterworth_2_low_pass(&measurement_lowpass_filters[i], rate_vect[i]);
     update_butterworth_2_low_pass(&estimation_output_lowpass_filters[i], rate_vect[i]);
+    update_butterworth_2_low_pass(&rate_lowpass_filters[i], rate_vect[i]);
 
     //Calculate the angular acceleration via finite difference
     angular_acceleration[i] = (measurement_lowpass_filters[i].o[0]

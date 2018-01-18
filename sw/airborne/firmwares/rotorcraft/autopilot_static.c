@@ -322,6 +322,7 @@ void autopilot_static_set_mode(uint8_t new_autopilot_mode)
     //if switching to rate mode but rate mode is not defined, the function returned
     autopilot.mode = new_autopilot_mode;
   }
+
 }
 
 

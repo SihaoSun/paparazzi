@@ -42,6 +42,7 @@ extern bool ap_ahrs_is_aligned(void);
 extern uint8_t ap_mode_of_3x2way_switch(void);
 #else
 extern uint8_t ap_mode_of_3way_switch(void);
+extern bool autopilot_mode_status;
 #endif
 #if defined RADIO_AUTO_MODE || defined(__DOXYGEN__)
 extern uint8_t ap_mode_of_two_switches(void)
