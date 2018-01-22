@@ -52,5 +52,7 @@ struct FloatVect3 nd_i_state;
 struct FloatVect3 sp_accel_primary_axis;
 struct FloatVect3 sp_accel_primary_axis_filter;
 float nx_desire_step,ny_desire_step;
+
+extern float vz_err_integral;
 #endif
 

@@ -78,6 +78,8 @@ Butterworth2LowPass sp_accel_filter_x;
 Butterworth2LowPass sp_accel_filter_y;
 Butterworth2LowPass sp_accel_filter_z;
 
+float vz_err_integral;
+
 bool guidance_primary_axis_status(void)
 {
 	return primary_axis_status;
@@ -195,7 +197,7 @@ if ((autopilot.mode == AP_MODE_ATTITUDE_DIRECT) || (autopilot.mode == AP_MODE_AT
 
 //printf("%f\n", sp_accel.z);
 }
-else if (autopilot.mode == AP_MODE_NAV){
+else{
 	float psi_des = guidance_h.sp.heading;
 
 	// Compute command r (check availability);
@@ -206,11 +208,15 @@ else if (autopilot.mode == AP_MODE_NAV){
 	float theta_dot = (get_first_order_low_pass(&theta_filt)-theta_filt_last)*PERIODIC_FREQUENCY;
 	float psi_des_dot = (get_first_order_low_pass(&psi_des_filt)-psi_des_filt_last)*PERIODIC_FREQUENCY;
 
-	float psi_dot_cmd = psi_des_dot + 5.0*(psi_des-psi);
+	float psi_dot_cmd = psi_des_dot + 1.0*(psi_des-psi);
 
 	r_des = psi_dot_cmd*cos(phi)*cos(theta)-sin(phi)*theta_dot;
 }
 	
+	if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT)
+    	vz_err_integral += (speed_sp_z - stateGetSpeedNed_f()->z) / PERIODIC_FREQUENCY;
+	else
+		vz_err_integral = 0;
 
 	//Acceleration projecting on body axis (nd_i)
 	nd_i_state.x = sp_accel.x;
@@ -223,10 +229,10 @@ else if (autopilot.mode == AP_MODE_NAV){
 	nd_i_state.z =  nd_i_state.z/norm_nd;
 
 	//psi = -27.0/57.3;
-	if(step_input_status() == true && (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD || autopilot.mode == AP_MODE_NAV))
+	if(step_input_status() == true && (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD || autopilot.mode == AP_MODE_NAV || autopilot.mode == AP_MODE_HOVER_Z_HOLD))
 	{
-		call_step_input(&nx_desire_step, 0.342, 0.1, 0.6, 1.2); //30deg
-		//call_step_input(&y_desire, 0.342, 2.1, 2.6, 3.2);
+		call_step_input(&nx_desire_step, 0.342, 0.1, 1.1, 2.1); //30deg
+		//call_step_input(&y_desire, 0.342, 2.1, 2.6, 3.2);	
 		nd_i_state.x = nx_desire_step;
 		nd_i_state.y = y_desire;
 		nd_i_state.z = -sqrtf(1.0-x_desire*x_desire);
@@ -250,7 +256,6 @@ else if (autopilot.mode == AP_MODE_NAV){
 	//Calculate command thrust
 	float thrust_specific;
 	thrust_specific = -(sp_accel.z-g)/cos(phi)/cos(theta);
-
 	//printf("%f\t%f\t%f\n", speed_sp_z, stateGetSpeedNed_f()->z,thrust_specific);
 
 	//Compute command p and q using NDI

@@ -44,8 +44,12 @@ void init_sliding_mode_observer(void) {
 
  	SMDO_status = false;
 
+//    SMDO_t[0] = 0.05;
+//    SMDO_t[1] = 0.07;
+//    SMDO_t[2] = 0.10;
+//    SMDO_t[3] = 0.05; 
     SMDO_t[0] = 0.05;
-    SMDO_t[1] = 0.07;
+    SMDO_t[1] = 0.05;
     SMDO_t[2] = 0.10;
     SMDO_t[3] = 0.05; 
 
