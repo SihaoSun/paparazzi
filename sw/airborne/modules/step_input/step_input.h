@@ -31,7 +31,7 @@
 extern void init_step_input(void);
 extern bool step_input_status(void);
 extern void periodic_step_input(void);
-extern void call_step_input(float *output, float magnitude, float t1, float t2, float t3);
+extern void call_step_input(float *output, float magnitude, float t1, float t2, float t3, float t4);
 
 
 #endif

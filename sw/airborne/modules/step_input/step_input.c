@@ -47,7 +47,7 @@ void periodic_step_input(void){
 		step_input_flag = true;
 }
 
-void call_step_input(float *output, float magnitude, float t1, float t2, float t3){
+void call_step_input(float *output, float magnitude, float t1, float t2, float t3, float t4){
 
 	temp += 1.0/PERIODIC_FREQUENCY;
 	//printf("%f\n", temp);
@@ -57,6 +57,8 @@ void call_step_input(float *output, float magnitude, float t1, float t2, float t
 		*output = magnitude;
 	else if (temp<t3)
 		*output = - magnitude;
+	else if (temp<t4)
+		*output = 0;
 	else
 	{
 		*output = 0;

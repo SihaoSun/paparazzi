@@ -63,5 +63,6 @@ float p_des_filter_logger;
 float q_des_filter_logger;
 float r_des_filter_logger;
 float NDI_PSI0[4];
+float Error[4];
 #endif /* STABILIZATION_INDI */
 

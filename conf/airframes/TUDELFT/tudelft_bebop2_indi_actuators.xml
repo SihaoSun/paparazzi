@@ -170,9 +170,9 @@
     <define name="REF_ERR_P" value="300.0"/>
     <define name="REF_ERR_Q" value="600.0"/>
     <define name="REF_ERR_R" value="600.0"/>
-    <define name="REF_RATE_P" value="40.0"/>
-    <define name="REF_RATE_Q" value="40.0"/>
-    <define name="REF_RATE_R" value="10.0"/>
+    <define name="REF_RATE_P" value="20.0"/>
+    <define name="REF_RATE_Q" value="20.0"/>
+    <define name="REF_RATE_R" value="5.0"/>
 
     <define name="ESTIMATION_FILT_CUTOFF" value="4.0"/>
     <define name="FILT_CUTOFF" value="5.0"/>
@@ -222,8 +222,8 @@
     <define name="MODE_STARTUP" value="AP_MODE_ATTITUDE_Z_HOLD"/>
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
     <!--define name="MODE_MANUAL" value="AP_MODE_KILL"/-->
-    <define name="MODE_AUTO1" value="AP_MODE_ATTITUDE_Z_HOLD"/>
-    <define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/>
+    <define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/>
+    <define name="MODE_AUTO1" value="AP_MODE_HOVER_Z_HOLD"/>
     <!--define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_DIRECT"/-->
 
     <define name="NO_RC_THRUST_LIMIT" value="TRUE"/>

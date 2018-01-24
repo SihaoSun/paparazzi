@@ -292,9 +292,9 @@ void init_filters(void)
   // tau = 1/(2*pi*Fc)
   float tau = 1.0 / (2.0 * M_PI * STABILIZATION_INDI_FILT_CUTOFF);
   float tau_est = 1.0 / (2.0 * M_PI * STABILIZATION_INDI_ESTIMATION_FILT_CUTOFF);
-  float tau_pq_des = 1.0 / (2.0 * M_PI *15.0);
+  float tau_pq_des = 1.0 / (2.0 * M_PI *20.0);
   float sample_time = 1.0 / PERIODIC_FREQUENCY;
-  float tau_pqr_mea = 1.0 / (2.0 * M_PI * 25.0);
+  float tau_pqr_mea = 1.0 / (2.0 * M_PI * 20.0);
   // Filtering of the gyroscope
   int8_t i;
   for (i = 0; i < 3; i++) {
@@ -411,10 +411,14 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   q_filter = rate_lowpass_filters[1].o[0];
   r_filter = rate_lowpass_filters[2].o[0];
 
-  float Error[4];
-  Error[0] = p_des_filter.o[0]-p_filter;
-  Error[1] = q_des_filter.o[0]-q_filter;
-  Error[2] = r_des_filter.o[0]-body_rates->r;
+  //float Error[4];
+ // Error[0] = p_des_filter.o[0]-p_filter;
+ // Error[1] = q_des_filter.o[0]-q_filter;
+ // Error[2] = rate_ref.r-body_rates->r;
+
+  Error[0] = rate_ref.p-body_rates->p;
+  Error[1] = rate_ref.q-body_rates->q;
+  Error[2] = rate_ref.r-body_rates->r;
   
   //calculate the virtual control (reference acceleration) based on a PD controller
   if(guidance_primary_axis_status()==true) {
@@ -428,8 +432,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       //angular_accel_ref.p = (rate_ref.p - body_rates->p) * reference_acceleration.rate_p + p_des_dot ;
       //angular_accel_ref.q = (rate_ref.q - body_rates->q) * reference_acceleration.rate_q + q_des_dot ;    
 
-      angular_accel_ref.p = Error[0] * reference_acceleration.rate_p + p_des_dot ;
-      angular_accel_ref.q = Error[1] * reference_acceleration.rate_q + q_des_dot ;    
+      angular_accel_ref.p = Error[0] * reference_acceleration.rate_p;// + p_des_dot ;
+      angular_accel_ref.q = Error[1] * reference_acceleration.rate_q;// + q_des_dot ;    
 
       p_des_dot_logger = p_des_dot;
       q_des_dot_logger = q_des_dot;
@@ -492,7 +496,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
         thrust_primary_axis = 0;
       rpm_cmd_pa = sqrtf(thrust_primary_axis * 4.7197e+06);
       //rpm_cmd_pa_fb = -3000*(POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z));
-      float rpm_cmd_pa_fb = -3000*vz_err_integral;
+      float rpm_cmd_pa_fb = -1000*vz_err_integral;
       if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT)
       {
         rpm_cmd_pa += rpm_cmd_pa_fb;
@@ -500,7 +504,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       float thrust_pprz_cmd = (rpm_cmd_pa- get_servo_min(0));
       thrust_pprz_cmd *= (MAX_PPRZ / (float)(get_servo_max(0) - get_servo_min(0)));  
 
-      printf("%f\t%f\t%f\n",rpm_cmd_pa,rpm_cmd_pa_fb,vz_err_integral);
+      //printf("%f\t%f\t%f\n",rpm_cmd_pa,rpm_cmd_pa_fb,vz_err_integral);
 
       for (i = 0; i < 4; ++i)
       {
@@ -619,6 +623,14 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
   }
 
+  float X_thrust = 0;
+  for (int i = 0; i < 4; ++i)
+  {
+    X_thrust += actuator_state[i]*((float)(get_servo_max(i) - get_servo_min(i)))/(float)MAX_PPRZ
+                + (float)get_servo_min(i);
+  }
+
+  Error[3] = rpm_cmd_pa*rpm_cmd_pa/1e6 - X_thrust*X_thrust/16e6;
 //////////////////////////////// NDI ////////////////////////////////////////
     //printf("%d\n", indi_use_ndi);
     indi_use_ndi = 1-autopilot_mode_status;
@@ -636,56 +648,51 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       Iz = 0.0028079;
 
       //printf("%f  %f\n", (float)stabilization_cmd[COMMAND_THRUST], omega_ref);
-      nu[0] = p_des_dot + reference_acceleration.rate_p*Error[0];
-      nu[1] = q_des_dot + reference_acceleration.rate_q*Error[1];
-      nu[2] = r_des_dot + reference_acceleration.rate_r*Error[2];
+      nu[0] = reference_acceleration.rate_p*Error[0] + p_des_dot;
+      nu[1] = reference_acceleration.rate_q*Error[1] + q_des_dot;
+      nu[2] = reference_acceleration.rate_r*Error[2] + r_des_dot;
       nu[3] = rpm_cmd_pa * rpm_cmd_pa/1e6;
 
       nu[0] -= body_rates->q*body_rates->r*(Iz-Iy)/Ix;
       nu[1] -= body_rates->q*body_rates->r*(Iz-Iy)/Ix;
       nu[2] -= body_rates->p*body_rates->q*(Iy-Ix)/Iz;
 
-      //printf("%f\t%f\t%f\t%f\n", p_des_filter.o[1], q_des_filter.o[1],r_des_filter.o[1]);
 
-     // float G_inv[4][4]={    4.4333,    3.4909,  115.9936/10,  0.1101,
-     //                       -4.8167,    5.6033, -142.4522/10,  0.1214,
-     //                       -3.7910,   -5.3569,  150.4645/10,  0.1076,
-     //                        3.6549,   -3.6319, -108.4452/10,  0.1071}; //G_inv is scaled by 1e-5
-        /*CMD_THRST = NU[3]*/  
-  //    float G_inv[4][4]={    4.1706,    4.3919,  125.8106/10,    0.1115,
-  //                          -4.1706,    4.3919, -125.8106/10,    0.1115,
-  //                          -4.1706,   -4.3919,  125.8106/10,    0.1115,
-  //                           4.1706,   -4.3919, -125.8106/10,    0.1115};
-      float G_inv[4][4]={      4.1736,    4.3937,  125.0000,   8.5000,
-                              -4.1736,    4.3937, -125.0000,   8.5000,
-                              -4.1736,   -4.3937,  125.0000,   8.5000,
-                               4.1736,   -4.3937, -125.0000,   8.5000};
-      float G[4][4] = {        0.0599,   -0.0599,   -0.0599,    0.0599,
-                               0.0569,    0.0569,   -0.0569,   -0.0569,
-                               0.0020,   -0.0020,    0.0020,   -0.0020,
-                               0.0294,    0.0294,    0.0294,    0.0294}; //G is scaled by 1e5
+      float G_inv[4][4]={  0.3333,    0.3289,   8.5997,    1.0000,
+                          -0.3333,    0.3289,  -8.5997,    1.0000,
+                          -0.3333,   -0.3289,   8.5997,    1.0000,
+                           0.3333,   -0.3289,  -8.5997,    1.0000};
+      float G[4][4] = {       0.7501,   -0.7501,   -0.7501,    0.7501,
+                              0.7601,    0.7601,   -0.7601,   -0.7601,
+                              0.0291,   -0.0291,    0.0291,   -0.0291,
+                              0.2500,    0.2500,    0.2500,    0.2500}; //G is scaled by 1e6
       
       float w2[4] = {0.0,0.0,0.0,0.0}; //rpm^2
       float w[4] = {0.0,0.0,0.0,0.0}; //rpm
+      float k_sigma[4] = {0.5,0.5,0.5,0.1};
 
       for (i = 0; i < 4; i++)
       {
         NDI_PSI0[i] = nu[i];
         for (j = 0; j < 4; j++)
         { 
-          if (sliding_mode_observer_status() == false || j==3)
-            w2[i] += G_inv[i][j]*(nu[j])*1e5;
+          if (sliding_mode_observer_status() == false)
+            w2[i] += G_inv[i][j]*(nu[j])*1e6;
           else
-            w2[i] += G_inv[i][j]*(nu[j] + SMDO_nu_est[j])*1e5;
-
-          Bound(w2[i],0,get_servo_max(i)*get_servo_max(i));
-          w[i] = sqrtf(w2[i]);
+            w2[i] += G_inv[i][j]*(nu[j] + SMDO_nu_est[j] + k_sigma[j]*SMDO_sigma[j])*1e6;
         }
+
+//        if (w2[i] <= (float)(get_servo_min(i))*(float)(get_servo_min(i)))
+//          w2[i] = (float)(get_servo_min(i))*(float)(get_servo_min(i));
+//        w[i] = sqrtf(w2[i]);
+        if (w2[i] <= 2500*2500)
+          w2[i] = 2500*2500;
+        w[i] = sqrtf(w2[i]);        
       }
       
       float act_cmd[4];
       for (i = 0; i < 4; i++) {
-        act_cmd[i] = (w[i] - get_servo_min(i));
+        act_cmd[i] = (w[i] - (float)get_servo_min(i));
         act_cmd[i] *= (MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
         Bound(act_cmd[i], 0, MAX_PPRZ);
         actuators_pprz[i] = (int16_t)act_cmd[i];
@@ -693,27 +700,18 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
         //Call SMDC. Now psi0 = nu;
         //float Ks[4] = {5.0,5.0,5.0,10.0};
-        float X_thrust = 0;
         for (i = 0; i < 4; ++i)
         {
           SMDO_z_dot[i] = -nu[i] - SMDO_nu0[i]; 
           for (j = 0; j < 4; ++j)
           {
-            SMDO_z_dot[i] += G[i][j]*w2[j]*1e-5;
+            SMDO_z_dot[i] += G[i][j]*w2[j]*1e-6;
           } 
         }
 
-        for (int i = 0; i < 4; ++i)
-        {
-          X_thrust += actuator_state[i]*((float)(get_servo_max(i) - get_servo_min(i)))/(float)MAX_PPRZ
-                      + (float)get_servo_min(i);
-        }
 
-        ET_integral += (rpm_cmd_pa*rpm_cmd_pa/1e6 - X_thrust*X_thrust/16e6) / PERIODIC_FREQUENCY;
-        Error[3] = ET_integral;
-        
-        float Ks[4] = {20,20,8.0,10};
-        float K[4] = {reference_acceleration.rate_p,reference_acceleration.rate_q,reference_acceleration.rate_r};
+        float Ks[4] = {30,30,8.0,20};
+        float K[4] = {reference_acceleration.rate_p,reference_acceleration.rate_q,reference_acceleration.rate_r, 1.0};
         if (sliding_mode_observer_status() == true){
           call_sliding_mode_observer(SMDO_z_dot, Error, K, Ks, 4);
         }
@@ -731,8 +729,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
           } 
         }
 
-        float Ks[4] = {10,10,8.0,10};
-        float K[4] = {reference_acceleration.rate_p,reference_acceleration.rate_q,reference_acceleration.rate_r};
+        float Ks[4] = {10.0,10.0,1.0,1.0};
+        float K[4] = {reference_acceleration.rate_p,reference_acceleration.rate_q,reference_acceleration.rate_r, 1.0};
         if (sliding_mode_observer_status() == true){
           call_sliding_mode_observer(SMDO_z_dot, Error, K, Ks, 4);
         }      

@@ -231,7 +231,7 @@ else{
 	//psi = -27.0/57.3;
 	if(step_input_status() == true && (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD || autopilot.mode == AP_MODE_NAV || autopilot.mode == AP_MODE_HOVER_Z_HOLD))
 	{
-		call_step_input(&nx_desire_step, 0.342, 0.1, 1.1, 2.1); //30deg
+		call_step_input(&nx_desire_step, 0.342, 0.1, 1.1, 2.1, 3.1); //30deg
 		//call_step_input(&y_desire, 0.342, 2.1, 2.6, 3.2);	
 		nd_i_state.x = nx_desire_step;
 		nd_i_state.y = y_desire;

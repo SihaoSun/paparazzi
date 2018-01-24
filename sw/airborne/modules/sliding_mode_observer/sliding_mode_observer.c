@@ -29,6 +29,9 @@
 #include "state.h"
 #include "generated/airframe.h"
 
+//float SMDO_t[4] = {0.10,0.10,0.10,0.05};
+float SMDO_t[4] = {0.30,0.10,0.30,0.05};
+
 float signf(float x);
 
 struct FirstOrderLowPass nu_est0;
@@ -44,22 +47,13 @@ void init_sliding_mode_observer(void) {
 
  	SMDO_status = false;
 
-//    SMDO_t[0] = 0.05;
-//    SMDO_t[1] = 0.07;
-//    SMDO_t[2] = 0.10;
-//    SMDO_t[3] = 0.05; 
-    SMDO_t[0] = 0.05;
-    SMDO_t[1] = 0.05;
-    SMDO_t[2] = 0.10;
-    SMDO_t[3] = 0.05; 
-
  	float sample_time = 1.0 / PERIODIC_FREQUENCY;
 	init_first_order_low_pass(&nu_est0,SMDO_t[0],sample_time,0);
 	init_first_order_low_pass(&nu_est1,SMDO_t[1],sample_time,0);
 	init_first_order_low_pass(&nu_est2,SMDO_t[2],sample_time,0);
 	init_first_order_low_pass(&nu_est3,SMDO_t[3],sample_time,0);
 	
-	//printf("%f\n", SMDO_t[0]);
+	printf("%f\n", SMDO_t[0]);
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -83,7 +77,13 @@ void call_sliding_mode_observer(float* z_dot,
 	for (int i = 0; i < output_num; i++)
 	{	
 		SMDO_sigma_integral[i] += k[i]*e[i]/PERIODIC_FREQUENCY;
-		SMDO_sigma[i] = e[i] + SMDO_sigma_integral[i];
+		if (i == 3){
+			SMDO_sigma[i] = SMDO_sigma_integral[i];
+			//printf("%f\t%f\n", SMDO_sigma_integral[i], e[i]);
+		}
+		else
+			SMDO_sigma[i] = e[i] + SMDO_sigma_integral[i];
+			
 		SMDO_z[i] += z_dot[i]/PERIODIC_FREQUENCY;
 		SMDO_s[i] = SMDO_z[i] + SMDO_sigma[i];
 		SMDO_nu0[i] = signf(SMDO_s[i])*ks[i];
