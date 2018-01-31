@@ -29,8 +29,12 @@
 #include "state.h"
 #include "generated/airframe.h"
 
-//float SMDO_t[4] = {0.10,0.10,0.10,0.05};
-float SMDO_t[4] = {0.30,0.10,0.30,0.05};
+#if SMC_TEST_NDI_USED
+//float SMDO_t[4] = {0.30,0.30,0.30,0.10}; //NDI
+float SMDO_t[4] = {0.10,0.10,0.10,0.10}; //NDI
+#else
+float SMDO_t[4] = {0.10,0.10,0.10,0.10};
+#endif
 
 float signf(float x);
 
@@ -53,8 +57,6 @@ void init_sliding_mode_observer(void) {
 	init_first_order_low_pass(&nu_est2,SMDO_t[2],sample_time,0);
 	init_first_order_low_pass(&nu_est3,SMDO_t[3],sample_time,0);
 	
-	printf("%f\n", SMDO_t[0]);
-
 	for (int i = 0; i < 4; i++)
 	{
 		SMDO_sigma_integral[i] = 0;

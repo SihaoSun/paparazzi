@@ -51,7 +51,7 @@
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else
-float guidance_pa_pos_gain = 1.0;
+float guidance_pa_pos_gain = 0.5;
 #endif
 
 #ifdef GUIDANCE_PA_SPEED_GAIN
@@ -210,7 +210,8 @@ else{
 
 	float psi_dot_cmd = psi_des_dot + 1.0*(psi_des-psi);
 
-	r_des = psi_dot_cmd*cos(phi)*cos(theta)-sin(phi)*theta_dot;
+	//r_des = psi_dot_cmd*cos(phi)*cos(theta)-sin(phi)*theta_dot;
+	r_des = psi_dot_cmd;
 }
 	
 	if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT)
@@ -231,11 +232,12 @@ else{
 	//psi = -27.0/57.3;
 	if(step_input_status() == true && (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD || autopilot.mode == AP_MODE_NAV || autopilot.mode == AP_MODE_HOVER_Z_HOLD))
 	{
-		call_step_input(&nx_desire_step, 0.342, 0.1, 1.1, 2.1, 3.1); //30deg
-		//call_step_input(&y_desire, 0.342, 2.1, 2.6, 3.2);	
+		call_step_input(&nx_desire_step, 0.342, 2, 3.5, 5.0, 8.0); //20deg
+		//call_step_input(&nx_desire_step, 0.4226, 0.1, 1.1, 2.1, 3.1); //25deg
+					
 		nd_i_state.x = nx_desire_step;
-		nd_i_state.y = y_desire;
-		nd_i_state.z = -sqrtf(1.0-x_desire*x_desire);
+		nd_i_state.y = ny_desire_step;
+		nd_i_state.z = -sqrtf(1.0-nx_desire_step*nx_desire_step);
 		psi = 0.0;
 	}	
 

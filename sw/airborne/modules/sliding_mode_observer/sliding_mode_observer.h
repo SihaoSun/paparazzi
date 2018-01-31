@@ -41,7 +41,7 @@ float SMDO_sigma[4];
 float SMDO_s[4];
 float SMDO_sigma_integral[4];
 float SMDO_z[4];
-extern float SMDO_t[4];
+float SMDO_t[4];
 float SMDO_nu0[4];
 float SMDO_nu_est[4];
 float SMDO_z_dot[4];

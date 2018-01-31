@@ -56,6 +56,7 @@ extern void stabilization_indi_read_rc(bool in_flight, bool in_carefree, bool co
 
 // other variables
 float act_obs[4];
+float du_log[4];
 float p_des_dot_logger;
 float q_des_dot_logger;
 float r_des_dot_logger;

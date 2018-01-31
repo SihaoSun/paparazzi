@@ -1,4 +1,4 @@
-float x_desire,y_desire;/*
+/*
  * Copyright (C) Sihao Sun
  *
  * This file is part of paparazzi

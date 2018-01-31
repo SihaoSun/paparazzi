@@ -20,7 +20,7 @@
     <waypoint lat="51.9906737" lon="4.3768074" name="_CZ4"/>
     <waypoint height="0.6" lat="51.9906083" lon= "4.3767676" name="Infront Fan"/>
     <waypoint height="0.6" lat="51.9906128" lon= "4.3767828" name="Outside Fan"/>    
-    <waypoint height="1" name="p1" lat = "51.9906242" lon = "4.3768321"/>
+    <waypoint height="1.5" name="p1" lat = "51.9906244" lon = "4.3768391"/>
     <waypoint height="3" name="p2" lat = "51.9906360" lon = "4.3767517"/>
   </waypoints>
   <sectors>
@@ -96,7 +96,9 @@
       <go from="p1" hmode="route" wp="p2"/>
     </block>
     <block name="go_p1">
-	<stay wp="p1"/>
+<set value="ANGLE_BFP_OF_REAL(-60/57.295779)" var="nav_heading"/>	
+<stay wp="p1"/>
+	
     </block>
     <block name="go_p2">
 	<stay wp="p2"/>
