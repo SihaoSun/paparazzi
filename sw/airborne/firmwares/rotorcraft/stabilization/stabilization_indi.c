@@ -56,7 +56,11 @@
 // Factor that the estimated G matrix is allowed to deviate from initial one
 #define INDI_ALLOWED_G_FACTOR 2.0
 // Scaling for the control effectiveness to make it readible
-#define INDI_G_SCALING 1000.0
+#if INDI_USE_OMEGA_SQUARE
+  #define INDI_G_SCALING 1000000.0
+#else
+  #define INDI_G_SCALING 1000.0
+#endif
 
 float du_min[INDI_NUM_ACT];
 float du_max[INDI_NUM_ACT];
@@ -89,12 +93,6 @@ bool indi_use_adaptive = true;
 bool indi_use_adaptive = false;
 #endif
 
-//#if STABILIZATION_INDI_USE_NDI
-//bool indi_use_ndi = true;
-//#else
-//bool indi_use_ndi = false;
-//#endif
-
 bool indi_use_ndi = false;
 
 #ifdef STABILIZATION_INDI_ACT_RATE_LIMIT
@@ -124,6 +122,7 @@ float act_dyn[INDI_NUM_ACT] = STABILIZATION_INDI_ACT_DYN;
 
 // variables needed for control
 float actuator_state_filt_vect[INDI_NUM_ACT];
+float actuator_state_filt_vect2[INDI_NUM_ACT];
 struct FloatRates angular_accel_ref = {0., 0., 0.};
 float angular_acceleration[3] = {0., 0., 0.};
 float actuator_state[INDI_NUM_ACT];
@@ -161,10 +160,19 @@ float indi_thrust_increment;
 bool indi_thrust_increment_set = false;
 
 float g1g2_pseudo_inv[INDI_NUM_ACT][INDI_OUTPUTS];
-float g2[INDI_NUM_ACT] = STABILIZATION_INDI_G2; //scaled by INDI_G_SCALING
+
+#if INDI_USE_OMEGA_SQUARE
+float g1[INDI_OUTPUTS][INDI_NUM_ACT] = {STABILIZATION_INDI_G1_ROLL_O2,
+                                        STABILIZATION_INDI_G1_PITCH_O2, STABILIZATION_INDI_G1_YAW_O2, STABILIZATION_INDI_G1_THRUST_O2
+                                       };
+float g2[INDI_NUM_ACT] = STABILIZATION_INDI_G2_O2; //zero
+#else
 float g1[INDI_OUTPUTS][INDI_NUM_ACT] = {STABILIZATION_INDI_G1_ROLL,
                                         STABILIZATION_INDI_G1_PITCH, STABILIZATION_INDI_G1_YAW, STABILIZATION_INDI_G1_THRUST
                                        };
+float g2[INDI_NUM_ACT] = STABILIZATION_INDI_G2; //scaled by INDI_G_SCALING
+#endif
+
 float g1g2[INDI_OUTPUTS][INDI_NUM_ACT];
 float g1_est[INDI_OUTPUTS][INDI_NUM_ACT];
 float g2_est[INDI_NUM_ACT];
@@ -179,6 +187,7 @@ float r_des_dot;
 double ET_integral;
 
 Butterworth2LowPass actuator_lowpass_filters[INDI_NUM_ACT];
+Butterworth2LowPass actuator_lowpass_filters2[INDI_NUM_ACT];
 Butterworth2LowPass estimation_input_lowpass_filters[INDI_NUM_ACT];
 Butterworth2LowPass measurement_lowpass_filters[3];
 Butterworth2LowPass estimation_output_lowpass_filters[3];
@@ -305,6 +314,7 @@ void init_filters(void)
   // Filtering of the actuators
   for (i = 0; i < INDI_NUM_ACT; i++) {
     init_butterworth_2_low_pass(&actuator_lowpass_filters[i], tau, sample_time, 0.0);
+    init_butterworth_2_low_pass(&actuator_lowpass_filters2[i], tau, sample_time, 0.0);
     init_butterworth_2_low_pass(&estimation_input_lowpass_filters[i], tau_est, sample_time, 0.0);
   }
 
@@ -511,7 +521,17 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       {
         v_thrust += (thrust_pprz_cmd - actuator_state_filt_vect[i]) * Bwls[3][i];
       }
+#if INDI_USE_OMEGA_SQUARE
+      float X_thrust = 0;
+      for (int i = 0; i < 4; ++i)
+      {
+        float X = actuator_state_filt_vect[i]*((float)(get_servo_max(i) - get_servo_min(i)))/(float)MAX_PPRZ
+                    + (float)get_servo_min(i);
+        X_thrust += X*X;
+      }
+      v_thrust = rpm_cmd_pa*rpm_cmd_pa/1e6 - X_thrust/4e6;
 
+#endif
     }
 #endif  
   else {
@@ -557,8 +577,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   #endif
 #endif
   
-  if(autopilot_mode_status == 1)
-    SMDO_nu_est[3] = 0;
+//  if(autopilot_mode_status == 1)
+//    SMDO_nu_est[3] = 0;
 
   if (sliding_mode_observer_status() == true)
   {
@@ -577,7 +597,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
                  + (g1g2_pseudo_inv[i][2] * indi_v[2])
                  + (g1g2_pseudo_inv[i][3] * indi_v[3]);
   }
-
+  //printf("%f\t%f\t%f\t%f\n", g1g2_pseudo_inv[0][0], g1g2_pseudo_inv[1][0], g1g2_pseudo_inv[2][0], g1g2_pseudo_inv[3][0]);
   if (damage_status())
   {
     indi_du[DAMAGED_ROTOR_INDEX] = 0;
@@ -600,24 +620,32 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
   // Compile this part if omega^2 is used as system input. The g1 matrix should be
   // set the same as NDI and g2 matrix should be set as zero. 
-#ifdef INDI_USE_OMEGA_SQUARE
+#if INDI_USE_OMEGA_SQUARE
     for (int i = 0; i < 4; ++i)
     {
-      if (indi_du > 0)
-        indi_du = sqrtf(indi_du)*(MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
-      else
-        indi_du = sqrtf(-indi_du)*(MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
+//      float indi_du_sqrt;
+//      if (indi_du[i] > 0)
+//        indi_du_sqrt = sqrtf(indi_du[i])*(MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
+//      else
+//      {
+//        indi_du_sqrt = -sqrtf(-indi_du[i])*(MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
+//      }
+      float k = MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i));
+      float indi_u2 = actuator_state_filt_vect2[i] + indi_du[i]*k*k;
+      if(indi_u2 < 0)
+        indi_u2 = 0;
+      indi_u[i] = sqrtf(indi_u2);
     }
-#endif
-
+    //printf("%f\t%f\n", v_thrust, indi_du[0]);
+#else
   // Add the increments to the actuators
   float_vect_sum(indi_u, actuator_state_filt_vect, indi_du, INDI_NUM_ACT);
+#endif
 
   for (i = 0; i < 4; ++i)
   {
     du_log[i] = indi_du[i];
   }
-
   // Bound the inputs to the actuators
   for (i = 0; i < INDI_NUM_ACT; i++) {
        if (act_is_servo[i]) {
@@ -638,8 +666,9 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   for (i = 0; i < INDI_NUM_ACT; i++) {
     update_butterworth_2_low_pass(&actuator_lowpass_filters[i], actuator_state[i]);
     update_butterworth_2_low_pass(&estimation_input_lowpass_filters[i], actuator_state[i]);
+    update_butterworth_2_low_pass(&actuator_lowpass_filters2[i], actuator_state[i]*actuator_state[i]);
     actuator_state_filt_vect[i] = actuator_lowpass_filters[i].o[0];
-
+    actuator_state_filt_vect2[i] = actuator_lowpass_filters2[i].o[0]; 
     // calculate derivatives for estimation
     float actuator_state_filt_vectd_prev = actuator_state_filt_vectd[i];
     actuator_state_filt_vectd[i] = (estimation_input_lowpass_filters[i].o[0] - estimation_input_lowpass_filters[i].o[1]) * PERIODIC_FREQUENCY;
@@ -1041,15 +1070,6 @@ void calc_g1_inv_damage(void)
       }
     }
     MAT_INV33(g1_damage_inv,g1_damage);
-//    printf("%2.1f %2.1f %2.1f\n%2.1f %2.1f %2.1f\n%2.1f %2.1f %2.1f\n"
-//                    , g1_damage[0][0], g1_damage[0][1], g1_damage[0][2]
-//                    , g1_damage[1][0], g1_damage[1][1], g1_damage[1][2]
-//                    , g1_damage[2][0], g1_damage[2][1], g1_damage[2][2]);
-//    printf("%6.5f %6.5f %6.5f\n%6.5f %6.5f %6.5f\n%6.5f %6.5f %6.5f\n"
-//                    , g1_damage_inv[0][0], g1_damage_inv[0][1], g1_damage_inv[0][2]
-//                    , g1_damage_inv[1][0], g1_damage_inv[1][1], g1_damage_inv[1][2]
-//                    , g1_damage_inv[2][0], g1_damage_inv[2][1], g1_damage_inv[2][2]);
-
 }
 
 /**
@@ -1070,7 +1090,6 @@ void calc_g1g2_pseudo_inv(void)
       }
     }
   }
-
   //G1G2*transpose(G1G2)
   //calculate matrix multiplication of its transpose INDI_OUTPUTSxnum_act x num_actxINDI_OUTPUTS
   float element = 0;
@@ -1087,13 +1106,13 @@ void calc_g1g2_pseudo_inv(void)
   }
 
   //there are numerical errors if the scaling is not right.
-  float_vect_scale(g1g2_trans_mult[0], 100.0, INDI_OUTPUTS * INDI_OUTPUTS);
+  float_vect_scale(g1g2_trans_mult[0], INDI_G_SCALING, INDI_OUTPUTS * INDI_OUTPUTS);
 
   //inverse of 4x4 matrix
   float_mat_inv_4d(g1g2inv[0], g1g2_trans_mult[0]);
 
   //scale back
-  float_vect_scale(g1g2inv[0], 100.0, INDI_OUTPUTS * INDI_OUTPUTS);
+  float_vect_scale(g1g2inv[0], INDI_G_SCALING, INDI_OUTPUTS * INDI_OUTPUTS);
 
   //G1G2'*G1G2inv
   //calculate matrix multiplication INDI_NUM_ACTxINDI_OUTPUTS x INDI_OUTPUTSxINDI_OUTPUTS
