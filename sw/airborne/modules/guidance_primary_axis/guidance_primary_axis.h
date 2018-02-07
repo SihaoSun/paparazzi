@@ -37,7 +37,9 @@ float thrust_primary_axis;
 float primary_axis_n_gain_x;
 float primary_axis_n_gain_y;
 float primary_axis_n_abs;
-
+float speed_sp_x;
+float speed_sp_y;
+float speed_sp_z;
 extern bool guidance_primary_axis_status(void);
 extern void guidance_primary_axis_init(void);
 extern void guidance_primary_axis_end(void);
@@ -55,4 +57,3 @@ float nx_desire_step,ny_desire_step;
 
 extern float vz_err_integral;
 #endif
-

@@ -436,32 +436,32 @@ void ins_int_update_gps(struct GpsState *gps_s __attribute__((unused))) {}
 #endif /* USE_GPS */
 
 
-#if USE_SONAR
-static void sonar_cb(uint8_t __attribute__((unused)) sender_id, float distance)
-{
-  static float last_offset = 0.;
-
-  /* update filter assuming a flat ground */
-  if (distance < INS_SONAR_MAX_RANGE && distance > INS_SONAR_MIN_RANGE
-#ifdef INS_SONAR_THROTTLE_THRESHOLD
-      && stabilization_cmd[COMMAND_THRUST] < INS_SONAR_THROTTLE_THRESHOLD
-#endif
-#ifdef INS_SONAR_BARO_THRESHOLD
-      && ins_int.baro_z > -INS_SONAR_BARO_THRESHOLD /* z down */
-#endif
-      && ins_int.update_on_agl
-      && ins_int.baro_initialized) {
-    vff_update_z_conf(-(distance), VFF_R_SONAR_0 + VFF_R_SONAR_OF_M * fabsf(distance));
-    last_offset = vff.offset;
-  } else {
-    /* update offset with last value to avoid divergence */
-    vff_update_offset(last_offset);
-  }
-
-  /* reset the counter to indicate we just had a measurement update */
-  ins_int.propagation_cnt = 0;
-}
-#endif // USE_SONAR
+//#if USE_SONAR
+//static void sonar_cb(uint8_t __attribute__((unused)) sender_id, float distance)
+//{
+//  static float last_offset = 0.;
+//
+//  /* update filter assuming a flat ground */
+//  if (distance < INS_SONAR_MAX_RANGE && distance > INS_SONAR_MIN_RANGE
+//#ifdef INS_SONAR_THROTTLE_THRESHOLD
+//      && stabilization_cmd[COMMAND_THRUST] < INS_SONAR_THROTTLE_THRESHOLD
+//#endif
+//#ifdef INS_SONAR_BARO_THRESHOLD
+//      && ins_int.baro_z > -INS_SONAR_BARO_THRESHOLD /* z down */
+//#endif
+//      && ins_int.update_on_agl
+//      && ins_int.baro_initialized) {
+//    //vff_update_z_conf(-(distance), VFF_R_SONAR_0 + VFF_R_SONAR_OF_M * fabsf(distance));
+//    last_offset = vff.offset;
+//  } else {
+//    /* update offset with last value to avoid divergence */
+//    vff_update_offset(last_offset);
+//  }
+//
+//  /* reset the counter to indicate we just had a measurement update */
+//  ins_int.propagation_cnt = 0;
+//}
+//#endif // USE_SONAR
 
 /** copy position and speed to state interface */
 static void ins_ned_to_state(void)

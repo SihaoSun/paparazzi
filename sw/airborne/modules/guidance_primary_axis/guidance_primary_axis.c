@@ -77,6 +77,7 @@ struct FirstOrderLowPass theta_filt, psi_des_filt;
 Butterworth2LowPass sp_accel_filter_x;
 Butterworth2LowPass sp_accel_filter_y;
 Butterworth2LowPass sp_accel_filter_z;
+Butterworth2LowPass altitude_filter;
 
 float vz_err_integral;
 
@@ -107,7 +108,11 @@ void low_pass_filter_init(void)
 	init_first_order_low_pass(&psi_des_filt,tau,sample_time,guidance_h.sp.heading);
 	init_butterworth_2_low_pass(&sp_accel_filter_x,tau_nd,sample_time,0);
 	init_butterworth_2_low_pass(&sp_accel_filter_y,tau_nd,sample_time,0);
-	init_butterworth_2_low_pass(&sp_accel_filter_z,tau_nd,sample_time,0);	
+	init_butterworth_2_low_pass(&sp_accel_filter_z,tau_nd,sample_time,0);
+#ifdef VZ_FROM_DIFF_ALT		
+	float tau_z = 1.0/(2.0 * M_PI * 5.0);
+	init_butterworth_2_low_pass(&altitude_filter,tau_z,sample_time,0);		
+#endif
 	return;
 }
 
@@ -136,16 +141,24 @@ void guidance_primary_axis_run(void)
 	//printf("%d\t%d\t%f\n", guidance_v_z_ref, stateGetPositionNed_i()->z,stateGetPositionEnu_f()->z);
 	//printf("%d\t%f\t%d\t%f\n",guidance_h.ref.pos.x, stateGetPositionNed_f()->x, guidance_h.ref.pos.y, stateGetPositionNed_f()->y);
 	
-	float speed_sp_x = pos_x_err * guidance_pa_pos_gain;
-	float speed_sp_y = pos_y_err * guidance_pa_pos_gain;
-	float speed_sp_z = pos_z_err * guidance_pa_pos_gain*0.5;
+	speed_sp_x = pos_x_err * guidance_pa_pos_gain;
+	speed_sp_y = pos_y_err * guidance_pa_pos_gain;
+	speed_sp_z = pos_z_err * guidance_pa_pos_gain*0.5;
 
+	//printf("%f\t%f\n", speed_sp_z,(stateGetSpeedNed_f()->z));
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
 	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
 
 	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain;
 	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain;
 	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
+
+#ifdef VZ_FROM_DIFF_ALT	
+	float Z_filter = update_butterworth_2_low_pass(&altitude_filter,POS_FLOAT_OF_BFP(stateGetPositionNed_i()->z));
+	float Vz_filter = (altitude_filter.o[0] - altitude_filter.o[1])*PERIODIC_FREQUENCY;
+	//printf("%f\t%f\t%f\n", speed_sp_z,Vz_fiter,stateGetSpeedNed_f()->z);
+	sp_accel_raw.z = (speed_sp_z - Vz_filter) * guidance_pa_speed_gain;
+#endif
 
 	sp_accel.x = update_butterworth_2_low_pass(&sp_accel_filter_x, sp_accel_raw.x);
 	sp_accel.y = update_butterworth_2_low_pass(&sp_accel_filter_y, sp_accel_raw.y);
@@ -215,7 +228,11 @@ else{
 }
 	
 	if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT)
-    	vz_err_integral += (speed_sp_z - stateGetSpeedNed_f()->z) / PERIODIC_FREQUENCY;
+#ifdef VZ_FROM_DIFF_ALT	
+    vz_err_integral += (speed_sp_z - Vz_filter) / PERIODIC_FREQUENCY;
+#else	
+    vz_err_integral += (speed_sp_z - stateGetSpeedNed_f()->z) / PERIODIC_FREQUENCY;
+#endif
 	else
 		vz_err_integral = 0;
 

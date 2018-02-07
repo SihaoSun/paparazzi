@@ -31,7 +31,7 @@
 
 #if SMC_TEST_NDI_USED
 //float SMDO_t[4] = {0.30,0.30,0.30,0.10}; //NDI
-float SMDO_t[4] = {0.10,0.10,0.10,0.10}; //NDI
+float SMDO_t[4] = {0.10,0.10,0.17,0.10}; //NDI
 #else
 float SMDO_t[4] = {0.10,0.10,0.10,0.10};
 #endif

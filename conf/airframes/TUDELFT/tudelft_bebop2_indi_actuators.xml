@@ -41,6 +41,7 @@
       <define name="SMC_TEST_NDI_USED" value = "FALSE"/>
     </module>
     <define name="BEBOP_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_2000"/>
+    <define name="VZ_FROM_DIFF_ALT"/>
   </firmware>
 
   <modules main_freq="512">
@@ -119,11 +120,12 @@
   </section>
 
   <section name="INS" prefix="INS_">
-    <define name="SONAR_MAX_RANGE" value="2.2"/>
-    <define name="SONAR_UPDATE_ON_AGL" value="TRUE"/>
+    <!--define name="SONAR_MAX_RANGE" value="2.2"/>
+    <!--define name="SONAR_UPDATE_ON_AGL" value="TRUE"/>
     <!-- Use GPS altitude measurments and set the R gain -->
     <define name="USE_GPS_ALT" value="1"/>
     <define name="VFF_R_GPS" value="0.01"/>
+    <define name="USE_GPS_ALT_SPEED" value = "TRUE"/>
   </section>
 
 
@@ -156,14 +158,15 @@
 
   <section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
     <!-- control effectiveness -->
+    <!--define name="G1_ROLL" value="{ 15, -15, -15 ,  15 }"/>
+    <define name="G1_PITCH" value="{14 , 14, -14 , -14 }"/>   
+    <define name="G1_YAW" value="{2.5, -2.5, 2.5  -2.5}"/-->
     <define name="G1_ROLL" value="{ 15, -15, -15 ,  15 }"/>
-    <define name="G1_PITCH" value="{14 , 14, -14 , -14 }"/>
-    <!--define name="G1_ROLL" value="{ 12, -12, -12,  12 }"/>
-    <define name="G1_PITCH" value="{12 , 12, -12 , -12 }"/-->    
-    <define name="G1_YAW" value="{2.5, -2.5, 2.5  -2.5}"/>
+    <define name="G1_PITCH" value="{14 , 14, -14 , -14 }"/>   
+    <define name="G1_YAW" value="{.25, -.25, .25  -.25}"/>
     <define name="G1_THRUST" value="{-.65, -.65, -.65, -.65}"/>
     <!--Counter torque effect of spinning up a rotor-->
-    <define name="G2" value="{0,   -0,  0,   -0}"/>
+    <define name="G2" value="{120,   -120,  120,-120}"/>
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
     <define name="FILTER_ROLL_RATE" value="TRUE"/>
@@ -227,9 +230,9 @@
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
     <!--define name="MODE_MANUAL" value="AP_MODE_KILL"/-->
     <define name="MODE_AUTO1" value="AP_MODE_HOVER_Z_HOLD"/>
-    <!--define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/-->
+    <define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/>
     <!--define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/-->
-    <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
+    <!--define name="MODE_AUTO2" value="AP_MODE_NAV"/-->
 
     <define name="NO_RC_THRUST_LIMIT" value="TRUE"/>
   </section>

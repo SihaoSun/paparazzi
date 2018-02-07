@@ -294,7 +294,7 @@ void init_filters(void)
   float tau_est = 1.0 / (2.0 * M_PI * STABILIZATION_INDI_ESTIMATION_FILT_CUTOFF);
   float tau_pq_des = 1.0 / (2.0 * M_PI *20.0);
   float sample_time = 1.0 / PERIODIC_FREQUENCY;
-  float tau_pqr_mea = 1.0 / (2.0 * M_PI * 20.0);
+  float tau_pqr_mea = 1.0 / (2.0 * M_PI * 40.0);
   // Filtering of the gyroscope
   int8_t i;
   for (i = 0; i < 3; i++) {
@@ -412,13 +412,13 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   r_filter = rate_lowpass_filters[2].o[0];
 
   //float Error[4];
- //Error[0] = rate_ref.p - p_filter;
- //Error[1] = rate_ref.q - q_filter;
- //Error[2] = rate_ref.r - body_rates->r;
+  Error[0] = rate_ref.p - p_filter;
+  Error[1] = rate_ref.q - q_filter;
+  Error[2] = rate_ref.r - r_filter;
 
-  Error[0] = rate_ref.p-body_rates->p;
-  Error[1] = rate_ref.q-body_rates->q;
-  Error[2] = rate_ref.r-body_rates->r;
+  //Error[0] = rate_ref.p-body_rates->p;
+  //Error[1] = rate_ref.q-body_rates->q;
+  //Error[2] = rate_ref.r-body_rates->r;
   
   //calculate the virtual control (reference acceleration) based on a PD controller
   if(guidance_primary_axis_status()==true) {
@@ -545,6 +545,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   float k_sigma[4]  = {1.0,1.0,1.0,1.5}; //ndi nominal
   indi_use_ndi =   1-autopilot_mode_status;
   #else
+//  float k_sigma[4] = {0.5,0.5,0.5,1.0}; //indi nominal
   float k_sigma[4] = {0.5,0.5,0.5,1.0}; //indi nominal
   #endif
 #else
@@ -597,6 +598,17 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 #endif
 
 
+  // Compile this part if omega^2 is used as system input. The g1 matrix should be
+  // set the same as NDI and g2 matrix should be set as zero. 
+#ifdef INDI_USE_OMEGA_SQUARE
+    for (int i = 0; i < 4; ++i)
+    {
+      if (indi_du > 0)
+        indi_du = sqrtf(indi_du)*(MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
+      else
+        indi_du = sqrtf(-indi_du)*(MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
+    }
+#endif
 
   // Add the increments to the actuators
   float_vect_sum(indi_u, actuator_state_filt_vect, indi_du, INDI_NUM_ACT);
@@ -682,24 +694,36 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     //                          0.0291,   -0.0291,    0.0291,   -0.0291,
     //                          0.2500,    0.2500,    0.2500,    0.2500}; //G is scaled by 1e6
       //w0 = 9500
-//      float G_inv[4][4]={  0.3333,    0.3289,   1.7781,    1.0000,
-//                          -0.3333,    0.3289,  -1.7781,    1.0000,
-//                          -0.3333,   -0.3289,   1.7781,    1.0000,
-//                           0.3333,   -0.3289,  -1.7781,    1.0000};
-//      float G[4][4] = {       0.7501,   -0.7501,   -0.7501,    0.7501,
+//      float G_inv[4][4]={     0.3111,    0.3333,    1.7781,    1.0000,
+//                             -0.3111,    0.3333,   -1.7781,    1.0000,
+//                             -0.3111,   -0.3333,    1.7781,    1.0000,
+//                              0.3111,   -0.3333,   -1.7781,    1.0000};                              
+//      float G[4][4] = {       0.8035,   -0.8035,   -0.8035,    0.8035,
 //                              0.7501,    0.7501,   -0.7501,   -0.7501,
 //                              0.1406,   -0.1406,    0.1406,   -0.1406,
 //                              0.2500,    0.2500,    0.2500,    0.2500}; //G is scaled by 1e6
 
+      //w0 = 8000
+      float G_inv[4][4]={    0.2620,    0.2807,    1.4973,    1.0000,
+                            -0.2620,    0.2807,   -1.4973,    1.0000,
+                            -0.2620,   -0.2807,    1.4973,    1.0000,
+                             0.2620,   -0.2807,   -1.4973,    1.0000}; 
+
+      float G[4][4] = {      0.9542,   -0.9542,   -0.9542,    0.9542,
+                             0.8907,    0.8907,   -0.8907,   -0.8907,
+                             0.1670,   -0.1670,    0.1670,   -0.1670,
+                             0.2500,    0.2500,    0.2500,    0.2500}; //G is scaled by 1e6
+
+
       //w0 = 7000
-      float G_inv[4][4]={  0.2333,    0.2500,   1.3998,    1.0000,
-                          -0.2333,    0.2500,  -1.3998,    1.0000,
-                          -0.2333,   -0.2500,   1.3998,    1.0000,
-                           0.2333,   -0.2500,  -1.3998,    1.0000};
-      float G[4][4] = {       1.0714,   -1.0714,   -1.0714,    1.0714,
-                              1.0,       1.0,      -1.0,      -1.0,
-                              0.1786,   -0.1786,    0.1786,   -0.1786,
-                              0.2500,    0.2500,    0.2500,    0.2500}; //G is scaled by 1e6
+//      float G_inv[4][4]={  0.2333,    0.2500,   1.3998,    1.0000,
+//                          -0.2333,    0.2500,  -1.3998,    1.0000,
+//                          -0.2333,   -0.2500,   1.3998,    1.0000,
+//                           0.2333,   -0.2500,  -1.3998,    1.0000};
+//      float G[4][4] = {       1.0714,   -1.0714,   -1.0714,    1.0714,
+//                              1.0,       1.0,      -1.0,      -1.0,
+//                              0.1786,   -0.1786,    0.1786,   -0.1786,
+//                              0.2500,    0.2500,    0.2500,    0.2500}; //G is scaled by 1e6
   
       float w2[4] = {0.0,0.0,0.0,0.0}; //rpm^2
       float w[4] = {0.0,0.0,0.0,0.0}; //rpm
@@ -752,9 +776,9 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
         Error[3] = rpm_cmd_pa*rpm_cmd_pa/1e6 - X_thrust/4e6;
 #if SMC_TEST_NOMINAL
         //float Ks[4] = {30,30,30,20}; // nominal
-        float Ks[4] = {50,50,10,20};
+        float Ks[4] = {60,60,20,20};
 #else
-        float Ks[4] = {180,180,15,30}; // damage_status
+        float Ks[4] = {180,180,30,30}; // damage_status
 #endif
         float K[4] = {reference_acceleration.rate_p,reference_acceleration.rate_q,reference_acceleration.rate_r, 1.0};
         if (sliding_mode_observer_status() == true){

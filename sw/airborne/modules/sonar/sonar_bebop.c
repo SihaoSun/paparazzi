@@ -128,6 +128,7 @@ static void *sonar_bebop_read(void *data __attribute__((unused)))
       // Send ABI message
       AbiSendMsgAGL(AGL_SONAR_ADC_ID, sonar_bebop.distance);
 
+      printf("%f\n", sonar_bebop.distance);
 #ifdef SENSOR_SYNC_SEND_SONAR
       // Send Telemetry report
       DOWNLINK_SEND_SONAR(DefaultChannel, DefaultDevice, &sonar_bebop.meas, &sonar_bebop.distance);
