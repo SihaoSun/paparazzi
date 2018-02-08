@@ -462,7 +462,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
   else{
     if (body_rates->r < 35.0) // gyroscope limitation on Bebop2, 2000deg/sec
-      angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
+      //angular_accel_ref.r = (rate_ref.r - body_rates->r) * reference_acceleration.rate_r;
+        angular_accel_ref.r = Error[2]*reference_acceleration.rate_r + r_des_dot;   
     else
       angular_accel_ref.r = (rate_ref.r - angular_rate_optitrack.r) * reference_acceleration.rate_r;
   }
@@ -597,7 +598,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
                  + (g1g2_pseudo_inv[i][2] * indi_v[2])
                  + (g1g2_pseudo_inv[i][3] * indi_v[3]);
   }
-  //printf("%f\t%f\t%f\t%f\n", g1g2_pseudo_inv[0][0], g1g2_pseudo_inv[1][0], g1g2_pseudo_inv[2][0], g1g2_pseudo_inv[3][0]);
+  //printf("%f\t%f\t%f\t%f\n", g1g2_pseudo_inv[0][0], g1g2_pseudo_inv[0][1], g1g2_pseudo_inv[0][2], g1g2_pseudo_inv[0][3]);
   if (damage_status())
   {
     indi_du[DAMAGED_ROTOR_INDEX] = 0;
@@ -631,6 +632,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 //        indi_du_sqrt = -sqrtf(-indi_du[i])*(MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i)));
 //      }
       float k = MAX_PPRZ / (float)(get_servo_max(i) - get_servo_min(i));
+//      float indi_u2 = actuator_state_filt_vect2[i] + indi_du[i]*k*k;
       float indi_u2 = actuator_state_filt_vect2[i] + indi_du[i]*k*k;
       if(indi_u2 < 0)
         indi_u2 = 0;
@@ -711,7 +713,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       nu[3] = rpm_cmd_pa * rpm_cmd_pa/1e6;
 
       nu[0] -= body_rates->q*body_rates->r*(Iz-Iy)/Ix;
-      nu[1] -= body_rates->q*body_rates->r*(Iz-Iy)/Ix;
+      nu[1] -= body_rates->p*body_rates->r*(Iz-Iy)/Ix;
       nu[2] -= body_rates->p*body_rates->q*(Iy-Ix)/Iz;
 
     //  float G_inv[4][4]={  0.3333,    0.3289,   8.5997,    1.0000,
@@ -733,13 +735,13 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 //                              0.2500,    0.2500,    0.2500,    0.2500}; //G is scaled by 1e6
 
       //w0 = 8000
-      float G_inv[4][4]={    0.2620,    0.2807,    1.4973,    1.0000,
-                            -0.2620,    0.2807,   -1.4973,    1.0000,
-                            -0.2620,   -0.2807,    1.4973,    1.0000,
-                             0.2620,   -0.2807,   -1.4973,    1.0000}; 
+      float G_inv[4][4]={    0.2620/1.5,    0.2807/1.5,    1.4973,    1.0000,
+                            -0.2620/1.5,    0.2807/1.5,   -1.4973,    1.0000,
+                            -0.2620/1.5,   -0.2807/1.5,    1.4973,    1.0000,
+                             0.2620/1.5,   -0.2807/1.5,   -1.4973,    1.0000}; 
 
-      float G[4][4] = {      0.9542,   -0.9542,   -0.9542,    0.9542,
-                             0.8907,    0.8907,   -0.8907,   -0.8907,
+      float G[4][4] = {      0.9542*1.5,   -0.9542*1.5,   -0.9542*1.5,    0.9542*1.5,
+                             0.8907*1.5,    0.8907*1.5,   -0.8907*1.5,   -0.8907*1.5,
                              0.1670,   -0.1670,    0.1670,   -0.1670,
                              0.2500,    0.2500,    0.2500,    0.2500}; //G is scaled by 1e6
 

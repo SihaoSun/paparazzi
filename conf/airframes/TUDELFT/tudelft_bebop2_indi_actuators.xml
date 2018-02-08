@@ -163,8 +163,8 @@
     <define name="G1_PITCH" value="{14 , 14, -14 , -14 }"/>   
     <define name="G1_YAW" value="{2.5, -2.5, 2.5  -2.5}"/>
     <define name="G1_THRUST" value="{-.65, -.65, -.65, -.65}"/>
-    <define name="G1_ROLL_O2" value="{ 0.9542,   -0.9542,   -0.9542,    0.9542}"/>
-    <define name="G1_PITCH_O2" value="{0.8907,    0.8907,   -0.8907,   -0.8907}"/> 
+    <define name="G1_ROLL_O2" value="{ 0.9542*1.5,-0.9542*1.5,-0.9542*1.5, 0.9542*1.5}"/>
+    <define name="G1_PITCH_O2" value="{0.8907*1.5, 0.8907*1.5,-0.8907*1.5,-0.8907*1.5}"/> 
     <define name="G1_YAW_O2" value  ="{0.1670,   -0.1670,    0.1670,   -0.1670 }"/>
     <define name="G1_THRUST_O2" value="{0.25, 0.25, 0.25, 0.25}"/>                 
     <!--define name="USE_OMEGA_SQUARE"/-->        
@@ -231,10 +231,10 @@
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
     <!--define name="MODE_MANUAL" value="AP_MODE_KILL"/-->
     <define name="MODE_AUTO1" value="AP_MODE_HOVER_Z_HOLD"/>
-    <define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/>
+    <!--define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/-->
     <!--define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/-->
     <!--define name="MODE_AUTO2" value="AP_MODE_NAV"/-->
-
+    <define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_DIRECT"/>
     <define name="NO_RC_THRUST_LIMIT" value="TRUE"/>
   </section>
 

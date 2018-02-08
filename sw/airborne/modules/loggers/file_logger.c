@@ -72,7 +72,7 @@ void file_logger_start(void)
       "p_des,q_des,r_des,h1,h2,ndi_x,ndi_y,ndi_z,acc_des_x,acc_des_y,acc_des_z,acc_des_x_filter,acc_des_y_filter,acc_des_z_filter,"
       "p_des_dot, q_des_dot, r_des_dot, p_des_filter, q_des_filter, r_des_filter,"
       "nu0_1,nu0_2,nu0_3,nu0_4,nu_est1,nu_est2,nu_est3,nu_est4,PSI0_1,PSI0_2,PSI0_3,PSI0_4,z_dot1,z_dot2,z_dot3,z_dot4,sigma1,sigma2,sigma3,sigma4,s1,s2,s3,s4,nx_des,ny_des,e1,e2,e3,e4"
-      "z_ref,z,du1,du2,du3,du4,Vx,Vy,Vz,Vx_des,Vy_des,Vz_des\n"
+      "z_ref,z,du1,du2,du3,du4,Vx,Vy,Vz,Vx_des,Vy_des,Vz_des,nu1,nu2,nu3,x0_dot1,x0_dot2,x0_dot3\n"
     );
   }
 }
@@ -95,7 +95,7 @@ void file_logger_periodic(void)
   static uint32_t counter;
   struct Int32Quat *quat = stateGetNedToBodyQuat_i();
 
-  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
           counter,
           imu.gyro_unscaled.p,
           imu.gyro_unscaled.q,
@@ -200,7 +200,13 @@ void file_logger_periodic(void)
           stateGetSpeedNed_f()->z,
           speed_sp_x,
           speed_sp_y,
-          speed_sp_z
+          speed_sp_z,
+          angular_accel_ref.p,
+          angular_accel_ref.q,
+          angular_accel_ref.r,
+          angular_acceleration[0],
+          angular_acceleration[1],
+          angular_acceleration[2]
          );
   counter++;
 }

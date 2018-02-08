@@ -65,5 +65,9 @@ float q_des_filter_logger;
 float r_des_filter_logger;
 float NDI_PSI0[4];
 float Error[4];
+
+extern float angular_acceleration[3];
+extern struct FloatRates angular_accel_ref;
+
 #endif /* STABILIZATION_INDI */
 
