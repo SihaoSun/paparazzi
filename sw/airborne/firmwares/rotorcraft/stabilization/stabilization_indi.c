@@ -418,7 +418,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
   //Error[0] = rate_ref.p-body_rates->p;
   //Error[1] = rate_ref.q-body_rates->q;
-  //Error[2] = rate_ref.r-body_rates->r;
+  Error[2] = rate_ref.r-body_rates->r;
   
   //calculate the virtual control (reference acceleration) based on a PD controller
   if(guidance_primary_axis_status()==true) {

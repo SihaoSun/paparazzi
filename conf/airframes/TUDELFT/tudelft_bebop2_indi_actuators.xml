@@ -37,8 +37,8 @@
       <define name="GUIDANCE_INDI_RC_DEBUG" value="FALSE"/> 
       <define name="STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE" value="TRUE"/>
       <define name="PRIMARY_AXIS_THRUST_COMMAND" value="TRUE"/>
-      <define name="SMC_TEST_NOMINAL" value = "TRUE" />
-      <define name="SMC_TEST_NDI_USED" value = "FALSE"/>
+      <define name="SMC_TEST_NOMINAL" value = "FALSE"/>
+      <define name="SMC_TEST_NDI_USED" value = "TRUE"/>
     </module>
     <define name="BEBOP_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_2000"/>
     <define name="VZ_FROM_DIFF_ALT"/>
@@ -163,10 +163,10 @@
     <define name="G1_YAW" value="{2.5, -2.5, 2.5  -2.5}"/-->
     <define name="G1_ROLL" value="{ 15, -15, -15 ,  15 }"/>
     <define name="G1_PITCH" value="{14 , 14, -14 , -14 }"/>   
-    <define name="G1_YAW" value="{.25, -.25, .25  -.25}"/>
+    <define name="G1_YAW" value="{5, -5, 5  -5}"/>
     <define name="G1_THRUST" value="{-.65, -.65, -.65, -.65}"/>
     <!--Counter torque effect of spinning up a rotor-->
-    <define name="G2" value="{120,   -120,  120,-120}"/>
+    <define name="G2" value="{0,   -0,  0,-0}"/>
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
     <define name="FILTER_ROLL_RATE" value="TRUE"/>
