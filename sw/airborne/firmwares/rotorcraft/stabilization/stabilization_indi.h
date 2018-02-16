@@ -28,6 +28,7 @@
 
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_common_int.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_ref_quat_int.h"
+#include "filters/low_pass_filter.h"
 
 extern struct Int32Quat   stab_att_sp_quat;  ///< with #INT32_QUAT_FRAC
 extern struct Int32Eulers stab_att_sp_euler; ///< with #INT32_ANGLE_FRAC
@@ -54,6 +55,7 @@ extern void stabilization_indi_set_earth_cmd_i(struct Int32Vect2 *cmd, int32_t h
 extern void stabilization_indi_run(bool in_flight, bool rate_control);
 extern void stabilization_indi_read_rc(bool in_flight, bool in_carefree, bool coordinated_turn);
 
+
 // other variables
 float act_obs[4];
 float du_log[4];
@@ -65,5 +67,8 @@ float q_des_filter_logger;
 float r_des_filter_logger;
 float NDI_PSI0[4];
 float Error[4];
+
+extern Butterworth2LowPass rate_lowpass_filters[3];
+
 #endif /* STABILIZATION_INDI */
 

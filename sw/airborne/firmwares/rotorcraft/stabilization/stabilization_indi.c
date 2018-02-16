@@ -42,7 +42,6 @@
 #include "subsystems/radio_control.h"
 #include "subsystems/actuators.h"
 #include "subsystems/abi.h"
-#include "filters/low_pass_filter.h"
 #include "wls/wls_alloc.h"
 #include "modules/actuator_terminator/actuator_terminator.h"
 #include "modules/sliding_mode_observer/sliding_mode_observer.h"
@@ -412,10 +411,18 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   r_filter = rate_lowpass_filters[2].o[0];
 
   //float Error[4];
-  Error[0] = rate_ref.p - p_filter;
-  Error[1] = rate_ref.q - q_filter;
-  Error[2] = rate_ref.r - r_filter;
-
+  if (abs(r_filter)>=10)
+  {
+    Error[0] = rate_ref.p - (p_filter+0.5);
+    Error[1] = rate_ref.q - (q_filter+0.6);
+    Error[2] = rate_ref.r - (r_filter+0.2);
+  }
+  else{
+    Error[0] = rate_ref.p - p_filter;
+    Error[1] = rate_ref.q - q_filter;
+    Error[2] = rate_ref.r - r_filter;
+  }
+  
   //Error[0] = rate_ref.p-body_rates->p;
   //Error[1] = rate_ref.q-body_rates->q;
   Error[2] = rate_ref.r-body_rates->r;
@@ -495,9 +502,9 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
       if (thrust_primary_axis<=0)
         thrust_primary_axis = 0;
-      rpm_cmd_pa = sqrtf(thrust_primary_axis * 4.7197e+06);
+      rpm_cmd_pa = sqrtf(thrust_primary_axis * 4.7197e+06/0.8);
       //rpm_cmd_pa_fb = -3000*(POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z));
-      float rpm_cmd_pa_fb = -1000*vz_err_integral;
+      float rpm_cmd_pa_fb = -2000*vz_err_integral;
       if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT)
       {
         rpm_cmd_pa += rpm_cmd_pa_fb;

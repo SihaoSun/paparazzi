@@ -9,7 +9,7 @@
 
 </header>
   <waypoints>
-    <waypoint height="1" name="HOME" x="0.0" y="0.0"/>
+    <waypoint height="1" name="HOME" x="-1.0" y="-2.0"/>
     <waypoint height="1.5" name="CLIMB" x="0.0" y="0.0"/>
     <waypoint name="GOAL" x="0.0" y="0.0"/>
     <waypoint height="1" name="STDBY" x="0.0" y="0.0"/>
@@ -20,8 +20,10 @@
     <waypoint lat="51.9906737" lon="4.3768074" name="_CZ4"/>
     <waypoint height="0.6" lat="51.9906083" lon= "4.3767676" name="Infront Fan"/>
     <waypoint height="0.6" lat="51.9906128" lon= "4.3767828" name="Outside Fan"/>    
-    <waypoint height="1.5" name="p1" lat = "51.9906244" lon = "4.3768391"/>
-    <waypoint height="3" name="p2" lat = "51.9906360" lon = "4.3767517"/>
+    <!--waypoint height="1.5" name="p1" lat = "51.9906242 " lon = "4.3768286"/>
+    <waypoint height="1.5" name="p2" lat = "51.9906485" lon = "4.3768035"/-->
+    <waypoint height="1.5" name="p1" x="-1.0" y="-2.0"/>
+    <waypoint height="1.5" name="p2" x="-1.0" y="0.0"/>
   </waypoints>
   <sectors>
     <sector color="red" name="CyberZoo">
@@ -103,9 +105,25 @@
     <block name="go_p2">
 	<stay wp="p2"/>
     </block>
+
+    <block name="Demo">
+      <set value="1.0" var ="primary_axis_n_gain_x"/>
+      <set value="1.0" var ="primary_axis_n_gain_y"/>
+      <set value="0.1" var ="primary_axis_n_abs"/>
+      <stay wp="p1" until="stage_time>8"/>
+      <stay wp="p2" until="stage_time>4"/>
+      <stay wp="p2" until="stage_time>2"/>
+      <set value="1.0" var ="primary_axis_n_gain_x"/>
+      <set value="1.0" var ="primary_axis_n_gain_y"/>
+      <set value="0.2" var ="primary_axis_n_abs"/>
+      <stay wp="p2" until="stage_time>2"/>
+      <stay wp="p1"/>
+    </block>
+
     <block key="l" name="Land here" strip_button="Land Here" strip_icon="land-right.png">
       <call_once fun="NavSetWaypointHere(WP_TD)"/>
     </block>
+
     <block name="Land">
       <set value = "FALSE" var = "actuator_terminator_running" />
       <go wp="TD"/>

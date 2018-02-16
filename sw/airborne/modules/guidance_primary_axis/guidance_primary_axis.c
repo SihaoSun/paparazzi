@@ -51,7 +51,7 @@
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else
-float guidance_pa_pos_gain = 0.5;
+float guidance_pa_pos_gain = 1.0;
 #endif
 
 #ifdef GUIDANCE_PA_SPEED_GAIN
@@ -66,7 +66,7 @@ float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 float guidance_pa_att_gain = -10.0;
 #endif
 
-struct FloatVect3 n_pa = {0.0,0.0,-1.0};
+struct FloatVect3 n_pa = {0.2,0.2,-1.0};
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
 struct FirstOrderLowPass nd_i_state_x, nd_i_state_y, nd_i_state_z;
@@ -133,11 +133,47 @@ void guidance_primary_axis_run(void)
 	//Flag to hack guidance loop
 	primary_axis_status = 1;
 
+	float phi,theta,psi;
+	float r;
+
+	if(attitude_optitrack_status()==true){
+		phi 	= attitude_optitrack.phi;
+	  	theta = attitude_optitrack.theta;
+	  	psi 	= attitude_optitrack.psi;
+
+	}else {
+		phi 	= stateGetNedToBodyEulers_f()->phi;
+		theta = stateGetNedToBodyEulers_f()->theta;
+		psi 	= stateGetNedToBodyEulers_f()->psi;	
+	}
+	struct FloatRates *body_rates = stateGetBodyRates_f();
+  	if (attitude_optitrack_status() == false)
+    	r = body_rates->r; 
+  	else{
+    	if (fabs(body_rates->r) < 35) // gyroscope limitation on Bebop2, +-2000deg/sec
+      		r = rate_lowpass_filters[2].o[0];
+    	else
+      		r = angular_rate_optitrack.r;
+  	}
+
 	//Linear controller to find the acceleration setpoint rate_cmd_primary_axis position and velocity
+	float dx = 0.019;
+	float dy = 0.002;
+	float x_cg, y_cg, vx_cg, vy_cg;
+	x_cg = stateGetPositionNed_f()->x -(cos(psi - 23/57.3)*dx - 	sin(psi - 23/57.3)*dy);
+	y_cg = stateGetPositionNed_f()->y -(sin(psi - 23/57.3)*dx + 	cos(psi - 23/57.3)*dy);
+	vx_cg = stateGetSpeedNed_f()->x - (-cos(psi - 23/57.3)*r*dy - 	sin(psi - 23/57.3)*r*dx);
+	vy_cg = stateGetSpeedNed_f()->y - (-sin(psi - 23/57.3)*r*dy + 	cos(psi - 23/57.3)*r*dx);
+	
+#if COMPENSATE_CG_SHIFT
+	float pos_x_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.x) - x_cg;
+	float pos_y_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.y) - y_cg;
+	float pos_z_err = POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z);
+#else
 	float pos_x_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.x) - stateGetPositionNed_f()->x;
 	float pos_y_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.y) - stateGetPositionNed_f()->y;
 	float pos_z_err = POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z);
-
+#endif
 	//printf("%d\t%d\t%f\n", guidance_v_z_ref, stateGetPositionNed_i()->z,stateGetPositionEnu_f()->z);
 	//printf("%d\t%f\t%d\t%f\n",guidance_h.ref.pos.x, stateGetPositionNed_f()->x, guidance_h.ref.pos.y, stateGetPositionNed_f()->y);
 	
@@ -148,10 +184,15 @@ void guidance_primary_axis_run(void)
 	//printf("%f\t%f\n", speed_sp_z,(stateGetSpeedNed_f()->z));
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
 	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
-
+#if COMPENSATE_CG_SHIFT
+	sp_accel_raw.x = (speed_sp_x - vx_cg) * guidance_pa_speed_gain;
+	sp_accel_raw.y = (speed_sp_y - vy_cg) * guidance_pa_speed_gain;
+	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
+#else
 	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain;
 	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain;
 	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
+#endif
 
 #ifdef VZ_FROM_DIFF_ALT	
 	float Z_filter = update_butterworth_2_low_pass(&altitude_filter,POS_FLOAT_OF_BFP(stateGetPositionNed_i()->z));
@@ -170,21 +211,8 @@ void guidance_primary_axis_run(void)
 	sp_accel_primary_axis_filter.x = sp_accel.x;
 	sp_accel_primary_axis_filter.y = sp_accel.y;
 	sp_accel_primary_axis_filter.z = sp_accel.z;	
-	float phi,theta,psi;
-
-	if(attitude_optitrack_status()==true){
-		phi 	= attitude_optitrack.phi;
-	  	theta = attitude_optitrack.theta;
-	  	psi 	= attitude_optitrack.psi;
-
-	}else {
-		phi 	= stateGetNedToBodyEulers_f()->phi;
-		theta = stateGetNedToBodyEulers_f()->theta;
-		psi 	= stateGetNedToBodyEulers_f()->psi;	
-	}
 	
-	float r, p_des, q_des, r_des;
-
+	float p_des, q_des, r_des;
 //#if GUIDANCE_PA_RC_DEBUG
 //#warning "GUIDANCE_PARC_DEBUG lets you control the accelerations via RC, but disables autonomous flight!"
   //for rc control horizontal, rotate from body axes to NED
@@ -278,15 +306,7 @@ else{
 	//printf("%f\t%f\t%f\n", speed_sp_z, stateGetSpeedNed_f()->z,thrust_specific);
 
 	//Compute command p and q using NDI
-	struct FloatRates *body_rates = stateGetBodyRates_f();
-  	if (attitude_optitrack_status() == false)
-    	r = body_rates->r; 
-  	else{
-    	if (fabs(body_rates->r) < 35) // gyroscope limitation on Bebop2, +-2000deg/sec
-      		r = body_rates->r;
-    	else
-      		r = angular_rate_optitrack.r;
-  	}
+
 	float nd_i_state_x_last = get_first_order_low_pass(&nd_i_state_x);
 	float nd_i_state_y_last = get_first_order_low_pass(&nd_i_state_y);
 	float nd_i_state_z_last = get_first_order_low_pass(&nd_i_state_z);	
@@ -298,8 +318,10 @@ else{
 	nd_i_state_dot_i.z = (get_first_order_low_pass(&nd_i_state_z)-nd_i_state_z_last)*PERIODIC_FREQUENCY;
 	
 	MAT33_VECT3_MUL(nd_i_state_dot_b, R_BI, nd_i_state_dot_i);
-	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.y-n_pa.y)+nd_state.x*r - 0.0*nd_i_state_dot_b.y);
-	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.x-n_pa.x)-nd_state.y*r - 0.0*nd_i_state_dot_b.x);
+	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*1*(nd_state.y-n_pa.y)+nd_state.x*r - 0.0*nd_i_state_dot_b.y);
+	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*1*(nd_state.x-n_pa.x)-nd_state.y*r - 0.0*nd_i_state_dot_b.x);
+	//p_des =  -1.0*(guidance_pa_att_gain*(nd_state.y-n_pa.y)+n_pa.x*r - 0.0*nd_i_state_dot_b.y);
+	//q_des = 1.0*(guidance_pa_att_gain*(nd_state.x-n_pa.x)-n_pa.y*r - 0.0*nd_i_state_dot_b.x);
 
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;

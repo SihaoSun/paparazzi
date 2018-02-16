@@ -25,9 +25,11 @@
 
 #include "modules/actuator_terminator/actuator_terminator.h"
 #include "stdio.h"
-
+#include "firmwares/rotorcraft/autopilot_utils.h"
 
 bool damage_status(){
+
+	//damage_flag =   1-autopilot_mode_status;
 	return damage_flag;
 }
 bool damage_status2(){

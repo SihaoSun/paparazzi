@@ -37,11 +37,12 @@
       <define name="GUIDANCE_INDI_RC_DEBUG" value="FALSE"/> 
       <define name="STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE" value="TRUE"/>
       <define name="PRIMARY_AXIS_THRUST_COMMAND" value="TRUE"/>
-      <define name="SMC_TEST_NOMINAL" value = "FALSE"/>
-      <define name="SMC_TEST_NDI_USED" value = "TRUE"/>
+      <define name="SMC_TEST_NOMINAL" value = "TRUE"/>
+      <define name="SMC_TEST_NDI_USED" value = "FALSE"/>
     </module>
     <define name="BEBOP_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_2000"/>
-    <define name="VZ_FROM_DIFF_ALT"/>
+    <!--define name="VZ_FROM_DIFF_ALT"/-->
+    <define name = "COMPENSATE_CG_SHIFT" value = "TRUE"/>
   </firmware>
 
   <modules main_freq="512">
@@ -177,8 +178,8 @@
     <define name="REF_ERR_P" value="300.0"/>
     <define name="REF_ERR_Q" value="600.0"/>
     <define name="REF_ERR_R" value="600.0"/>
-    <define name="REF_RATE_P" value="10.0"/>
-    <define name="REF_RATE_Q" value="10.0"/>
+    <define name="REF_RATE_P" value="15.0"/>
+    <define name="REF_RATE_Q" value="15.0"/>
     <define name="REF_RATE_R" value="5.0"/>
 
     <define name="ESTIMATION_FILT_CUTOFF" value="4.0"/>
@@ -230,9 +231,10 @@
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
     <!--define name="MODE_MANUAL" value="AP_MODE_KILL"/-->
     <define name="MODE_AUTO1" value="AP_MODE_HOVER_Z_HOLD"/>
-    <define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/>
+    <!--define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/-->
     <!--define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/-->
     <!--define name="MODE_AUTO2" value="AP_MODE_NAV"/-->
+    <!--define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_DIRECT"/-->
 
     <define name="NO_RC_THRUST_LIMIT" value="TRUE"/>
   </section>
