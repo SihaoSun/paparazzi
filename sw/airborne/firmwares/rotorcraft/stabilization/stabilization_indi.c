@@ -293,7 +293,7 @@ void init_filters(void)
   float tau_est = 1.0 / (2.0 * M_PI * STABILIZATION_INDI_ESTIMATION_FILT_CUTOFF);
   float tau_pq_des = 1.0 / (2.0 * M_PI *20.0);
   float sample_time = 1.0 / PERIODIC_FREQUENCY;
-  float tau_pqr_mea = 1.0 / (2.0 * M_PI * 40.0);
+  float tau_pqr_mea = 1.0 / (2.0 * M_PI * 30.0);
   // Filtering of the gyroscope
   int8_t i;
   for (i = 0; i < 3; i++) {
@@ -413,8 +413,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   //float Error[4];
   if (abs(r_filter)>=10)
   {
-    Error[0] = rate_ref.p - (p_filter+0.5);
-    Error[1] = rate_ref.q - (q_filter+0.6);
+    Error[0] = rate_ref.p - (p_filter+0.4);
+    Error[1] = rate_ref.q - (q_filter+0.5);
     Error[2] = rate_ref.r - (r_filter+0.2);
   }
   else{

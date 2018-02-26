@@ -178,8 +178,8 @@
     <define name="REF_ERR_P" value="300.0"/>
     <define name="REF_ERR_Q" value="600.0"/>
     <define name="REF_ERR_R" value="600.0"/>
-    <define name="REF_RATE_P" value="15.0"/>
-    <define name="REF_RATE_Q" value="15.0"/>
+    <define name="REF_RATE_P" value="20.0"/>
+    <define name="REF_RATE_Q" value="20.0"/>
     <define name="REF_RATE_R" value="5.0"/>
 
     <define name="ESTIMATION_FILT_CUTOFF" value="4.0"/>

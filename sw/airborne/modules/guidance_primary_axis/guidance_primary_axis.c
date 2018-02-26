@@ -51,7 +51,7 @@
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else
-float guidance_pa_pos_gain = 1.0;
+float guidance_pa_pos_gain = 3.0;
 #endif
 
 #ifdef GUIDANCE_PA_SPEED_GAIN
@@ -63,10 +63,10 @@ float guidance_pa_speed_gain = 2.0;
 #ifdef GUIDANCE_PA_ATT_GAIN 
 float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 #else
-float guidance_pa_att_gain = -10.0;
+float guidance_pa_att_gain = -5.0;
 #endif
 
-struct FloatVect3 n_pa = {0.2,0.2,-1.0};
+struct FloatVect3 n_pa = {0.05,0.05,-1.0};
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
 struct FirstOrderLowPass nd_i_state_x, nd_i_state_y, nd_i_state_z;

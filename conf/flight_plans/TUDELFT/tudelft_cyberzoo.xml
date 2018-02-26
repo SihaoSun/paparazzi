@@ -23,7 +23,7 @@
     <!--waypoint height="1.5" name="p1" lat = "51.9906242 " lon = "4.3768286"/>
     <waypoint height="1.5" name="p2" lat = "51.9906485" lon = "4.3768035"/-->
     <waypoint height="1.5" name="p1" x="-1.0" y="-2.0"/>
-    <waypoint height="1.5" name="p2" x="-1.0" y="0.0"/>
+    <waypoint height="1.5" name="p2" x="-2.0892" y="-0.3226"/>
   </waypoints>
   <sectors>
     <sector color="red" name="CyberZoo">
@@ -109,13 +109,12 @@
     <block name="Demo">
       <set value="1.0" var ="primary_axis_n_gain_x"/>
       <set value="1.0" var ="primary_axis_n_gain_y"/>
-      <set value="0.1" var ="primary_axis_n_abs"/>
+      <set value="0.05" var ="primary_axis_n_abs"/>
       <stay wp="p1" until="stage_time>8"/>
       <stay wp="p2" until="stage_time>4"/>
-      <stay wp="p2" until="stage_time>2"/>
       <set value="1.0" var ="primary_axis_n_gain_x"/>
       <set value="1.0" var ="primary_axis_n_gain_y"/>
-      <set value="0.2" var ="primary_axis_n_abs"/>
+      <set value="0.25" var ="primary_axis_n_abs"/>
       <stay wp="p2" until="stage_time>2"/>
       <stay wp="p1"/>
     </block>
