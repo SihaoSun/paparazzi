@@ -1,0 +1,16 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="single_failure">
+  <doc>
+    <description>Introduce a single rotor failure</description>
+  </doc>
+  <header>
+    <file name="single_failure.h"/>
+  </header>
+  <init fun="single_failure_init()"/>
+  <periodic fun="single_failure()" freq="512" stop="single_failure_init()" autorun="FALSE"/>
+  <makefile>
+    <file name="single_failure.c"/>
+  </makefile>
+</module>
+

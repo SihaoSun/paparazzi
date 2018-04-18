@@ -122,7 +122,22 @@ extern "C" {
     _invS[1][2] = -m21 / det;                                           \
     _invS[2][2] =  m22 / det;                                           \
   }
-
+#define MAT_INV22(_invS, _S) {                                          \
+    const float dmat = _S[1][1];                                        \
+    const float cmat = _S[0][1];                                        \
+    const float bmat = _S[1][0];                                        \
+    const float amat = _S[0][0];                                        \
+    float det = dmat * amat - bmat * cmat ;                             \
+    if (fabs(det) < FLT_EPSILON) {                                      \
+      /* If the determinant is too small then set it to epsilon preserving sign. */ \
+      warn_message("warning: %s:%d MAT_INV22 trying to invert non-invertable matrix '%s' and put result in '%s'.\n", __FILE__, __LINE__, #_S, #_invS); \
+      det = copysignf(FLT_EPSILON, det);                                \
+    }                                                                   \
+    _invS[0][0] =  dmat / det;                                          \
+    _invS[0][1] = -cmat / det;                                          \
+    _invS[1][0] = -bmat / det;                                          \
+    _invS[1][1] =  amat / det;                                          \
+  }
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

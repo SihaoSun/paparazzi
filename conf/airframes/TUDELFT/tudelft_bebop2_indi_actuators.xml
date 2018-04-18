@@ -38,6 +38,7 @@
       <define name="STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE" value="TRUE"/>
       <define name="PRIMARY_AXIS_THRUST_COMMAND" value="FALSE"/>
     </module>
+
     <define name="BEBOP_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_2000"/>
   </firmware>
 
@@ -50,6 +51,14 @@
     </module>
     <module name="actuator_terminator">
       <define name="DAMAGED_ROTOR_INDEX" value="3"/>
+    </module>
+            <module name="single_failure">
+      <define name="DAMAGED_ROTOR_INDEX" value="3"/>
+    </module>
+      <module name="double_failure">
+      <define name="DAMAGED_ROTOR_INDEX3" value="3"/>
+      <define name="DAMAGED_ROTOR_INDEX2" value="1"/>
+      
     </module>
     <module name="guidance_primary_axis">
       <!--define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/-->
@@ -187,7 +196,7 @@
     <define name="HOVER_KD" value="85"/>
     <define name="HOVER_KI" value="20"/>
     <define name="NOMINAL_HOVER_THROTTLE" value="0.655"/>
-    <define name="ADAPT_THROTTLE_ENABLED" value="TRUE"/>
+    <define name="ADAPT_THROTTLE_ENABLED" value="FALSE"/> <!-- WAS TRUE -->
   </section>
 
   <section name="GUIDANCE_H" prefix="GUIDANCE_H_">

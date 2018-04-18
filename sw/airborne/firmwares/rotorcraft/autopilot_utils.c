@@ -85,15 +85,20 @@ uint8_t ap_mode_of_3x2way_switch(void)
 
 #define THRESHOLD_1_PPRZ (MIN_PPRZ / 2)
 #define THRESHOLD_2_PPRZ (MAX_PPRZ / 2)
-
+bool autopilot_mode_status = 0;
 /** get autopilot mode as set by RADIO_MODE 3-way switch */
 uint8_t ap_mode_of_3way_switch(void)
 {
+  //printf("%d\t%d\t%d\n",radio_control.values[RADIO_MODE],THRESHOLD_1_PPRZ,THRESHOLD_2_PPRZ);  
   if (radio_control.values[RADIO_MODE] > THRESHOLD_2_PPRZ) {
+    autopilot_mode_status = 0;
     return autopilot_mode_auto2;
   } else if (radio_control.values[RADIO_MODE] > THRESHOLD_1_PPRZ) {
+    autopilot_mode_status = 0;
     return MODE_AUTO1;
   } else {
+    autopilot_mode_status = 1;
+    
     return MODE_MANUAL;
   }
 }

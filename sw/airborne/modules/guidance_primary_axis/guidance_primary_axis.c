@@ -61,7 +61,7 @@ float guidance_pa_speed_gain = 2.0;
 #ifdef GUIDANCE_PA_ATT_GAIN 
 float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 #else
-float guidance_pa_att_gain = -10.0;
+float guidance_pa_att_gain = -8.0;
 #endif
 
 struct FloatVect3 n_pa = {0.0,0.0,-1.0};
@@ -94,7 +94,7 @@ void guidance_primary_axis_init(void)
 void low_pass_filter_init(void)
 {	
 	float tau = 1.0 / (2.0 * M_PI * 8.0);
-	float tau_nd = 1.0/(2.0 * M_PI * 2.5);
+	float tau_nd = 1.0/(2.0 * M_PI * 5.5);
 	float sample_time = 1.0 / PERIODIC_FREQUENCY;
 	init_first_order_low_pass(&nd_i_state_x,tau_nd,sample_time,0);
 	init_first_order_low_pass(&nd_i_state_y,tau_nd,sample_time,0);
@@ -128,7 +128,7 @@ void guidance_primary_axis_run(void)
 	float pos_y_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.y) - stateGetPositionNed_f()->y;
 	float pos_z_err = POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z);
 
-	printf("%d\t%f\t%d\t%f\n",guidance_h.ref.pos.x, stateGetPositionNed_f()->x, guidance_h.ref.pos.y, stateGetPositionNed_f()->y);
+	// printf("%d\t%f\t%d\t%f\n",guidance_h.ref.pos.x, stateGetPositionNed_f()->x, guidance_h.ref.pos.y, stateGetPositionNed_f()->y);
 	
 	float speed_sp_x = pos_x_err * guidance_pa_pos_gain;
 	float speed_sp_y = pos_y_err * guidance_pa_pos_gain;
@@ -144,7 +144,7 @@ void guidance_primary_axis_run(void)
 	sp_accel.x = update_butterworth_2_low_pass(&sp_accel_filter_x, sp_accel_raw.x);
 	sp_accel.y = update_butterworth_2_low_pass(&sp_accel_filter_y, sp_accel_raw.y);
 	sp_accel.z = update_butterworth_2_low_pass(&sp_accel_filter_z, sp_accel_raw.z);
-
+  	// printf("OT = %2.0f \t %2.0f \t %2.0f \t", sp_accel.x, sp_accel.y, sp_accel.z);
 	sp_accel_primary_axis.x = sp_accel_raw.x;
 	sp_accel_primary_axis.y = sp_accel_raw.y;
 	sp_accel_primary_axis.z = sp_accel_raw.z;
@@ -170,8 +170,8 @@ void guidance_primary_axis_run(void)
 //#warning "GUIDANCE_PARC_DEBUG lets you control the accelerations via RC, but disables autonomous flight!"
   //for rc control horizontal, rotate from body axes to NED
 if ((autopilot.mode == AP_MODE_ATTITUDE_DIRECT) || (autopilot.mode == AP_MODE_ATTITUDE_Z_HOLD)) {
-  	float rc_x = -(radio_control.values[RADIO_PITCH]/9600.0)*2.0;
-  	float rc_y = (radio_control.values[RADIO_ROLL]/9600.0)*2.0;
+  	float rc_x = -(radio_control.values[RADIO_PITCH]/9600.0)*2.0; // original was *2.0
+  	float rc_y = (radio_control.values[RADIO_ROLL]/9600.0)*2.0; 	// original was *2.0
 //  	sp_accel.x = cosf(psi) * rc_x - sinf(psi) * rc_y;
 //  	sp_accel.y = sinf(psi) * rc_x + cosf(psi) * rc_y;
 //  	sp_accel.x = rc_x;
@@ -184,7 +184,8 @@ if ((autopilot.mode == AP_MODE_ATTITUDE_DIRECT) || (autopilot.mode == AP_MODE_AT
     r_des =  rd * STABILIZATION_ATTITUDE_SP_MAX_R / (MAX_PPRZ - STABILIZATION_ATTITUDE_DEADBAND_R);
 
   //for rc vertical control
-  	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-4500)*8.0/9600.0;
+  	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-4500)*8.0/9600.0;	
+  	// printf("RC = %2.0f \t %2.0f \t %2.0f \t", sp_accel.x, sp_accel.y, sp_accel.z);
 }
 else if (autopilot.mode == AP_MODE_NAV){
 	float psi_des = guidance_h.sp.heading;
