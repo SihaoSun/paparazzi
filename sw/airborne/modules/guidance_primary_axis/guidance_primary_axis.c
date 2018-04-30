@@ -46,10 +46,12 @@
 #include "math/pprz_algebra_float.h"
 #include "modules/attitude_optitrack/attitude_optitrack.h"
 
+
+
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else
-float guidance_pa_pos_gain = 1.0;
+float guidance_pa_pos_gain = 0.8;
 #endif
 
 #ifdef GUIDANCE_PA_SPEED_GAIN
@@ -61,14 +63,19 @@ float guidance_pa_speed_gain = 2.0;
 #ifdef GUIDANCE_PA_ATT_GAIN 
 float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 #else
-float guidance_pa_att_gain = -8.0;
+float guidance_pa_att_gain = -5.0;
+float extra_gain_att_gain = 2; // If RPM is high enough, then extra_gain_att_gain is added to guidance_pa_att_gain
 #endif
+
 
 struct FloatVect3 n_pa = {0.0,0.0,-1.0};
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
 struct FirstOrderLowPass nd_i_state_x, nd_i_state_y, nd_i_state_z;
 struct FirstOrderLowPass theta_filt, psi_des_filt;
+
+
+
 //struct FirstOrderLowPass sp_accel_filter_x;
 //struct FirstOrderLowPass sp_accel_filter_y;
 //struct FirstOrderLowPass sp_accel_filter_z;
@@ -83,6 +90,8 @@ bool guidance_primary_axis_status(void)
 
 void guidance_primary_axis_init(void)
 {
+
+  printf("max_extra_gain_multiplier in guidance: %2.2f \n", max_extra_gain_multiplier);
 	primary_axis_status = 0;
 	low_pass_filter_init();
 	primary_axis_n_gain_x = PRIMARY_AXIS_GUIDANCE_NX_GAIN;
@@ -94,7 +103,7 @@ void guidance_primary_axis_init(void)
 void low_pass_filter_init(void)
 {	
 	float tau = 1.0 / (2.0 * M_PI * 8.0);
-	float tau_nd = 1.0/(2.0 * M_PI * 5.5);
+	float tau_nd = 1.0/(2.0 * M_PI * 1.5);
 	float sample_time = 1.0 / PERIODIC_FREQUENCY;
 	init_first_order_low_pass(&nd_i_state_x,tau_nd,sample_time,0);
 	init_first_order_low_pass(&nd_i_state_y,tau_nd,sample_time,0);
@@ -139,7 +148,7 @@ void guidance_primary_axis_run(void)
 
 	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain;
 	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain;
-	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain*0.5;
+	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
 
 	sp_accel.x = update_butterworth_2_low_pass(&sp_accel_filter_x, sp_accel_raw.x);
 	sp_accel.y = update_butterworth_2_low_pass(&sp_accel_filter_y, sp_accel_raw.y);
@@ -155,7 +164,7 @@ void guidance_primary_axis_run(void)
 
 	if(attitude_optitrack_status()==true){
 		phi 	= attitude_optitrack.phi;
-	  	theta = attitude_optitrack.theta;
+	  	theta  = attitude_optitrack.theta;
 	  	psi 	= attitude_optitrack.psi + 0.99; //0.99 is the difference between optitrack uplodaded heading and state heading
 
 	}else {
@@ -250,7 +259,10 @@ else if (autopilot.mode == AP_MODE_NAV){
 	nd_i_state_dot_i.x = (get_first_order_low_pass(&nd_i_state_x)-nd_i_state_x_last)*PERIODIC_FREQUENCY;
 	nd_i_state_dot_i.y = (get_first_order_low_pass(&nd_i_state_y)-nd_i_state_y_last)*PERIODIC_FREQUENCY;
 	nd_i_state_dot_i.z = (get_first_order_low_pass(&nd_i_state_z)-nd_i_state_z_last)*PERIODIC_FREQUENCY;
-	
+	  	
+	printf("max_extra_gain_multiplier in guidance periodic: %2.2f \n", max_extra_gain_multiplier);
+	guidance_pa_att_gain += max_extra_gain_multiplier * extra_gain_att_gain;
+
 	MAT33_VECT3_MUL(nd_i_state_dot_b, R_BI, nd_i_state_dot_i);
 	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.y-n_pa.y)+nd_state.x*r - 0.0*nd_i_state_dot_b.y);
 	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.x-n_pa.x)-nd_state.y*r - 0.0*nd_i_state_dot_b.x);
@@ -260,8 +272,10 @@ else if (autopilot.mode == AP_MODE_NAV){
 	rate_cmd_primary_axis[1] = q_des;
 	rate_cmd_primary_axis[2] = 0;
 	thrust_primary_axis = thrust_specific;
+	// printf("theta\t %5f \t \t", theta	);
+	// printf("nd_state \t x y z %f \t %f \t %f \t",nd_state.x,nd_state.y,nd_state.z);
+	// printf("nd_i_state \t x y %f \t %f \n",nd_i_state.x,nd_i_state.y);
 
-	//printf("%f\t%f\n",nd_state.x,nd_state.y);
 	return;
 }
 
@@ -269,3 +283,5 @@ void primary_axis_status_take_off(void)
 {
 
 }
+
+

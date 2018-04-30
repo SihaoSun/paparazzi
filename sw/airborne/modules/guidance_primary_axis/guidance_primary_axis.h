@@ -42,7 +42,6 @@ extern bool guidance_primary_axis_status(void);
 extern void guidance_primary_axis_init(void);
 extern void guidance_primary_axis_end(void);
 extern void guidance_primary_axis_run(void);
-
 extern void guidance_primary_axis_take_off(void);
 
 void low_pass_filter_init(void);

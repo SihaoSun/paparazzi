@@ -123,6 +123,12 @@
   </section>
 
   <section name="INS" prefix="INS_">
+<!-- 
+    <define name="INS_BODY_TO_GPS_X" value="0.0" unit="cm"/> 
+    <define name="INS_BODY_TO_GPS_Y" value="0.0" unit="cm"/> 
+    <define name="INS_BODY_TO_GPS_Z" value="0.0" unit="cm"/>
+     -->
+
     <define name="SONAR_MAX_RANGE" value="2.2"/>
     <define name="SONAR_UPDATE_ON_AGL" value="TRUE"/>
     <!-- Use GPS altitude measurments and set the R gain -->

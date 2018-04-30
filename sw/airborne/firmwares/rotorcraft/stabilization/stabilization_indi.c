@@ -75,7 +75,9 @@ static void calc_g2_element(float dx_error, int8_t j, float mu_extra);
 static void calc_g1g2_pseudo_inv(void);
 static void bound_g_mat(void);
 static void calc_g1_inv_damage(void);
-static void calc_g1_inv_damage2(void);
+static void calc_g1_inv_damage_square(void);
+static void calc_g1_damage_tall(void);
+static void calculate_gain_fraction(void); 
 
 int32_t stabilization_att_indi_cmd[COMMANDS_NB];
 struct ReferenceSystem reference_acceleration = {
@@ -131,12 +133,22 @@ float indi_u2[INDI_NUM_ACT];
 float indi_du[INDI_NUM_ACT];
 float indi_du2[INDI_NUM_ACT];
 
+// variables required for gain fraction
+float MIN_THRESHOLD; // for calculate_gain_fraction
+float MAX_THRESHOLD; // for calculate_gain_fraction
+float extra_gain_multiplier[4]; //
+//float max_extra_gain_multiplier; // scalar maximum of extra_gain_multiplier[4];
+
 float diff_indi_du[4];
 float g2_times_du;
 
 // variables needed for estimation
 float g1g2_trans_mult[INDI_OUTPUTS][INDI_OUTPUTS];
 float g1g2inv[INDI_OUTPUTS][INDI_OUTPUTS];
+
+float g1_damage_tall_trans_mult[INDI_OUTPUTS][INDI_OUTPUTS];
+float g1_damage_tall_inv[INDI_OUTPUTS][INDI_OUTPUTS];
+
 float actuator_state_filt_vectd[INDI_NUM_ACT];
 float actuator_state_filt_vectdd[INDI_NUM_ACT];
 float estimation_rate_d[INDI_NUM_ACT];
@@ -168,6 +180,8 @@ float g2[INDI_NUM_ACT] = STABILIZATION_INDI_G2; //scaled by INDI_G_SCALING
 float g1[INDI_OUTPUTS][INDI_NUM_ACT] = {STABILIZATION_INDI_G1_ROLL,
                                         STABILIZATION_INDI_G1_PITCH, STABILIZATION_INDI_G1_YAW, STABILIZATION_INDI_G1_THRUST
                                        };
+float g1_damage_tall_pseudo_inv[INDI_NUM_ACT][INDI_OUTPUTS];
+
 float g1g2[INDI_OUTPUTS][INDI_NUM_ACT];
 float g1_est[INDI_OUTPUTS][INDI_NUM_ACT];
 float g2_est[INDI_NUM_ACT];
@@ -176,7 +190,7 @@ float g2_init[INDI_NUM_ACT];
 // add matrices for single rotor failure
 float g1_damage[3][3];
 float g1_damage_inv[3][3];
-
+float g1_damage_tall[4][4];
 // add matrices for double rotor failure
 float g1_damage2[2][2];
 float g1_damage_inv2[2][2];
@@ -240,8 +254,11 @@ void stabilization_indi_init(void)
   //Calculate G1G2_PSEUDO_INVERSE
   calc_g1g2_pseudo_inv();
   calc_g1_inv_damage();
-  calc_g1_inv_damage2();
-
+  calc_g1_inv_damage_square();
+  // printf("Running calc_g1_damage_tall \n");
+  calc_g1_damage_tall();
+  calculate_gain_fraction(); 
+  printf("max_extra_gain_multiplier in stabilization init: %2.2f \n", max_extra_gain_multiplier);
   // Initialize the array of pointers to the rows of g1g2
   uint8_t i;
   for (i = 0; i < INDI_OUTPUTS; i++) {
@@ -476,6 +493,11 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       v_thrust +=
         (stabilization_cmd[COMMAND_THRUST] - actuator_state_filt_vect[i]) * Bwls[3][i];
     }
+    // printf("v_t nomina %3f \t cmd %d \t act state %d \t \n", v_thrust,stabilization_cmd[COMMAND_THRUST],actuator_state_filt_vect[0]);
+      //     if((double_failure_status()) == true) {
+      //   v_thrust = (stabilization_cmd[COMMAND_THRUST]*3 - actuator_state_filt_vect[0] - actuator_state_filt_vect[2]) * Bwls[3][0]; // changed to thrust_pprz_cmd*4 from thrust_pprz_cmd*2 to get same v_thrust
+      //     printf("v_t double %3f \t cmd %d \t act state %d \t \n", v_thrust,stabilization_cmd[COMMAND_THRUST],actuator_state_filt_vect[0]);
+      // }
   }
 
   // Calculate the min and max increments
@@ -534,8 +556,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       }
     }
 float_vect_sum(indi_u, actuator_state_filt_vect, indi_du, INDI_NUM_ACT);
-  printf("%2.1f \t %2.1f \t %2.1f \t",body_rates->p*1000,body_rates->q*1000, body_rates->r*1000);
-printf("%2.1f\t%2.1f\t%2.1f\t%2.1f\t\t",indi_u[0],indi_u[1],indi_u[2],indi_u[3]);
+//   printf("%2.1f \t %2.1f \t %2.1f \t",body_rates->p*1000,body_rates->q*1000, body_rates->r*1000);
+// printf("%2.1f\t%2.1f\t%2.1f\t%2.1f\t\t",indi_u[0],indi_u[1],indi_u[2],indi_u[3]);
 
 
     indi_du2[1] = 0;
@@ -544,19 +566,23 @@ printf("%2.1f\t%2.1f\t%2.1f\t%2.1f\t\t",indi_u[0],indi_u[1],indi_u[2],indi_u[3])
     indi_du2[0] = (g1_damage_inv2[0][0] * indi_v[0]) +(g1_damage_inv2[0][1] * indi_v[3]);
     indi_du2[2] = (g1_damage_inv2[1][0] * indi_v[0]) +(g1_damage_inv2[1][1] * indi_v[3]);
     float_vect_sum(indi_u2, actuator_state_filt_vect, indi_du2, INDI_NUM_ACT);
-printf("%2.1f\t%2.1f\t%2.1f\t%2.1f\t\t",indi_u2[0],indi_u2[1],indi_u2[2],indi_u2[3]);
+// printf("%2.1f\t%2.1f\t%2.1f\t%2.1f\t\t",indi_u2[0],indi_u2[1],indi_u2[2],indi_u2[3]);
 
 float_vect_diff(diff_indi_du, indi_u, indi_u2, INDI_NUM_ACT); // check difference between single and double rotor failures.
-printf("diff = %2.1f\t%2.1f\t%2.1f\t%2.1f\t\t",diff_indi_du[0],diff_indi_du[1],diff_indi_du[2],diff_indi_du[3]);
-printf("\n");
+// printf("diff = %2.1f\t%2.1f\t%2.1f\t%2.1f\t\t",diff_indi_du[0],diff_indi_du[1],diff_indi_du[2],diff_indi_du[3]);
+// printf("\n");
   }
 if (double_failure_flag == 1){
     indi_du[DAMAGED_ROTOR_INDEX3]  = 0;
     indi_du[DAMAGED_ROTOR_INDEX2]  = 0;
     int8_t i0 = 0;
 // hardcode it for now
-    indi_du[0] = (g1_damage_inv2[0][0] * indi_v[0]) +(g1_damage_inv2[0][1] * indi_v[3]);
-    indi_du[2] = (g1_damage_inv2[1][0] * indi_v[0]) +(g1_damage_inv2[1][1] * indi_v[3]);
+    // indi_du[0] = (g1_damage_inv2[0][0] * indi_v[0]) +(g1_damage_inv2[0][1] * indi_v[3]);
+    // indi_du[2] = (g1_damage_inv2[1][0] * indi_v[0]) +(g1_damage_inv2[1][1] * indi_v[3]);
+
+    indi_du[0] = (g1_damage_tall_pseudo_inv[0][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[0][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[0][3] * indi_v[3]);
+    indi_du[2] = (g1_damage_tall_pseudo_inv[2][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[2][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[2][3] * indi_v[3]);
+
     // printf("%2.2f\t %2.2f\t %2.2f\t %2.2f\n",g1_damage_inv2[0][0],g1_damage_inv2[0][1], g1_damage_inv2[1][0],g1_damage_inv2[1][1]);
 /*    for (i = 0; i < INDI_NUM_ACT; i++){
       if ((i != DAMAGED_ROTOR_INDEX) || (i != DAMAGED_ROTOR_INDEX2)) {
@@ -628,8 +654,11 @@ if (double_failure_flag == 1){
       actuators_pprz[i] = -MAX_PPRZ;
 
        }
+}
+
     // }
-  }
+
+
 // Leon
 // printf("%2.1f\t%2.1f\t%2.1f\t%2.1f\t\t",indi_v[0],indi_v[1],indi_v[2],indi_v[3]);
 // printf("%2.1f\t%2.1f\t%2.1f\t%2.1f\t\t",indi_du[0],indi_du[1],indi_du[2],indi_du[3]);
@@ -641,7 +670,7 @@ if (double_failure_flag == 1){
 printf("%2.0d\t%2.0d\t%2.0d\t%2.0d \t",actuators_pprz[0],actuators_pprz[1],actuators_pprz[2],actuators_pprz[3]);
 printf("%1.0d %1.0d %1.0d \n",autopilot_mode_status, single_failure_flag, double_failure_flag );
 
-
+printf("max_extra_gain_multiplier in stabilization periodic: %2.2f \n", max_extra_gain_multiplier);
 
 
  // printf("%d\n",stateGetPositionNed_i()->z);
@@ -758,6 +787,11 @@ void get_actuator_state(void)
  * The elements are stored in a different matrix,
  * because the old matrix is necessary to caclulate more elements.
  */
+
+/*Function that calculates the new G1 matrix to be inverted after rotors are lost*/
+
+
+
 void calc_g1_element(float ddx_error, int8_t i, int8_t j, float mu)
 {
   g1_est[i][j] = g1_est[i][j] - du_estimation[j] * mu * ddx_error;
@@ -869,19 +903,19 @@ void calc_g1_inv_damage(void)
       }
     }
     MAT_INV33(g1_damage_inv,g1_damage);
-   printf("single: %6.4f %6.4f %6.4f\n%6.4f %6.4f %6.4f\n%6.4f %6.4f %6.4f\n"
+/*   printf("single:\n %6.4f %6.4f %6.4f\n%6.4f %6.4f %6.4f\n%6.4f %6.4f %6.4f\n"
                    , g1_damage[0][0], g1_damage[0][1], g1_damage[0][2]
                    , g1_damage[1][0], g1_damage[1][1], g1_damage[1][2]
                    , g1_damage[2][0], g1_damage[2][1], g1_damage[2][2]);
-   printf("%6.5f %6.5f %6.5f\n%6.5f %6.5f %6.5f\n%6.5f %6.5f %6.5f\n"
+   printf("inv:\n %6.5f %6.5f %6.5f\n%6.5f %6.5f %6.5f\n%6.5f %6.5f %6.5f\n"
                    , g1_damage_inv[0][0], g1_damage_inv[0][1], g1_damage_inv[0][2]
                    , g1_damage_inv[1][0], g1_damage_inv[1][1], g1_damage_inv[1][2]
-                   , g1_damage_inv[2][0], g1_damage_inv[2][1], g1_damage_inv[2][2]);
+                   , g1_damage_inv[2][0], g1_damage_inv[2][1], g1_damage_inv[2][2]);*/
 
 }
 /*Function that calculates a 2x2 inversion matrix for G1*/
 
-void calc_g1_inv_damage2(void)
+void calc_g1_inv_damage_square(void)
 {
     int i0 = 0,j0 = 0;
     for (int i = 0; i < 4; i++) // loop over states
@@ -910,14 +944,108 @@ void calc_g1_inv_damage2(void)
     }
   MAT_INV22(g1_damage_inv2,g1_damage2);
 
-
+/*
   printf("double: %6.4f %6.4f\n%6.4f %6.4f\n"
     ,   g1_damage2[0][0],  g1_damage2[0][1]
     ,   g1_damage2[1][0],  g1_damage2[1][1] );
   printf("%6.1f %6.1f\n%6.1f %6.1f\n"
                     , g1_damage_inv2[0][0], g1_damage_inv2[0][1]
-                    , g1_damage_inv2[1][0], g1_damage_inv2[1][1]);
+                    , g1_damage_inv2[1][0], g1_damage_inv2[1][1]);*/
 }
+
+void calc_g1_damage_tall(void)
+{
+    int i0 = 0,j0 = 0;
+    for (int i = 0; i < 4; i++) // loop over states
+    {
+      if ((i != 2)) // Added the '1' channel for the pitch control
+      {
+        j0 = 0;
+        for (int  j = 0; j < 4; j++) // Set j < 3 instead of <4 prevents a lot of errors
+        {
+          // This invokes warning: [-Waggressive-loop-optimizations]
+          // A simple fix would be to hardcode it 
+          if ((j != DAMAGED_ROTOR_INDEX) && (j != DAMAGED_ROTOR_INDEX2)) // 1 and 3
+          { 
+            g1_damage_tall[i0][j0] = g1[i][j]/INDI_G_SCALING;
+           j0++; 
+            
+          }
+          else {
+        g1_damage_tall[i0][j0] = 0;
+            j0++;
+                } 
+          }
+        }
+      else {
+        g1_damage_tall[i0][j0] = 0;
+      }
+        
+        i0++;
+        
+    }
+    
+
+/*
+  printf("%6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n"
+  ,  g1_damage_tall[0][0],  g1_damage_tall[0][1] ,  g1_damage_tall[0][2],  g1_damage_tall[0][3]
+  ,  g1_damage_tall[1][0],  g1_damage_tall[1][1] ,  g1_damage_tall[1][2],  g1_damage_tall[1][3] 
+  ,  g1_damage_tall[2][0],  g1_damage_tall[2][1] ,  g1_damage_tall[2][2],  g1_damage_tall[2][3]
+  ,  g1_damage_tall[3][0],  g1_damage_tall[3][1] ,  g1_damage_tall[3][2],  g1_damage_tall[3][3]);
+
+
+  printf("INDI_OUTPUTS, %d \nINDI_NUM_ACT, %d \n", INDI_OUTPUTS, INDI_NUM_ACT);*/
+
+  //G1G2*transpose(G1G2)
+  //calculate matrix multiplication of its transpose INDI_OUTPUTSxnum_act x num_actxINDI_OUTPUTS
+  float element = 0;
+  int8_t row;
+  int8_t col;
+  for (row = 0; row < INDI_OUTPUTS; row++) {
+    for (col = 0; col < INDI_OUTPUTS; col++) {
+      element = 0;
+      for (int i = 0; i < INDI_NUM_ACT; i++) {
+        element = element + g1_damage_tall[row][i] * g1_damage_tall[col][i];
+      }
+      g1_damage_tall_trans_mult[row][col] = element;
+    }
+  }
+
+  //there are numerical errors if the scaling is not right.
+  float_vect_scale(g1_damage_tall_trans_mult[0], 1000.0, INDI_OUTPUTS * INDI_OUTPUTS);
+
+  //inverse of 4x4 matrix
+  float_mat_inv_4d(g1_damage_tall_inv[0], g1_damage_tall_trans_mult[0]);
+
+  //scale back
+  float_vect_scale(g1_damage_tall_inv[0], 1000.0, INDI_OUTPUTS * INDI_OUTPUTS);
+
+  //G1G2'*G1G2inv
+  //calculate matrix multiplication INDI_NUM_ACTxINDI_OUTPUTS x INDI_OUTPUTSxINDI_OUTPUTS
+
+    for (row = 0; row < INDI_NUM_ACT; row++) {
+    for (col = 0; col < INDI_OUTPUTS; col++) {
+      element = 0;
+      
+      g1_damage_tall_pseudo_inv[row][col] = 0;
+      
+    }
+  }
+  // We hardcode this because the regular simple calculation as A^+ = (A' * A)^-1 .* A' 
+  // does not provide an answer (NaN's) for double rotor failure
+
+  // Therefore we need a singular value decomposition to calculate the pseudo inverse. 
+  // But we know what the inversion looks like from Matlab thus this is 1000x faster
+float scaling = 100;
+  g1_damage_tall_pseudo_inv[0][0] = 0.0178*scaling*10; g1_damage_tall_pseudo_inv[0][1] = 0.0166*scaling*10; g1_damage_tall_pseudo_inv[0][3] = -7.623*scaling;
+  g1_damage_tall_pseudo_inv[2][0] = -0.0178*scaling*10; g1_damage_tall_pseudo_inv[2][1] = -0.0166*scaling*10; g1_damage_tall_pseudo_inv[2][3] = -7.623*scaling;
+    /*printf("Now for the inverse \n");
+    printf("%6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n"
+  ,  g1_damage_tall_pseudo_inv[0][0],  g1_damage_tall_pseudo_inv[0][1] ,  g1_damage_tall_pseudo_inv[0][2],  g1_damage_tall_pseudo_inv[0][3]
+  ,  g1_damage_tall_pseudo_inv[1][0],  g1_damage_tall_pseudo_inv[1][1] ,  g1_damage_tall_pseudo_inv[1][2],  g1_damage_tall_pseudo_inv[1][3] 
+  ,  g1_damage_tall_pseudo_inv[2][0],  g1_damage_tall_pseudo_inv[2][1] ,  g1_damage_tall_pseudo_inv[2][2],  g1_damage_tall_pseudo_inv[2][3]
+  ,  g1_damage_tall_pseudo_inv[3][0],  g1_damage_tall_pseudo_inv[3][1] ,  g1_damage_tall_pseudo_inv[3][2],  g1_damage_tall_pseudo_inv[3][3]);
+*/}
 /**
  * Function that calculates the pseudo-inverse of (G1+G2).
  */
@@ -1038,3 +1166,18 @@ static void bound_g_mat(void)
     }
   }
 }
+
+static void calculate_gain_fraction(void){
+MIN_THRESHOLD = 10260; // arbitrary, set to 10% of max
+MAX_THRESHOLD = 11400; // empirical, max rpm of the rotors
+
+// Do for all actuators?
+int i;
+for (i = 0; i < INDI_NUM_ACT; i++) {
+
+  extra_gain_multiplier[i] = 10 * (act_obs[i] - MIN_THRESHOLD) / (MAX_THRESHOLD); // when RPM in [MIN,MAX] -> extra_gain_multiplier in [0,1]
+  Bound(extra_gain_multiplier[i], 0, 1); // bound the multiplier between 0 and 1 for safety
+                              }
+  max_extra_gain_multiplier = float_vect_max(extra_gain_multiplier, INDI_NUM_ACT); // Take largest element without defining which element this was
+}
+

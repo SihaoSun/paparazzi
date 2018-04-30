@@ -592,6 +592,30 @@ static inline float float_vect_dot_product(const float *a, const float *b, const
   return dot;
 }
 
+/** max(a) */
+static inline float float_vect_max(float *a, const int n)
+{
+  int i;
+  float max = 0;
+  for (i = 0; i < n; i++) { 
+    if (a[i] > max){
+    max = a[i]; 
+    }
+  }
+    return max;
+}
+/** min(a) */
+static inline float float_vect_min(float *a, const int n)
+{
+  int i;
+  float min = 0;
+  for (i = 0; i < n; i++) { 
+    if (a[i] < min){
+    min = a[i]; 
+    }
+  }
+    return min;
+}
 //
 //
 // Generic matrix algebra
@@ -714,6 +738,7 @@ static inline void float_mat_col(float *o, float **a, int m, int c)
     o[i] = a[i][c];
   }
 }
+
 
 extern void float_mat_inv_4d(float invOut[16], float mat_in[16]);
 

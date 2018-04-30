@@ -59,5 +59,6 @@ float p_des_dot_logger;
 float q_des_dot_logger;
 float p_des_filter_logger;
 float q_des_filter_logger;   
+float max_extra_gain_multiplier;
 #endif /* STABILIZATION_INDI */
 
