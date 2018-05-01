@@ -35,14 +35,16 @@
       <define name="GUIDANCE_INDI_SPECIFIC_FORCE_GAIN" value="-500.0"/>
       <define name="GUIDANCE_INDI_THRUST_DYNAMICS" value="0.1"/>
       <define name="GUIDANCE_INDI_RC_DEBUG" value="FALSE"/> 
-      <define name="STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE" value="TRUE"/>
-      <define name="PRIMARY_AXIS_THRUST_COMMAND" value="TRUE"/>
-      <define name="SMC_TEST_NOMINAL" value = "TRUE"/>
-      <define name="SMC_TEST_NDI_USED" value = "FALSE"/>
     </module>
+
     <define name="BEBOP_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_2000"/>
     <!--define name="VZ_FROM_DIFF_ALT"/-->
+    <define name="STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE" value="TRUE"/>
+    <define name="PRIMARY_AXIS_THRUST_COMMAND" value="TRUE"/>
+    <define name="SMC_TEST_NOMINAL" value = "TRUE"/>
+    <define name="SMC_TEST_NDI_USED" value = "FALSE"/>
     <define name = "COMPENSATE_CG_SHIFT" value = "TRUE"/>
+
   </firmware>
 
   <modules main_freq="512">
@@ -57,16 +59,21 @@
     </module>
     <module name="guidance_primary_axis">
       <!--define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/-->
-      <define name="PRIMARY_AXIS_GUIDANCE_NX_GAIN" value="1.0"/>
-      <define name="PRIMARY_AXIS_GUIDANCE_NY_GAIN" value="1.0"/>
-      <define name="PRIMARY_AXIS_GUIDANCE_ABS" value="0.0"/>
+      <define name="PRIMARY_AXIS_GUIDANCE_NX_GAIN"  value = "1.0"/>
+      <define name="PRIMARY_AXIS_GUIDANCE_NY_GAIN"  value = "1.0"/>
+      <define name="PRIMARY_AXIS_GUIDANCE_ABS"      value = "0.0"/>
+      <define name="GUIDANCE_PA_POS_GAIN"           value = "2.0"/>
+      <define name="GUIDANCE_PA_SPEED_GAIN"         value = "3.0"/>
+      <define name="GUIDANCE_PA_POS_GAIN_INT"       value = "0.0"/>
+      <define name="GUIDANCE_PA_ATT_GAIN"           value = "10.0"/>
+      <define name="GUIDANCE_PA_ACC_FILTER_FC"      value = "4.0"/>
     </module>
     <module name="attitude_optitrack">
       <define name="DATALINK_NATNET_FREQUENCY" value="120"/>
       <define name="OPTITRACK_PSI_SHIFT_CYBERZOO" value="0.99"/>
     </module>
-  <module name="sliding_mode_observer"/>
-  <module name="step_input"/>
+    <module name="sliding_mode_observer"/>
+    <module name="step_input"/>
   </modules>
 
   <commands>
@@ -159,15 +166,12 @@
 
   <section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
     <!-- control effectiveness -->
-    <!--define name="G1_ROLL" value="{ 15, -15, -15 ,  15 }"/>
-    <define name="G1_PITCH" value="{14 , 14, -14 , -14 }"/>   
-    <define name="G1_YAW" value="{2.5, -2.5, 2.5  -2.5}"/-->
     <define name="G1_ROLL" value="{ 15, -15, -15 ,  15 }"/>
     <define name="G1_PITCH" value="{14 , 14, -14 , -14 }"/>   
-    <define name="G1_YAW" value="{5, -5, 5  -5}"/>
+    <define name="G1_YAW" value="{0.25, -0.25, 0.25  -0.25}"/>
     <define name="G1_THRUST" value="{-.65, -.65, -.65, -.65}"/>
     <!--Counter torque effect of spinning up a rotor-->
-    <define name="G2" value="{0,   -0,  0,-0}"/>
+    <define name="G2" value="{120,   -120,  120,-120}"/>
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
     <define name="FILTER_ROLL_RATE" value="TRUE"/>
@@ -191,9 +195,7 @@
     <!-- Adaptive Learning Rate -->
     <define name="USE_ADAPTIVE" value="FALSE"/>
     <define name="ADAPTIVE_MU" value="0.0001"/>
-
-    <!-- NDI test-->
-    <define name="USE_NDI" value="FALSE"/>
+    
   </section>
 
   <section name="GUIDANCE_V" prefix="GUIDANCE_V_">
@@ -232,7 +234,7 @@
     <!--define name="MODE_MANUAL" value="AP_MODE_KILL"/-->
     <define name="MODE_AUTO1" value="AP_MODE_HOVER_Z_HOLD"/>
     <!--define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/-->
-    <!--define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/-->
+    <define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/>
     <!--define name="MODE_AUTO2" value="AP_MODE_NAV"/-->
     <!--define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_DIRECT"/-->
 

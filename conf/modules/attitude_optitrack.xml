@@ -8,7 +8,7 @@
     <file name="attitude_optitrack.h"/>
   </header>
   <init fun="get_attitude_optitrack_init()"/>
-  <periodic fun="get_attitude_optitrack_periodic()" autorun="TRUE" freq="512" stop = "get_attitude_optitrack_init()"/>
+  <periodic fun="get_attitude_optitrack_periodic()" autorun="FALSE" freq="512" stop = "get_attitude_optitrack_init()"/>
   <datalink message="OPTITRACK_ATT_EULER" fun = "get_attitude_optitrack()"/>
   <makefile>
     <file name="attitude_optitrack.c"/>

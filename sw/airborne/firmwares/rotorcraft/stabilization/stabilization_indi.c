@@ -88,12 +88,6 @@ bool indi_use_adaptive = true;
 bool indi_use_adaptive = false;
 #endif
 
-//#if STABILIZATION_INDI_USE_NDI
-//bool indi_use_ndi = true;
-//#else
-//bool indi_use_ndi = false;
-//#endif
-
 bool indi_use_ndi = false;
 
 #ifdef STABILIZATION_INDI_ACT_RATE_LIMIT
@@ -502,9 +496,11 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
       if (thrust_primary_axis<=0)
         thrust_primary_axis = 0;
-      rpm_cmd_pa = sqrtf(thrust_primary_axis * 4.7197e+06/0.8);
+      //rpm_cmd_pa = sqrtf(thrust_primary_axis * 4.7197e+06/0.8);
+      rpm_cmd_pa = sqrtf(thrust_primary_axis * 4.7197e+06/0.5);
       //rpm_cmd_pa_fb = -3000*(POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z));
-      float rpm_cmd_pa_fb = -2000*vz_err_integral;
+      float rpm_cmd_pa_fb = -1000 * vz_err_integral;
+      
       if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT)
       {
         rpm_cmd_pa += rpm_cmd_pa_fb;

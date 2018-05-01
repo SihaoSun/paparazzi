@@ -48,27 +48,16 @@
 #include "modules/sliding_mode_observer/sliding_mode_observer.h"
 #include "modules/step_input/step_input.h"
 
-#ifdef GUIDANCE_PA_POS_GAIN
-float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
-#else
-float guidance_pa_pos_gain = 3.0;
-#endif
 
-#ifdef GUIDANCE_PA_SPEED_GAIN
-float guidance_pa_speed_gain = GUIDANCE_INDI_SPEED_GAIN;
-#else
-float guidance_pa_speed_gain = 2.0;
-#endif
-
-#ifdef GUIDANCE_PA_ATT_GAIN 
-float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
-#else
-float guidance_pa_att_gain = -5.0;
-#endif
-
-struct FloatVect3 n_pa = {0.05,0.05,-1.0};
+float guidance_pa_pos_gain 		= GUIDANCE_PA_SPEED_GAIN;
+float guidance_pa_speed_gain 	= GUIDANCE_PA_SPEED_GAIN;
+float guidance_pa_gain_int 		= GUIDANCE_PA_POS_GAIN_INT;
+float guidance_pa_att_gain 		= GUIDANCE_PA_ATT_GAIN;
+float guidance_pa_acc_filter_fc = GUIDANCE_PA_ACC_FILTER_FC;
+struct FloatVect3 n_pa = {0.0,0.0,-1.0};
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
+struct FloatVect3 sp_accel_int = {0.0,0.0,0.0};
 struct FirstOrderLowPass nd_i_state_x, nd_i_state_y, nd_i_state_z;
 struct FirstOrderLowPass theta_filt, psi_des_filt;
 //struct FirstOrderLowPass sp_accel_filter_x;
@@ -99,7 +88,7 @@ void guidance_primary_axis_init(void)
 void low_pass_filter_init(void)
 {	
 	float tau = 1.0 / (2.0 * M_PI * 8.0);
-	float tau_nd = 1.0/(2.0 * M_PI * 2.5);
+	float tau_nd = 1.0/(2.0 * M_PI * guidance_pa_acc_filter_fc);
 	float sample_time = 1.0 / PERIODIC_FREQUENCY;
 	init_first_order_low_pass(&nd_i_state_x,tau_nd,sample_time,0);
 	init_first_order_low_pass(&nd_i_state_y,tau_nd,sample_time,0);
@@ -138,12 +127,12 @@ void guidance_primary_axis_run(void)
 
 	if(attitude_optitrack_status()==true){
 		phi 	= attitude_optitrack.phi;
-	  	theta = attitude_optitrack.theta;
+	  	theta 	= attitude_optitrack.theta;
 	  	psi 	= attitude_optitrack.psi;
 
 	}else {
 		phi 	= stateGetNedToBodyEulers_f()->phi;
-		theta = stateGetNedToBodyEulers_f()->theta;
+		theta 	= stateGetNedToBodyEulers_f()->theta;
 		psi 	= stateGetNedToBodyEulers_f()->psi;	
 	}
 	struct FloatRates *body_rates = stateGetBodyRates_f();
@@ -157,7 +146,7 @@ void guidance_primary_axis_run(void)
   	}
 
 	//Linear controller to find the acceleration setpoint rate_cmd_primary_axis position and velocity
-	float dx = 0.019;
+	float dx = 0.020;
 	float dy = 0.002;
 	float x_cg, y_cg, vx_cg, vy_cg;
 	x_cg = stateGetPositionNed_f()->x -(cos(psi - 23/57.3)*dx - 	sin(psi - 23/57.3)*dy);
@@ -185,19 +174,19 @@ void guidance_primary_axis_run(void)
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
 	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
 #if COMPENSATE_CG_SHIFT
-	sp_accel_raw.x = (speed_sp_x - vx_cg) * guidance_pa_speed_gain;
-	sp_accel_raw.y = (speed_sp_y - vy_cg) * guidance_pa_speed_gain;
+	sp_accel_raw.x = (speed_sp_x - vx_cg) * guidance_pa_speed_gain + sp_accel_int.x * guidance_pa_gain_int;
+	sp_accel_raw.y = (speed_sp_y - vy_cg) * guidance_pa_speed_gain + sp_accel_int.y * guidance_pa_gain_int;
 	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
 #else
-	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain;
-	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain;
+	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain; //+ sp_accel_int.x * guidance_pa_gain_int;
+	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain; //+ sp_accel_int.y * guidance_pa_gain_int;
 	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
 #endif
 
 #ifdef VZ_FROM_DIFF_ALT	
 	float Z_filter = update_butterworth_2_low_pass(&altitude_filter,POS_FLOAT_OF_BFP(stateGetPositionNed_i()->z));
 	float Vz_filter = (altitude_filter.o[0] - altitude_filter.o[1])*PERIODIC_FREQUENCY;
-	//printf("%f\t%f\t%f\n", speed_sp_z,Vz_fiter,stateGetSpeedNed_f()->z);
+	//printf("%f\t%f\t%f\n", speed_sp_z,Vz_fiter,sguidance_pa_speed_gaintateGetSpeedNed_f()->z);
 	sp_accel_raw.z = (speed_sp_z - Vz_filter) * guidance_pa_speed_gain;
 #endif
 
@@ -233,7 +222,7 @@ if ((autopilot.mode == AP_MODE_ATTITUDE_DIRECT) || (autopilot.mode == AP_MODE_AT
     if (autopilot.mode == AP_MODE_ATTITUDE_DIRECT)
     {
 	  //for rc vertical control
-	  	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-4500)*16.0/9600.0;
+	  	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-5000)*16.0/9600.0;
     }
 
 //printf("%f\n", sp_accel.z);
@@ -256,13 +245,21 @@ else{
 }
 	
 	if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT)
+	{
+		sp_accel_int.x += pos_x_err / PERIODIC_FREQUENCY;
+		sp_accel_int.y += pos_y_err / PERIODIC_FREQUENCY;
 #ifdef VZ_FROM_DIFF_ALT	
-    vz_err_integral += (speed_sp_z - Vz_filter) / PERIODIC_FREQUENCY;
+    	vz_err_integral += (speed_sp_z - Vz_filter) / PERIODIC_FREQUENCY;
 #else	
-    vz_err_integral += (speed_sp_z - stateGetSpeedNed_f()->z) / PERIODIC_FREQUENCY;
-#endif
+    	vz_err_integral += (speed_sp_z - stateGetSpeedNed_f()->z) / PERIODIC_FREQUENCY;
+#endif		
+	}
 	else
+	{
+		sp_accel_int.x = 0;
+		sp_accel_int.y = 0;
 		vz_err_integral = 0;
+	}
 
 	//Acceleration projecting on body axis (nd_i)
 	nd_i_state.x = sp_accel.x;
@@ -318,8 +315,8 @@ else{
 	nd_i_state_dot_i.z = (get_first_order_low_pass(&nd_i_state_z)-nd_i_state_z_last)*PERIODIC_FREQUENCY;
 	
 	MAT33_VECT3_MUL(nd_i_state_dot_b, R_BI, nd_i_state_dot_i);
-	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*1*(nd_state.y-n_pa.y)+nd_state.x*r - 0.0*nd_i_state_dot_b.y);
-	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*1*(nd_state.x-n_pa.x)-nd_state.y*r - 0.0*nd_i_state_dot_b.x);
+	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*(n_pa.y-nd_state.y)+nd_state.x*r - 0.0*nd_i_state_dot_b.y);
+	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*(n_pa.x-nd_state.x)-nd_state.y*r - 0.0*nd_i_state_dot_b.x);
 	//p_des =  -1.0*(guidance_pa_att_gain*(nd_state.y-n_pa.y)+n_pa.x*r - 0.0*nd_i_state_dot_b.y);
 	//q_des = 1.0*(guidance_pa_att_gain*(nd_state.x-n_pa.x)-n_pa.y*r - 0.0*nd_i_state_dot_b.x);
 
