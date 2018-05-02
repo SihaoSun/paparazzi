@@ -49,11 +49,14 @@
 #include "modules/step_input/step_input.h"
 
 
-float guidance_pa_pos_gain 		= GUIDANCE_PA_SPEED_GAIN;
+float guidance_pa_pos_gain 		= GUIDANCE_PA_POS_GAIN;
 float guidance_pa_speed_gain 	= GUIDANCE_PA_SPEED_GAIN;
-float guidance_pa_gain_int 		= GUIDANCE_PA_POS_GAIN_INT;
+float guidance_pa_pos_gain_int  = GUIDANCE_PA_POS_GAIN_INT;
+float guidance_pa_pos_gain_int_last;
 float guidance_pa_att_gain 		= GUIDANCE_PA_ATT_GAIN;
 float guidance_pa_acc_filter_fc = GUIDANCE_PA_ACC_FILTER_FC;
+float guidance_pa_z_gain      = GUIDANCE_PA_Z_GAIN;
+float guidance_pa_z_gain_int    = GUIDANCE_PA_Z_GAIN_INT;
 struct FloatVect3 n_pa = {0.0,0.0,-1.0};
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
@@ -67,8 +70,7 @@ Butterworth2LowPass sp_accel_filter_x;
 Butterworth2LowPass sp_accel_filter_y;
 Butterworth2LowPass sp_accel_filter_z;
 Butterworth2LowPass altitude_filter;
-
-float vz_err_integral;
+float z_err_integral;
 
 bool guidance_primary_axis_status(void)
 {
@@ -174,13 +176,14 @@ void guidance_primary_axis_run(void)
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
 	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
 #if COMPENSATE_CG_SHIFT
-	sp_accel_raw.x = (speed_sp_x - vx_cg) * guidance_pa_speed_gain + sp_accel_int.x * guidance_pa_gain_int;
-	sp_accel_raw.y = (speed_sp_y - vy_cg) * guidance_pa_speed_gain + sp_accel_int.y * guidance_pa_gain_int;
+	sp_accel_raw.x = (speed_sp_x - vx_cg) * guidance_pa_speed_gain + sp_accel_int.x * guidance_pa_pos_gain_int;
+	sp_accel_raw.y = (speed_sp_y - vy_cg) * guidance_pa_speed_gain + sp_accel_int.y * guidance_pa_pos_gain_int;
 	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
 #else
-	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain; //+ sp_accel_int.x * guidance_pa_gain_int;
-	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain; //+ sp_accel_int.y * guidance_pa_gain_int;
+	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain + sp_accel_int.x * guidance_pa_pos_gain_int;
+	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain + sp_accel_int.y * guidance_pa_pos_gain_int;
 	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
+	
 #endif
 
 #ifdef VZ_FROM_DIFF_ALT	
@@ -249,22 +252,27 @@ else{
 		sp_accel_int.x += pos_x_err / PERIODIC_FREQUENCY;
 		sp_accel_int.y += pos_y_err / PERIODIC_FREQUENCY;
 #ifdef VZ_FROM_DIFF_ALT	
-    	vz_err_integral += (speed_sp_z - Vz_filter) / PERIODIC_FREQUENCY;
+    	z_err_integral += pos_z_err/ PERIODIC_FREQUENCY;
 #else	
-    	vz_err_integral += (speed_sp_z - stateGetSpeedNed_f()->z) / PERIODIC_FREQUENCY;
-#endif		
+    	z_err_integral += pos_z_err / PERIODIC_FREQUENCY;
+#endif
+	if (guidance_pa_pos_gain_int != guidance_pa_pos_gain_int_last)
+		{
+			sp_accel_int.x = 0;
+			sp_accel_int.y = 0;
+		}		
 	}
 	else
-	{
+	{		
 		sp_accel_int.x = 0;
 		sp_accel_int.y = 0;
-		vz_err_integral = 0;
+		z_err_integral = 0;
 	}
-
+	guidance_pa_pos_gain_int_last = guidance_pa_pos_gain_int;
 	//Acceleration projecting on body axis (nd_i)
 	nd_i_state.x = sp_accel.x;
 	nd_i_state.y = sp_accel.y;
-	nd_i_state.z = sp_accel.z<0 ? sp_accel.z-g : -g;
+	nd_i_state.z = sp_accel.z-g;//<0 ? sp_accel.z-g : -g;
 
 	float norm_nd = sqrtf(nd_i_state.x*nd_i_state.x+nd_i_state.y*nd_i_state.y+nd_i_state.z*nd_i_state.z);
 	nd_i_state.x =  nd_i_state.x/norm_nd;
@@ -299,7 +307,10 @@ else{
 
 	//Calculate command thrust
 	float thrust_specific;
-	thrust_specific = -(sp_accel.z-g)/cos(phi)/cos(theta);
+	if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT)
+		thrust_specific = -(sp_accel.z-g)/cos(phi)/cos(theta)-guidance_pa_z_gain*pos_z_err - guidance_pa_z_gain_int*z_err_integral;
+	else
+		thrust_specific = -(sp_accel.z-g)/cos(phi)/cos(theta);
 	//printf("%f\t%f\t%f\n", speed_sp_z, stateGetSpeedNed_f()->z,thrust_specific);
 
 	//Compute command p and q using NDI

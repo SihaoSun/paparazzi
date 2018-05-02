@@ -18,8 +18,8 @@
     <waypoint lat="51.9905874" lon="4.3767766" name="_CZ2"/>
     <waypoint lat="51.9906409" lon="4.3767226" name="_CZ3"/>
     <waypoint lat="51.9906737" lon="4.3768074" name="_CZ4"/>
-    <waypoint height="0.6" lat="51.9906083" lon= "4.3767676" name="Infront Fan"/>
-    <waypoint height="0.6" lat="51.9906128" lon= "4.3767828" name="Outside Fan"/>    
+    <waypoint height="0.6" lat="51.9906271" lon= "4.3768222" name="Infront Fan"/>
+    <waypoint height="0.6" lat="51.9906365" lon= "4.3768110" name="Outside Fan"/>    
     <!--waypoint height="1.5" name="p1" lat = "51.9906242 " lon = "4.3768286"/>
     <waypoint height="1.5" name="p2" lat = "51.9906485" lon = "4.3768035"/-->
     <waypoint height="1.5" name="p1" x="-1.0" y="-2.0"/>

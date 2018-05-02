@@ -12,9 +12,11 @@
         <dl_setting var="primary_axis_n_gain_y" min="0" step="0.2" max="1.0" shortname="n_y_gain" param="PRIMARY_AXIS_GUIDANCE_NY_GAIN" persistent="true"/>
         <dl_setting var="guidance_pa_pos_gain" min="0.5" step="0.1" max="5.0" shortname="pos_gain" param="GUIDANCE_PA_POS_GAIN" persistent="true"/>
         <dl_setting var="guidance_pa_speed_gain" min="0.5" step="0.1" max="5.0" shortname="vel_gain" param="GUIDANCE_PA_SPEED_GAIN" persistent="true"/>
-        <dl_setting var="guidance_pa_gain_int" min="0.0" step="0.1" max="3.0" shortname="pos_int_gain" param="GUIDANCE_PA_POS_GAIN_INT" persistent="true"/>
+        <dl_setting var="guidance_pa_pos_gain_int" min="0.0" step="0.1" max="3.0" shortname="pos_int_gain" param="GUIDANCE_PA_POS_GAIN_INT" persistent="true"/>
         <dl_setting var="guidance_pa_att_gain" min="2.0" step="0.1" max="15.0" shortname="att_gain" param="GUIDANCE_PA_ATT_GAIN" persistent="true"/>
-        <dl_setting var="guidance_pa_acc_filter_fc" min="0.5" step="0.1" max="8.0" shortname="att_gain" param="GUIDANCE_PA_ACC_FILTER_FC" persistent="true"/>
+        <dl_setting var="guidance_pa_z_gain" min="2.0" step="0.1" max="30.0" shortname="z_gain" param="GUIDANCE_PA_Z_GAIN" persistent="true"/>
+        <dl_setting var="guidance_pa_z_gain_int" min="0.0" step="0.1" max="10.0" shortname="z_int_gain" param="GUIDANCE_PA_Z_GAIN_INT" persistent="true"/>                
+        <dl_setting var="guidance_pa_acc_filter_fc" min="0.5" step="0.1" max="20.0" shortname="acc_filter" param="GUIDANCE_PA_ACC_FILTER_FC" persistent="true"/>
 
       </dl_settings>
     </dl_settings>

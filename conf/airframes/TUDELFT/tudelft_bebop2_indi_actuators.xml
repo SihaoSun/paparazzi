@@ -62,11 +62,13 @@
       <define name="PRIMARY_AXIS_GUIDANCE_NX_GAIN"  value = "1.0"/>
       <define name="PRIMARY_AXIS_GUIDANCE_NY_GAIN"  value = "1.0"/>
       <define name="PRIMARY_AXIS_GUIDANCE_ABS"      value = "0.0"/>
-      <define name="GUIDANCE_PA_POS_GAIN"           value = "2.0"/>
-      <define name="GUIDANCE_PA_SPEED_GAIN"         value = "3.0"/>
+      <define name="GUIDANCE_PA_POS_GAIN"           value = "1.0"/>
+      <define name="GUIDANCE_PA_SPEED_GAIN"         value = "2.0"/>
       <define name="GUIDANCE_PA_POS_GAIN_INT"       value = "0.0"/>
       <define name="GUIDANCE_PA_ATT_GAIN"           value = "10.0"/>
-      <define name="GUIDANCE_PA_ACC_FILTER_FC"      value = "4.0"/>
+      <define name="GUIDANCE_PA_ACC_FILTER_FC"      value = "15.0"/>
+      <define name="GUIDANCE_PA_Z_GAIN"             value = "15.0"/>
+      <define name="GUIDANCE_PA_Z_GAIN_INT"         value = "0.5"/>
     </module>
     <module name="attitude_optitrack">
       <define name="DATALINK_NATNET_FREQUENCY" value="120"/>
@@ -234,7 +236,7 @@
     <!--define name="MODE_MANUAL" value="AP_MODE_KILL"/-->
     <define name="MODE_AUTO1" value="AP_MODE_HOVER_Z_HOLD"/>
     <!--define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/-->
-    <define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/>
+    <!-- <define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/> -->
     <!--define name="MODE_AUTO2" value="AP_MODE_NAV"/-->
     <!--define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_DIRECT"/-->
 

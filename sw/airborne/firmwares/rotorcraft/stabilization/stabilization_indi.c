@@ -407,9 +407,9 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   //float Error[4];
   if (abs(r_filter)>=10)
   {
-    Error[0] = rate_ref.p - (p_filter+0.4);
-    Error[1] = rate_ref.q - (q_filter+0.5);
-    Error[2] = rate_ref.r - (r_filter+0.2);
+    Error[0] = rate_ref.p - p_filter;
+    Error[1] = rate_ref.q - q_filter;
+    Error[2] = rate_ref.r - r_filter;
   }
   else{
     Error[0] = rate_ref.p - p_filter;
@@ -496,19 +496,10 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 
       if (thrust_primary_axis<=0)
         thrust_primary_axis = 0;
-      //rpm_cmd_pa = sqrtf(thrust_primary_axis * 4.7197e+06/0.8);
-      rpm_cmd_pa = sqrtf(thrust_primary_axis * 4.7197e+06/0.5);
-      //rpm_cmd_pa_fb = -3000*(POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z));
-      float rpm_cmd_pa_fb = -1000 * vz_err_integral;
-      
-      if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT)
-      {
-        rpm_cmd_pa += rpm_cmd_pa_fb;
-      }
+      rpm_cmd_pa = sqrtf(thrust_primary_axis * 4.7197e+06/0.8);
+
       thrust_pprz_cmd = (rpm_cmd_pa- get_servo_min(0));
       thrust_pprz_cmd *= (MAX_PPRZ / (float)(get_servo_max(0) - get_servo_min(0)));  
-
-      //printf("%f\t%f\t%f\n",rpm_cmd_pa,rpm_cmd_pa_fb,vz_err_integral);
 
       for (i = 0; i < 4; ++i)
       {

@@ -48,9 +48,11 @@ extern void guidance_primary_axis_run(void);
 extern void guidance_primary_axis_take_off(void);
 extern float guidance_pa_pos_gain;
 extern float guidance_pa_speed_gain;
-extern float guidance_pa_gain_int;
+extern float guidance_pa_pos_gain_int;
 extern float guidance_pa_att_gain;
 extern float guidance_pa_acc_filter_fc;
+extern float guidance_pa_z_gain;
+extern float guidance_pa_z_gain_int;
 
 void low_pass_filter_init(void);
 
@@ -60,6 +62,6 @@ struct FloatVect3 sp_accel_primary_axis;
 struct FloatVect3 sp_accel_primary_axis_filter;
 
 float nx_desire_step,ny_desire_step;
-
+float thrust_specific_raw;
 extern float vz_err_integral;
 #endif
