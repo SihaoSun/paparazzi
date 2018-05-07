@@ -46,12 +46,26 @@
 #include "math/pprz_algebra_float.h"
 #include "modules/attitude_optitrack/attitude_optitrack.h"
 
+#ifdef INNER_LOOP_PROTECTION
+float protect_inner_loop = INNER_LOOP_PROTECTION;
+#else
+float protect_inner_loop = 0;
+#endif
+#ifdef INTEGRAL_GAIN_WORKS
+float int_gain_works = INTEGRAL_GAIN_WORKS;
+float guidance_pa_pos_gain_int = 1;
 
+#else
+float int_gain_works = 0;
+float guidance_pa_pos_gain_int = 1;
+
+#endif
 
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else
-float guidance_pa_pos_gain = 0.8;
+float guidance_pa_pos_gain = 1;
+float extra_gain_pos_gain = -0.5; // RPM is high enough, then extra_gain_att_gain is added to guidance_pa_pos_gain
 #endif
 
 #ifdef GUIDANCE_PA_SPEED_GAIN
@@ -59,18 +73,22 @@ float guidance_pa_speed_gain = GUIDANCE_INDI_SPEED_GAIN;
 #else
 float guidance_pa_speed_gain = 2.0;
 #endif
+	// printf("max_extra_gain_multiplier: %2.2f \t %2.2f \n", max_extra_gain_multiplier,guidance_pa_att_gain);
 
 #ifdef GUIDANCE_PA_ATT_GAIN 
 float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 #else
 float guidance_pa_att_gain = -5.0;
-float extra_gain_att_gain = 2; // If RPM is high enough, then extra_gain_att_gain is added to guidance_pa_att_gain
+float extra_gain_att_gain = 3; // If RPM is high enough, then extra_gain_att_gain is added to guidance_pa_att_gain
 #endif
 
 
 struct FloatVect3 n_pa = {0.0,0.0,-1.0};
 struct FloatVect3 nd_i_state_dot_b = {0.0,0.0,0.0};
 struct FloatVect3 nd_i_state_dot_i = {0.0,0.0,0.0};
+
+struct FloatVect3 sp_accel_int = {0.0,0.0,0.0};
+
 struct FirstOrderLowPass nd_i_state_x, nd_i_state_y, nd_i_state_z;
 struct FirstOrderLowPass theta_filt, psi_des_filt;
 
@@ -91,7 +109,6 @@ bool guidance_primary_axis_status(void)
 void guidance_primary_axis_init(void)
 {
 
-  printf("max_extra_gain_multiplier in guidance: %2.2f \n", max_extra_gain_multiplier);
 	primary_axis_status = 0;
 	low_pass_filter_init();
 	primary_axis_n_gain_x = PRIMARY_AXIS_GUIDANCE_NX_GAIN;
@@ -103,7 +120,7 @@ void guidance_primary_axis_init(void)
 void low_pass_filter_init(void)
 {	
 	float tau = 1.0 / (2.0 * M_PI * 8.0);
-	float tau_nd = 1.0/(2.0 * M_PI * 1.5);
+	float tau_nd = 1.0/(2.0 * M_PI * 1.5); // 1.5 Because its half of the 3 Hz yaw rotational period 
 	float sample_time = 1.0 / PERIODIC_FREQUENCY;
 	init_first_order_low_pass(&nd_i_state_x,tau_nd,sample_time,0);
 	init_first_order_low_pass(&nd_i_state_y,tau_nd,sample_time,0);
@@ -132,24 +149,59 @@ void guidance_primary_axis_run(void)
 	//Flag to hack guidance loop
 	primary_axis_status = 1;
 
+	// Addition for logger file
+	pos_x_act = stateGetPositionNed_f()->x;
+	pos_y_act = stateGetPositionNed_f()->y;
+	pos_z_act = stateGetPositionNed_f()->z;
+	// Addition for logger file
+	pos_x_ref = POS_FLOAT_OF_BFP(guidance_h.ref.pos.x);
+	pos_y_ref = POS_FLOAT_OF_BFP(guidance_h.ref.pos.y);
+	pos_z_ref = POS_FLOAT_OF_BFP(guidance_v_z_ref);
+
 	//Linear controller to find the acceleration setpoint rate_cmd_primary_axis position and velocity
-	float pos_x_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.x) - stateGetPositionNed_f()->x;
-	float pos_y_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.y) - stateGetPositionNed_f()->y;
-	float pos_z_err = POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z);
+	pos_x_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.x) - stateGetPositionNed_f()->x;
+	pos_y_err = POS_FLOAT_OF_BFP(guidance_h.ref.pos.y) - stateGetPositionNed_f()->y;
+	pos_z_err = POS_FLOAT_OF_BFP(guidance_v_z_ref - stateGetPositionNed_i()->z);
 
 	// printf("%d\t%f\t%d\t%f\n",guidance_h.ref.pos.x, stateGetPositionNed_f()->x, guidance_h.ref.pos.y, stateGetPositionNed_f()->y);
-	
-	float speed_sp_x = pos_x_err * guidance_pa_pos_gain;
-	float speed_sp_y = pos_y_err * guidance_pa_pos_gain;
-	float speed_sp_z = pos_z_err * guidance_pa_pos_gain;
+	if (protect_inner_loop == 1){
+	guidance_pa_pos_gain += max_extra_gain_multiplier * extra_gain_pos_gain;
+	}
 
+
+	speed_sp_x = pos_x_err * guidance_pa_pos_gain;
+	speed_sp_y = pos_y_err * guidance_pa_pos_gain;
+	speed_sp_z = pos_z_err * guidance_pa_pos_gain*0.5;
+	// Reset pos_gain
+	guidance_pa_pos_gain = 1;
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
 	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
+
+	// Addition for logger file
+	speed_x_act = stateGetSpeedNed_f()->x;
+	speed_y_act = stateGetSpeedNed_f()->y;
+	speed_z_act = stateGetSpeedNed_f()->z;	
+
+ 	if (int_gain_works == 1){
+
+ 	sp_accel_int.x += pos_x_err / PERIODIC_FREQUENCY;
+	sp_accel_int.y += pos_y_err / PERIODIC_FREQUENCY;
+	sp_accel_int.z += pos_z_err / PERIODIC_FREQUENCY;
+ 	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain + sp_accel_int.x * guidance_pa_pos_gain_int;
+	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain + sp_accel_int.y * guidance_pa_pos_gain_int;
+	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
+	// OR 
+	// pos_x_err = pos_x_err * guidance_pa_pos_gain + sp_accel_int.x * guidance_pa_pos_gain_int;
+	// pos_y_err = pos_y_err * guidance_pa_pos_gain + sp_accel_int.y * guidance_pa_pos_gain_int;
+	// pos_z_err = pos_z_err * guidance_pa_pos_gain + sp_accel_int.z * guidance_pa_pos_gain_int;
+ 	}
+ 	else{
 
 	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain;
 	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain;
 	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
 
+ 	}
 	sp_accel.x = update_butterworth_2_low_pass(&sp_accel_filter_x, sp_accel_raw.x);
 	sp_accel.y = update_butterworth_2_low_pass(&sp_accel_filter_y, sp_accel_raw.y);
 	sp_accel.z = update_butterworth_2_low_pass(&sp_accel_filter_z, sp_accel_raw.z);
@@ -260,13 +312,14 @@ else if (autopilot.mode == AP_MODE_NAV){
 	nd_i_state_dot_i.y = (get_first_order_low_pass(&nd_i_state_y)-nd_i_state_y_last)*PERIODIC_FREQUENCY;
 	nd_i_state_dot_i.z = (get_first_order_low_pass(&nd_i_state_z)-nd_i_state_z_last)*PERIODIC_FREQUENCY;
 	  	
-	printf("max_extra_gain_multiplier in guidance periodic: %2.2f \n", max_extra_gain_multiplier);
 	guidance_pa_att_gain += max_extra_gain_multiplier * extra_gain_att_gain;
+ 
 
 	MAT33_VECT3_MUL(nd_i_state_dot_b, R_BI, nd_i_state_dot_i);
 	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.y-n_pa.y)+nd_state.x*r - 0.0*nd_i_state_dot_b.y);
 	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.x-n_pa.x)-nd_state.y*r - 0.0*nd_i_state_dot_b.x);
-
+	// Reset Guidance to old value
+	guidance_pa_att_gain = -5;
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;
 	rate_cmd_primary_axis[1] = q_des;
@@ -283,5 +336,6 @@ void primary_axis_status_take_off(void)
 {
 
 }
+
 
 

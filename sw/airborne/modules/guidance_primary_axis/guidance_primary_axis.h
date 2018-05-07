@@ -38,6 +38,33 @@ float primary_axis_n_gain_x;
 float primary_axis_n_gain_y;
 float primary_axis_n_abs;
 
+float guidance_pa_att_gain;
+float extra_gain_att_gain;
+
+// position act, ref, err
+float pos_x_act;
+float pos_y_act;
+float pos_z_act;
+
+float pos_x_ref;
+float pos_y_ref;
+float pos_z_ref;
+
+float pos_x_err;
+float pos_y_err;
+float pos_z_err;
+
+// velocity act, ref, err
+float speed_x_act;
+float speed_y_act;
+float speed_z_act;
+
+float speed_sp_x; //ref
+float speed_sp_y;
+float speed_sp_z;
+
+// acceleration act, ref, err
+
 extern bool guidance_primary_axis_status(void);
 extern void guidance_primary_axis_init(void);
 extern void guidance_primary_axis_end(void);

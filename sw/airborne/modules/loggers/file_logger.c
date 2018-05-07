@@ -70,7 +70,9 @@ void file_logger_start(void)
       "w1obs,w2obs,w3obs,w4obs,w1ref,w2ref,w3ref,w4ref,w1obs_indi,w2obs_indi,w3obs_indi,w4obs_indi,"
       "p,q,r,phi,theta,psi,Acc^b_x,Acc^b_y,Acc^b_z,phi_ot,theta_ot,psi_ot,r_ot,"
       "p_des,q_des,r_des,h1,h2,ndi_x,ndi_y,ndi_z,acc_des_x,acc_des_y,acc_des_z,acc_des_x_filter,acc_des_y_filter,acc_des_z_filter,"
-      "p_des_dot, q_des_dot, p_des_filter, q_des_filter\n"
+      "p_des_dot, q_des_dot, p_des_filter, q_des_filter, guidance_pa_att_gain,extra_gain_att_gain,"
+      "pos_x_err,pos_y_err,pos_z_err,pos_x_ref,pos_y_ref,pos_z_ref,pos_x_act,pos_y_act,pos_z_act,"
+      "speed_x_act,speed_y_act,speed_z_act,speed_x_ref,speec_y_ref,speed_z_ref*2\n"
     );
   }
 }
@@ -93,7 +95,7 @@ void file_logger_periodic(void)
   static uint32_t counter;
   struct Int32Quat *quat = stateGetNedToBodyQuat_i();
 
-  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d\n",
+  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%1f,%2.2f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
           counter,
           imu.gyro_unscaled.p,
           imu.gyro_unscaled.q,
@@ -154,7 +156,25 @@ void file_logger_periodic(void)
           p_des_dot_logger,
           q_des_dot_logger,
           p_des_filter_logger,
-          q_des_filter_logger
+          q_des_filter_logger,
+          max_extra_gain_multiplier,
+          guidance_pa_att_gain,
+          extra_gain_att_gain,
+          pos_x_err,
+          pos_y_err,
+          pos_z_err,
+          pos_x_ref,
+          pos_y_ref,
+          pos_z_ref,
+          pos_x_act,
+          pos_y_act,
+          pos_z_act,
+          speed_x_act,
+          speed_y_act,
+          speed_z_act,
+          speed_sp_x,
+          speed_sp_y,
+          speed_sp_z
          );
   counter++;
 }

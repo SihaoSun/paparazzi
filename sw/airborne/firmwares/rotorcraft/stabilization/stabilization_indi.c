@@ -35,6 +35,8 @@
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_rc_setpoint.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_quat_transformations.h"
 
+#include "modules/guidance_primary_axis/guidance_primary_axis.h"
+
 #include "math/pprz_algebra_float.h"
 #include "math/pprz_simple_matrix.h"
 #include "state.h"
@@ -257,8 +259,7 @@ void stabilization_indi_init(void)
   calc_g1_inv_damage_square();
   // printf("Running calc_g1_damage_tall \n");
   calc_g1_damage_tall();
-  calculate_gain_fraction(); 
-  printf("max_extra_gain_multiplier in stabilization init: %2.2f \n", max_extra_gain_multiplier);
+
   // Initialize the array of pointers to the rows of g1g2
   uint8_t i;
   for (i = 0; i < INDI_OUTPUTS; i++) {
@@ -608,6 +609,10 @@ if (double_failure_flag == 1){
   // Add the increments to the actuators
   float_vect_sum(indi_u, actuator_state_filt_vect, indi_du, INDI_NUM_ACT);
 
+
+  // ADJUST GAINS
+    calculate_gain_fraction(); 
+  // printf("max_extra_gain_multiplier in stabilization init: %2.2f \n", max_extra_gain_multiplier);
   // Bound the inputs to the actuators
   for (i = 0; i < INDI_NUM_ACT; i++) {
        if (act_is_servo[i]) {
@@ -667,10 +672,10 @@ if (double_failure_flag == 1){
 // printf("%4.4f \t \t",diff_indi_du);
 
 
-printf("%2.0d\t%2.0d\t%2.0d\t%2.0d \t",actuators_pprz[0],actuators_pprz[1],actuators_pprz[2],actuators_pprz[3]);
-printf("%1.0d %1.0d %1.0d \n",autopilot_mode_status, single_failure_flag, double_failure_flag );
+// printf("%2.0d\t%2.0d\t%2.0d\t%2.0d \t",actuators_pprz[0],actuators_pprz[1],actuators_pprz[2],actuators_pprz[3]);
+// printf("%1.0d %1.0d %1.0d \n",autopilot_mode_status, single_failure_flag, double_failure_flag );
 
-printf("max_extra_gain_multiplier in stabilization periodic: %2.2f \n", max_extra_gain_multiplier);
+// printf("max_extra_gain_multiplier in stabilization periodic: %2.2f \n", max_extra_gain_multiplier);
 
 
  // printf("%d\n",stateGetPositionNed_i()->z);
@@ -1168,16 +1173,16 @@ static void bound_g_mat(void)
 }
 
 static void calculate_gain_fraction(void){
-MIN_THRESHOLD = 10260; // arbitrary, set to 10% of max
-MAX_THRESHOLD = 11400; // empirical, max rpm of the rotors
+MIN_THRESHOLD = 10260;//10260; // arbitrary, set to 10% of max
+MAX_THRESHOLD = 11400;//11400; // empirical, max rpm of the rotors
 
 // Do for all actuators?
 int i;
 for (i = 0; i < INDI_NUM_ACT; i++) {
-
+// printf("%2.2f\t%2.2f\t%2.2f\t%2.2f\t%2.2f\t%2.2f \t",extra_gain_multiplier[0], extra_gain_multiplier[1], extra_gain_multiplier[2],extra_gain_multiplier[3],max_extra_gain_multiplier, guidance_pa_att_gain );
   extra_gain_multiplier[i] = 10 * (act_obs[i] - MIN_THRESHOLD) / (MAX_THRESHOLD); // when RPM in [MIN,MAX] -> extra_gain_multiplier in [0,1]
   Bound(extra_gain_multiplier[i], 0, 1); // bound the multiplier between 0 and 1 for safety
-                              }
+  }
   max_extra_gain_multiplier = float_vect_max(extra_gain_multiplier, INDI_NUM_ACT); // Take largest element without defining which element this was
 }
 

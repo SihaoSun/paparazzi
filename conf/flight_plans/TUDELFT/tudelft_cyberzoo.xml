@@ -20,6 +20,8 @@
     <waypoint lat="51.9906737" lon="4.3768074" name="_CZ4"/>
     <waypoint height="0.8" lat="51.9906350" lon= "4.3768282" name="Infront point"/>
     <waypoint height="0.8" lat="51.9906320" lon= "4.3768208" name="Middle point"/>
+    <waypoint height="2.5" lat="51.9906320" lon= "4.3768208" name="Middle point high"/>
+    
     <waypoint height="0.8" lat="51.9906278" lon= "4.3768114" name="Outside point"/>
 
 <!--     <waypoint height="1.3" lat="51.9906317" lon= "4.3768059" name="Infront point"/>
@@ -91,13 +93,31 @@
       <call_once fun="NavSetWaypointHere(WP_GOAL)"/>
     </block>
 
+<!--     <block name = "Climb to Middle waypoint">
+      <go wp="Middle point" vmode ="climb"/>
+    </block>
+    <block name = "Climb to Middle waypoint high">
+      <go wp="Middle point high" vmode ="climb"/>
+    </block> -->
+
+<block name = "Climb route Middle waypoint">
+  <go from ="Middle point" wp="Middle point high" vmode ="climb" climb="nav_descend_vspeed"/>
+</block>
+
+<block name = "Descend route Middle waypoint">
+  <go from ="Middle point high" wp="Middle point" vmode ="climb" climb="nav_descend_vspeed"/>
+</block>
+
+
     <block name="Infront point">
       <stay wp="Infront point"/>
     </block>
     <block name = "Middle point">
-      <stay wp="Middle point"/>
+      <go wp="Middle point" vmode ="climb" climb="nav_descend_vspeed"/>
     </block>
-
+    <block name = "Middle point high">
+      <go wp="Middle point high" vmode ="climb" climb="nav_descend_vspeed"/>
+    </block>  
     <block name="Outside point">
       <stay wp="Outside point"/>
     </block>

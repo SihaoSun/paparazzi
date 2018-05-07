@@ -40,6 +40,9 @@
     </module>
 
     <define name="BEBOP_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_2000"/>
+
+    <define name = "INNER_LOOP_PROTECTION" value = "FALSE"/>
+    <define name = "INTEGRAL_GAIN_WORKS" value = "FALSE"/>
   </firmware>
 
   <modules main_freq="512">
@@ -217,8 +220,8 @@
   </section>
 
   <section name="NAVIGATION" prefix="NAV_">
-    <define name="CLIMB_VSPEED" value="8.5"/>
-    <define name="DESCEND_VSPEED" value="-2.0"/>
+    <define name="CLIMB_VSPEED" value="10"/>
+    <define name="DESCEND_VSPEED" value="-10"/>
   </section>
 
   <section name="SIMULATOR" prefix="NPS_">
