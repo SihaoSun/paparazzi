@@ -52,7 +52,7 @@ extern void stabilization_indi_read_rc(bool in_flight, bool in_carefree, bool co
 
 // other variables
 float act_obs[4];
-
+extern struct FloatRates rate_ref_log_indi;
 #endif /* STABILIZATION_INDI */
 
 

@@ -41,4 +41,7 @@ extern void stabilization_attitude_set_setpoint_rp_quat_f(struct FloatEulers* in
 extern float guidance_indi_thrust_specific_force_gain;
 extern struct FloatVect3 euler_cmd;
 
+extern float pos_x_log, pos_y_log, pos_z_log, pos_x_ref_log, pos_y_ref_log, pos_z_ref_log;
+extern float speed_x_log, speed_y_log, speed_z_log, speed_x_ref_log, speed_y_ref_log, speed_z_ref_log;
+extern float acc_x_log, acc_y_log, acc_z_log, acc_x_ref_log, acc_y_ref_log, acc_z_ref_log;
 #endif /* GUIDANCE_INDI_H */

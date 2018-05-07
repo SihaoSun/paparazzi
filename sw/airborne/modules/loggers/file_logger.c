@@ -34,6 +34,7 @@
 #include "state.h"
 #include "boards/bebop/actuators.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_indi.h"
+#include "firmwares/rotorcraft/guidance/guidance_indi.h"
 
 /** Set the default File logger path to the USB drive */
 #ifndef FILE_LOGGER_PATH
@@ -63,7 +64,7 @@ void file_logger_start(void)
   if (file_logger != NULL) {
     fprintf(
       file_logger,
-      "counter,gyro_unscaled_p,gyro_unscaled_q,gyro_unscaled_r,accel_unscaled_x,accel_unscaled_y,accel_unscaled_z,mag_unscaled_x,mag_unscaled_y,mag_unscaled_z,COMMAND_THRUST,COMMAND_ROLL,COMMAND_PITCH,COMMAND_YAW,qi,qx,qy,qz,w1obs,w2obs,w3obs,w4obs,w1ref,w2ref,w3ref,w4ref,w1obs_indi,w2obs_indi,w3obs_indi,w4obs_indi\n"
+      "counter,gyro_unscaled_p,gyro_unscaled_q,gyro_unscaled_r,accel_unscaled_x,accel_unscaled_y,accel_unscaled_z,mag_unscaled_x,mag_unscaled_y,mag_unscaled_z,COMMAND_THRUST,COMMAND_ROLL,COMMAND_PITCH,COMMAND_YAW,qi,qx,qy,qz,w1obs,w2obs,w3obs,w4obs,w1ref,w2ref,w3ref,w4ref,w1obs_indi,w2obs_indi,w3obs_indi,w4obs_indi, p_ref, q_ref, r_ref, x, y, z, x_ref, y_ref, z_ref, Vx, Vy, Vz, Vx_ref, Vy_ref, Vz_ref, acc_x_ref, acc_y_ref, acc_z_ref\n"
     );
   }
 }
@@ -86,7 +87,7 @@ void file_logger_periodic(void)
   static uint32_t counter;
   struct Int32Quat *quat = stateGetNedToBodyQuat_i();
 
-  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
           counter,      
           imu.gyro_unscaled.p,
           imu.gyro_unscaled.q,
@@ -117,15 +118,24 @@ void file_logger_periodic(void)
           act_obs[1],
           act_obs[2],
           act_obs[3],
-          stateGetBodyRates_f()->p,
-          stateGetBodyRates_f()->q,
-          stateGetBodyRates_f()->r,
-          stateGetNedToBodyEulers_f()->phi,
-          stateGetNedToBodyEulers_f()->theta,
-          stateGetNedToBodyEulers_f()->psi,
-          stateGetAccelBody_i()->x,
-          stateGetAccelBody_i()->y,
-          stateGetAccelBody_i()->z
+          rate_ref_log_indi.p,
+          rate_ref_log_indi.q,
+          rate_ref_log_indi.r,
+          pos_x_log,
+          pos_y_log,
+          pos_z_log,
+          pos_x_ref_log,
+          pos_y_ref_log,
+          pos_z_ref_log,
+          speed_x_log,
+          speed_y_log,
+          speed_z_log,
+          speed_x_ref_log,
+          speed_y_ref_log,
+          speed_z_ref_log,
+          acc_x_ref_log,
+          acc_y_ref_log,
+          acc_z_ref_log
          );
   counter++;
 }

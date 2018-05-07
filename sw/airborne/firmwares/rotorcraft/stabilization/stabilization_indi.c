@@ -61,7 +61,7 @@ float du_pref[INDI_NUM_ACT];
 float indi_v[INDI_OUTPUTS];
 float *Bwls[INDI_OUTPUTS];
 int num_iter = 0;
-
+struct FloatRates rate_ref_log_indi;
 static void lms_estimation(void);
 static void get_actuator_state(void);
 static void calc_g1_element(float dx_error, int8_t i, int8_t j, float mu_extra);
@@ -343,6 +343,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
 {
 
   struct FloatRates rate_ref;
+
   if (rate_control) { //Check if we are running the rate controller
     rate_ref.p = (float)radio_control.values[RADIO_ROLL]  / MAX_PPRZ * STABILIZATION_INDI_MAX_RATE;
     rate_ref.q = (float)radio_control.values[RADIO_PITCH] / MAX_PPRZ * STABILIZATION_INDI_MAX_RATE;
@@ -361,6 +362,10 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   }
 
   struct FloatRates *body_rates = stateGetBodyRates_f();
+  
+  rate_ref_log_indi.p = rate_ref.p;
+  rate_ref_log_indi.q = rate_ref.q;
+  rate_ref_log_indi.r = rate_ref.r;
 
   //calculate the virtual control (reference acceleration) based on a PD controller
   angular_accel_ref.p = (rate_ref.p - body_rates->p) * reference_acceleration.rate_p;

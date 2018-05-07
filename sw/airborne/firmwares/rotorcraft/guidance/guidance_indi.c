@@ -99,6 +99,10 @@ float filter_cutoff = GUIDANCE_INDI_FILTER_CUTOFF;
 struct FloatEulers guidance_euler_cmd;
 float thrust_in;
 
+float pos_x_log, pos_y_log, pos_z_log, pos_x_ref_log, pos_y_ref_log, pos_z_ref_log;
+float speed_x_log, speed_y_log, speed_z_log, speed_x_ref_log, speed_y_ref_log, speed_z_ref_log;
+float acc_x_log, acc_y_log, acc_z_log, acc_x_ref_log, acc_y_ref_log, acc_z_ref_log;
+
 static void guidance_indi_propagate_filters(void);
 static void guidance_indi_calcG(struct FloatMat33 *Gmat);
 
@@ -126,6 +130,8 @@ void guidance_indi_enter(void) {
  *
  * main indi guidance function
  */
+
+
 void guidance_indi_run(bool in_flight, float heading_sp) {
 
   //filter accel to get rid of noise and filter attitude to synchronize with accel
@@ -143,6 +149,26 @@ void guidance_indi_run(bool in_flight, float heading_sp) {
   sp_accel.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_indi_speed_gain;
   sp_accel.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_indi_speed_gain;
   sp_accel.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_indi_speed_gain;
+
+  pos_x_log = stateGetPositionNed_f()->x;
+  pos_y_log = stateGetPositionNed_f()->y;
+  pos_z_log = POS_FLOAT_OF_BFP(stateGetPositionNed_i()->z);
+
+  pos_x_ref_log = POS_FLOAT_OF_BFP(guidance_h.ref.pos.x);
+  pos_y_ref_log = POS_FLOAT_OF_BFP(guidance_h.ref.pos.y);
+  pos_z_ref_log = POS_FLOAT_OF_BFP(guidance_v_z_ref);  
+
+  speed_x_log = stateGetSpeedNed_f()->x;
+  speed_y_log = stateGetSpeedNed_f()->y;
+  speed_z_log = stateGetSpeedNed_f()->z;
+
+  speed_x_ref_log = speed_sp_x;
+  speed_y_ref_log = speed_sp_y;
+  speed_z_ref_log = speed_sp_z;
+  
+  acc_x_ref_log = sp_accel.x;
+  acc_y_ref_log = sp_accel.y;
+  acc_z_ref_log = sp_accel.z;
 
 #if GUIDANCE_INDI_RC_DEBUG
 #warning "GUIDANCE_INDI_RC_DEBUG lets you control the accelerations via RC, but disables autonomous flight!"
