@@ -165,15 +165,16 @@ void guidance_primary_axis_run(void)
 
 	// printf("%d\t%f\t%d\t%f\n",guidance_h.ref.pos.x, stateGetPositionNed_f()->x, guidance_h.ref.pos.y, stateGetPositionNed_f()->y);
 	if (protect_inner_loop == 1){
-	guidance_pa_pos_gain += max_extra_gain_multiplier * extra_gain_pos_gain;
+	guidance_pa_pos_gain += max_extra_gain_multiplier * extra_gain_pos_gain; // extra_gain_pos_gain is calculated within stabilization_indi.c (innerloop)
 	}
-
 
 	speed_sp_x = pos_x_err * guidance_pa_pos_gain;
 	speed_sp_y = pos_y_err * guidance_pa_pos_gain;
 	speed_sp_z = pos_z_err * guidance_pa_pos_gain*0.5;
+	
 	// Reset pos_gain
-	guidance_pa_pos_gain = 1;
+	guidance_pa_pos_gain = 1; // Reset to avoid gain increase ad infinitum
+
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
 	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
 
@@ -312,7 +313,7 @@ else if (autopilot.mode == AP_MODE_NAV){
 	nd_i_state_dot_i.y = (get_first_order_low_pass(&nd_i_state_y)-nd_i_state_y_last)*PERIODIC_FREQUENCY;
 	nd_i_state_dot_i.z = (get_first_order_low_pass(&nd_i_state_z)-nd_i_state_z_last)*PERIODIC_FREQUENCY;
 	  	
-	guidance_pa_att_gain += max_extra_gain_multiplier * extra_gain_att_gain;
+	// guidance_pa_att_gain += max_extra_gain_multiplier * extra_gain_att_gain;
  
 
 	MAT33_VECT3_MUL(nd_i_state_dot_b, R_BI, nd_i_state_dot_i);

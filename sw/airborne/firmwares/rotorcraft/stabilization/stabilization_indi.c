@@ -110,7 +110,7 @@ bool act_is_servo[INDI_NUM_ACT] = {0};
 
 #ifdef STABILIZATION_INDI_ACT_PREF
 // Preferred (neutral, least energy) actuator value
-float act_pref[INDI_NUM_ACT] = STABILIZATION_INDI_ACT_PREF;
+float act_pref[INDI_NUMla catedral_ACT] = STABILIZATION_INDI_ACT_PREF;
 #else
 // Assume 0 is neutral
 float act_pref[INDI_NUM_ACT] = {0.0};
