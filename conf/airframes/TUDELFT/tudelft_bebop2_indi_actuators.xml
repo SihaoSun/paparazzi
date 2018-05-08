@@ -43,7 +43,7 @@
     <define name="PRIMARY_AXIS_THRUST_COMMAND" value="TRUE"/>
     <define name="SMC_TEST_NOMINAL" value = "TRUE"/>
     <define name="SMC_TEST_NDI_USED" value = "FALSE"/>
-    <define name = "COMPENSATE_CG_SHIFT" value = "TRUE"/>
+    <define name = "COMPENSATE_CG_SHIFT" value = "FALSE"/>
 
   </firmware>
 
