@@ -52,13 +52,13 @@
 #ifdef GUIDANCE_INDI_POS_GAIN
 float guidance_indi_pos_gain = GUIDANCE_INDI_POS_GAIN;
 #else
-float guidance_indi_pos_gain = 1.5;
+float guidance_indi_pos_gain = 2.5;
 #endif
 
 #ifdef GUIDANCE_INDI_SPEED_GAIN
 float guidance_indi_speed_gain = GUIDANCE_INDI_SPEED_GAIN;
 #else
-float guidance_indi_speed_gain = 4.0;
+float guidance_indi_speed_gain = 3.0;
 #endif
 
 struct FloatVect3 sp_accel = {0.0,0.0,0.0};
@@ -235,7 +235,8 @@ void guidance_indi_run(bool in_flight, float heading_sp) {
   //Bound euler angles to prevent flipping
   Bound(guidance_euler_cmd.phi, -GUIDANCE_H_MAX_BANK, GUIDANCE_H_MAX_BANK);
   Bound(guidance_euler_cmd.theta, -GUIDANCE_H_MAX_BANK, GUIDANCE_H_MAX_BANK);
-
+  
+  // printf("%f\t%f\n", a_diff.x, a_diff.y);
   //set the quat setpoint with the calculated roll and pitch
   stabilization_attitude_set_setpoint_rp_quat_f(&guidance_euler_cmd, in_flight, heading_sp);
 }

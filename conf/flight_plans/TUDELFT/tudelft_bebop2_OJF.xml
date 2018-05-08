@@ -9,11 +9,11 @@
 </header>
   <waypoints>
     <waypoint height="1.5" name="HOME" x="0.0" y="-0.0"/>
-    <waypoint height="1.5" name="CLIMB" x="0.5" y="-1.5"/>
+    <waypoint height="1.5" name="CLIMB" x="0.0" y="-1.5"/>
     <waypoint height="1.5" name="STDBY" x="0.0" y="-1.5"/>
-    <waypoint height="1.5" name="CENTER" x="0.0" y="-1.5"/>
+    <waypoint height="1.5" name="CENTER" x="0.0" y="-2.0"/>
     <!--waypoint height="1.45" name="FORWARD" x="0.0" y="2.5"/-->
-    <waypoint height="1.5" name="FORWARD" x="0.0" y="-0.5"/> <!--for lower wind speed -->
+    <waypoint height="1.5" name="FORWARD" x="0.0" y="0.5"/> <!--for lower wind speed -->
     <waypoint height="1.5" name="BACKWARD" x="0.0" y="-4.5"/>
     <waypoint height="1.5" name="LEFT" x="-3.5" y="-1.5"/>
     <waypoint height="1.5" name="RIGHT" x="3.5" y="-1.5"/>
@@ -93,24 +93,20 @@
 		<stay wp="CENTER"/>
 	</block>
 
-    <block name="longitude doublet">
+<block name="longitude doublet">
+	<stay wp="CENTER" until="stage_time>1"/>
+	<set value="0" var="nav_heading"/>
 	<for var="i" from="0" to="2">
-	<stay wp="FORWARD" until="GetPosY()>1.5" />
-	<stay wp="BACKWARD" until="0.3>GetPosY()" />
+		<stay wp="FORWARD" until="GetPosY()>-1.5" />
+		<stay wp="BACKWARD" until="-2.3>GetPosY()" />
 	</for>
-	</block>
-
-    <block name="longitude doublet_high_speed">
-  <for var="i" from="0" to="2">
-  <stay wp="HOME" until="stage_time>2.0" />
-  <stay wp="STDBY" until="stage_time>2.0" />
-  </for>
-  </block>
+	<stay wp="CENTER"/>
+</block>
 
 
-	<block name="go_center">
-		<stay wp="CENTER"/>
-	</block>	
+<block name="go_center">
+	<stay wp="CENTER"/>
+</block>	
 
     <block name="Looping heading altitude doublet">
 	<stay wp="CENTER" until="stage_time>2"/>

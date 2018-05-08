@@ -63,7 +63,7 @@
 #endif
 
 #ifndef GUIDANCE_H_MAX_BANK
-#define GUIDANCE_H_MAX_BANK RadOfDeg(20)
+#define GUIDANCE_H_MAX_BANK RadOfDeg(45)
 #endif
 
 PRINT_CONFIG_VAR(GUIDANCE_H_USE_REF)
