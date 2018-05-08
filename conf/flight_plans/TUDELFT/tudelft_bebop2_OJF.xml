@@ -18,8 +18,8 @@
     <waypoint height="1.5" name="LEFT" x="-3.5" y="-1.5"/>
     <waypoint height="1.5" name="RIGHT" x="3.5" y="-1.5"/>
     <waypoint height="1.5" name="TD" x="0.0" y="0.5"/>
-    <waypoint height="3.0" name="UP" x="0.0" y="-1.5"/>
-    <waypoint height="0.5" name="LOW" x="0.0" y="-1.5"/>
+    <waypoint height="3.5" name="UP" x="0.0" y="-1.5"/>
+    <waypoint height="0.0" name="LOW" x="0.0" y="-1.5"/>
         
     <!--waypoint lat="51.9906213" lon="4.3768628" name="_CZ1"/>
     <waypoint lat="51.9905874" lon="4.3767766" name="_CZ2"/>
@@ -120,7 +120,7 @@
 		<for var="j" from="2" to="4">
 		<!--stay climb="$j*0.5" vmode="climb" wp="UP" until="GetPosAlt()>2.2"/>
 		<stay climb="-$j*0.5" vmode="climb" wp="LOW" until="1.2>GetPosAlt()"/-->
-		<stay wp="UP" until="GetPosAlt()>2.5"/>
+		<stay wp="UP" until="GetPosAlt()>1.8"/>
 		<stay wp="LOW" until="1.0>GetPosAlt()"/>
 		</for>
     <stay wp="CENTER" vmode="alt"until="stage_time>1.0"/>

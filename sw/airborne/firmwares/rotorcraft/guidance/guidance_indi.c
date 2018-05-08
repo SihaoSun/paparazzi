@@ -193,7 +193,7 @@ void guidance_indi_run(bool in_flight, float heading_sp) {
   //Bound the acceleration error so that the linearization still holds
   Bound(a_diff.x, -20.0, 20.0);
   Bound(a_diff.y, -20.0, 20.0);
-  Bound(a_diff.z, -9.0, 9.0);
+  Bound(a_diff.z, -20.0, 20.0);
 
   //If the thrust to specific force ratio has been defined, include vertical control
   //else ignore the vertical acceleration error
