@@ -257,7 +257,7 @@ void stabilization_indi_init(void)
   calc_g1g2_pseudo_inv();
   calc_g1_inv_damage();
   calc_g1_inv_damage_square();
-  // printf("Running calc_g1_damage_tall \n");
+  printf("Running calc_g1_damage_tall \n");
   calc_g1_damage_tall();
 
   // Initialize the array of pointers to the rows of g1g2
@@ -598,6 +598,7 @@ if (double_failure_flag == 1){
 // // printf("%2.2f\t %2.2f\t %2.2f\t %2.2f\n",g1_damage_inv2[0][0],g1_damage_inv2[0][1], g1_damage_inv2[1][0],g1_damage_inv2[1][1]);
     
   }
+  // printf("%d\n", double_failure_flag);
 // }
   //printf("%6.2f\t%6.2f\t%6.2f\t%6.2f\n", indi_du[0], indi_du[1], indi_du[2], indi_du[3]);
 #else
@@ -611,7 +612,7 @@ if (double_failure_flag == 1){
 
 
   // ADJUST GAINS
-    calculate_gain_fraction(); 
+    // calculate_gain_fraction(); 
   // printf("max_extra_gain_multiplier in stabilization init: %2.2f \n", max_extra_gain_multiplier);
   // Bound the inputs to the actuators
   for (i = 0; i < INDI_NUM_ACT; i++) {
@@ -1044,13 +1045,13 @@ void calc_g1_damage_tall(void)
 float scaling = 100;
   g1_damage_tall_pseudo_inv[0][0] = 0.0178*scaling*10; g1_damage_tall_pseudo_inv[0][1] = 0.0166*scaling*10; g1_damage_tall_pseudo_inv[0][3] = -7.623*scaling;
   g1_damage_tall_pseudo_inv[2][0] = -0.0178*scaling*10; g1_damage_tall_pseudo_inv[2][1] = -0.0166*scaling*10; g1_damage_tall_pseudo_inv[2][3] = -7.623*scaling;
-    /*printf("Now for the inverse \n");
+    printf("Now for the inverse \n");
     printf("%6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n"
   ,  g1_damage_tall_pseudo_inv[0][0],  g1_damage_tall_pseudo_inv[0][1] ,  g1_damage_tall_pseudo_inv[0][2],  g1_damage_tall_pseudo_inv[0][3]
   ,  g1_damage_tall_pseudo_inv[1][0],  g1_damage_tall_pseudo_inv[1][1] ,  g1_damage_tall_pseudo_inv[1][2],  g1_damage_tall_pseudo_inv[1][3] 
   ,  g1_damage_tall_pseudo_inv[2][0],  g1_damage_tall_pseudo_inv[2][1] ,  g1_damage_tall_pseudo_inv[2][2],  g1_damage_tall_pseudo_inv[2][3]
   ,  g1_damage_tall_pseudo_inv[3][0],  g1_damage_tall_pseudo_inv[3][1] ,  g1_damage_tall_pseudo_inv[3][2],  g1_damage_tall_pseudo_inv[3][3]);
-*/}
+}
 /**
  * Function that calculates the pseudo-inverse of (G1+G2).
  */

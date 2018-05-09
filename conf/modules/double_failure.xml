@@ -8,7 +8,7 @@
     <file name="double_failure.h"/>
   </header>
   <init fun="double_failure_init()"/>
-  <periodic fun="double_failure()" freq="512" stop="double_failure_init()" autorun="FALSE"/>
+  <periodic fun="double_failure()" freq="512" stop="double_failure_init()" autorun="TRUE"/>
   <makefile>
     <file name="double_failure.c"/>
   </makefile>

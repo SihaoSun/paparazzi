@@ -52,12 +52,12 @@ float protect_inner_loop = INNER_LOOP_PROTECTION;
 float protect_inner_loop = 0;
 #endif
 #ifdef INTEGRAL_GAIN_WORKS
-float int_gain_works = INTEGRAL_GAIN_WORKS;
-float guidance_pa_pos_gain_int = 1;
+bool int_gain_works = INTEGRAL_GAIN_WORKS;
+float guidance_pa_pos_gain_int = 0;
 
 #else
-float int_gain_works = 0;
-float guidance_pa_pos_gain_int = 1;
+bool int_gain_works = 0;
+float guidance_pa_pos_gain_int = 0;
 
 #endif
 
@@ -65,13 +65,13 @@ float guidance_pa_pos_gain_int = 1;
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
 #else
 float guidance_pa_pos_gain = 1;
-float extra_gain_pos_gain = -0.5; // RPM is high enough, then extra_gain_att_gain is added to guidance_pa_pos_gain
+float extra_gain_pos_gain = 0; // RPM is high enough, then extra_gain_att_gain is added to guidance_pa_pos_gain
 #endif
 
 #ifdef GUIDANCE_PA_SPEED_GAIN
 float guidance_pa_speed_gain = GUIDANCE_INDI_SPEED_GAIN;
 #else
-float guidance_pa_speed_gain = 2.0;
+float guidance_pa_speed_gain = 1.2;
 #endif
 	// printf("max_extra_gain_multiplier: %2.2f \t %2.2f \n", max_extra_gain_multiplier,guidance_pa_att_gain);
 
@@ -172,8 +172,8 @@ void guidance_primary_axis_run(void)
 	speed_sp_y = pos_y_err * guidance_pa_pos_gain;
 	speed_sp_z = pos_z_err * guidance_pa_pos_gain*0.5;
 	
-	// Reset pos_gain
-	guidance_pa_pos_gain = 1; // Reset to avoid gain increase ad infinitum
+	// // Reset pos_gain
+	// guidance_pa_pos_gain = 1; // Reset to avoid gain increase ad infinitum
 
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
 	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
@@ -185,9 +185,17 @@ void guidance_primary_axis_run(void)
 
  	if (int_gain_works == 1){
 
+	if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT) // No error accumulation in Manual mode
+	{
  	sp_accel_int.x += pos_x_err / PERIODIC_FREQUENCY;
 	sp_accel_int.y += pos_y_err / PERIODIC_FREQUENCY;
 	sp_accel_int.z += pos_z_err / PERIODIC_FREQUENCY;
+	}
+	else
+	{		
+		sp_accel_int.x = 0;
+		sp_accel_int.y = 0;
+	}	
  	sp_accel_raw.x = (speed_sp_x - stateGetSpeedNed_f()->x) * guidance_pa_speed_gain + sp_accel_int.x * guidance_pa_pos_gain_int;
 	sp_accel_raw.y = (speed_sp_y - stateGetSpeedNed_f()->y) * guidance_pa_speed_gain + sp_accel_int.y * guidance_pa_pos_gain_int;
 	sp_accel_raw.z = (speed_sp_z - stateGetSpeedNed_f()->z) * guidance_pa_speed_gain;
@@ -319,8 +327,7 @@ else if (autopilot.mode == AP_MODE_NAV){
 	MAT33_VECT3_MUL(nd_i_state_dot_b, R_BI, nd_i_state_dot_i);
 	p_des =  1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.y-n_pa.y)+nd_state.x*r - 0.0*nd_i_state_dot_b.y);
 	q_des = -1.0/nd_state.z*(guidance_pa_att_gain*(nd_state.x-n_pa.x)-nd_state.y*r - 0.0*nd_i_state_dot_b.x);
-	// Reset Guidance to old value
-	guidance_pa_att_gain = -5;
+
 	//Angular rate command from primay axis guidance
 	rate_cmd_primary_axis[0] = p_des;
 	rate_cmd_primary_axis[1] = q_des;
