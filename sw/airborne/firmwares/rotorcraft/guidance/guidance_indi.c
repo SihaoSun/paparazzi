@@ -52,7 +52,7 @@
 #ifdef GUIDANCE_INDI_POS_GAIN
 float guidance_indi_pos_gain = GUIDANCE_INDI_POS_GAIN;
 #else
-float guidance_indi_pos_gain = 2.5;
+float guidance_indi_pos_gain = 1.5;
 #endif
 
 #ifdef GUIDANCE_INDI_SPEED_GAIN
