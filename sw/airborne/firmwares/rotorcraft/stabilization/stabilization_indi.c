@@ -572,7 +572,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
                  + (g1g2_pseudo_inv[i][3] * indi_v[3]);
   }
 
-  if (damage_status())
+  //if (damage_status())
+  if (damage_detected == 1)
   {
     indi_du[DAMAGED_ROTOR_INDEX] = 0;
     int8_t i0 = 0;
@@ -585,6 +586,8 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       }
     }
   }
+
+  //printf("%d\n", damage_detected);
 #else
   // WLS Control Allocator
   num_iter =

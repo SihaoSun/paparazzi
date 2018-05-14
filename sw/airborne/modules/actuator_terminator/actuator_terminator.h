@@ -38,6 +38,8 @@ float fault_factor;
 
 bool actuator_terminator_running;
 
+extern bool damage_detected;
+
 extern void actuator_terminator(void);
 extern void actuator_terminator_init(void);
 extern bool damage_status(void);

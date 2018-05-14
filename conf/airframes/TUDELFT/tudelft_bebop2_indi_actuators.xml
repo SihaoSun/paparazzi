@@ -66,7 +66,7 @@
       <define name="GUIDANCE_PA_SPEED_GAIN"         value = "2.0"/>
       <define name="GUIDANCE_PA_POS_GAIN_INT"       value = "0.5"/>
       <define name="GUIDANCE_PA_ATT_GAIN"           value = "10.0"/>
-      <define name="GUIDANCE_PA_ACC_FILTER_FC"      value = "15.0"/>
+      <define name="GUIDANCE_PA_ACC_FILTER_FC"      value = "3.0"/>
       <define name="GUIDANCE_PA_Z_GAIN"             value = "15.0"/>
       <define name="GUIDANCE_PA_Z_GAIN_INT"         value = "0.5"/>
     </module>
