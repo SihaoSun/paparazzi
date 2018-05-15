@@ -655,9 +655,14 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     if ((i == DAMAGED_ROTOR_INDEX ) && damage_status()){
       actuators_pprz[i] = -MAX_PPRZ;
     }
+
+    if (stateGetPositionNed_f()->z >= 0.5 && stateGetSpeedNed_f()->z > 0)
+    {
+      actuators_pprz[i] = -MAX_PPRZ;   
+    }
   }
 
-  
+
 //////////////////////////////// NDI ////////////////////////////////////////
 
 

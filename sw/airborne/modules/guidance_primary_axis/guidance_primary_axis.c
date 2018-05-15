@@ -172,6 +172,10 @@ void guidance_primary_axis_run(void)
 	speed_sp_y = pos_y_err * guidance_pa_pos_gain;
 	speed_sp_z = pos_z_err * guidance_pa_pos_gain*0.5;
 
+	if (speed_sp_z <= -1.5)  // bound the maximum verticle speed
+		speed_sp_z = -1.5;
+
+
 	//printf("%f\t%f\n", speed_sp_z,(stateGetSpeedNed_f()->z));
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
 	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
@@ -247,7 +251,8 @@ else{
 	r_des = psi_dot_cmd;
 }
 	
-	if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT)
+
+	if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT && autopilot_in_flight())
 	{
 		sp_accel_int.x += pos_x_err / PERIODIC_FREQUENCY;
 		sp_accel_int.y += pos_y_err / PERIODIC_FREQUENCY;
@@ -337,8 +342,14 @@ else{
 	rate_cmd_primary_axis[2] = r_des;
 	thrust_primary_axis = thrust_specific;
 
-	//printf("%f\t%f\n",nd_state.x,nd_state.y);
-	return;
+    if (stateGetPositionNed_f()->z >= -0.5 && stateGetSpeedNed_f()->z > 0.1)
+    {
+      autopilot_set_kill_throttle(true);
+	  //printf("%f\t%f\n",stateGetPositionNed_f()->z,stateGetSpeedNed_f()->z,autopilot_in_flight());
+    }
+
+	//printf("%f\t%f\n",stateGetPositionNed_f()->z, stateGetSpeedNed_f()->z);
+	//return;
 }
 
 void primary_axis_status_take_off(void)

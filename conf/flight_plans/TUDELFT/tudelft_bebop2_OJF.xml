@@ -11,7 +11,7 @@
     <waypoint height="1.5" name="HOME" x="0.0" y="-0.0"/>
     <waypoint height="1.5" name="CLIMB" x="0.5" y="-1.5"/>
     <waypoint height="1.5" name="STDBY" x="0.0" y="-1.5"/>
-    <waypoint height="1.5" name="CENTER" x="0.0" y="-1.5"/>
+    <waypoint height="1.7" name="CENTER" x="0.0" y="0.0"/>
     <!--waypoint height="1.45" name="FORWARD" x="0.0" y="2.5"/-->
     <waypoint height="1.5" name="FORWARD" x="0.0" y="-0.5"/> <!--for lower wind speed -->
     <waypoint height="1.5" name="BACKWARD" x="0.0" y="-4.5"/>
@@ -45,8 +45,8 @@
   </sectors>
   <exceptions>
     <exception cond="!InsideSafeZone(GetPosX(), GetPosY())" deroute="go_center"/>
-    <exception cond="GetPosAlt()>3.5" deroute="go_center"/>
-    <exception cond="GetPosAlt()>4.0" deroute="Land here"/>
+    <exception cond="GetPosAlt()>6.5" deroute="go_center"/>
+    <exception cond="GetPosAlt()>7.0" deroute="Land here"/>
     <exception cond="electrical.bat_critical && !(nav_block == IndexOfBlock('Land here')) && !(nav_block == IndexOfBlock('Land')) && !(nav_block == IndexOfBlock('Flare')) && !(nav_block == IndexOfBlock('Landed'))" deroute="Land here"/>
     <!--exception cond="datalink_time > 2" deroute="Land here"/>
     <exception cond="electrical.bat_low && !(nav_block == IndexOfBlock('Land')) && !(nav_block == IndexOfBlock('Flare')) && !(nav_block == IndexOfBlock('Landed'))" deroute="Land"/>
@@ -74,7 +74,7 @@
     <block key="t" name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
       <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="go_center"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
-      <stay climb="1.0" vmode="climb" wp="CLIMB"/>
+      <stay climb="0.5" vmode="climb" wp="CLIMB"/>
     </block>
     <block name="Start engine and go standby">
       <call_once fun="NavResurrect()"/>

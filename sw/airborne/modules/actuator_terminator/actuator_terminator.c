@@ -30,7 +30,11 @@
 bool damage_detected;
 
 float temp;
-float FDD_delay = 0.1;
+#ifdef FDD_DELAY
+	float FDD_delay = FDD_DELAY;
+#else
+	float FDD_delay = 0.0;
+#endif
 
 bool damage_status(){
 
@@ -42,7 +46,7 @@ bool damage_status2(){
 }
 void actuator_terminator_init(){
 	damage_flag = 0;
-	//damage_detected = 0;
+	damage_detected = 0;
 	fault_limitation = 1;
 	fault_factor = 0.0;	
 	temp = 0.0;

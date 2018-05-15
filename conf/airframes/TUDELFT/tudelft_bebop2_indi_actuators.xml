@@ -67,8 +67,9 @@
       <define name="GUIDANCE_PA_POS_GAIN_INT"       value = "0.5"/>
       <define name="GUIDANCE_PA_ATT_GAIN"           value = "10.0"/>
       <define name="GUIDANCE_PA_ACC_FILTER_FC"      value = "3.0"/>
-      <define name="GUIDANCE_PA_Z_GAIN"             value = "15.0"/>
+      <define name="GUIDANCE_PA_Z_GAIN"             value = "8.0"/>
       <define name="GUIDANCE_PA_Z_GAIN_INT"         value = "0.5"/>
+      <define name="FDD_DELAY"                      value = "0.1"/>
     </module>
     <module name="attitude_optitrack">
       <define name="DATALINK_NATNET_FREQUENCY" value="120"/>
