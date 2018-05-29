@@ -344,7 +344,7 @@ else{
 
     if (stateGetPositionNed_f()->z >= -0.5 && stateGetSpeedNed_f()->z > 0.1)
     {
-      autopilot_set_kill_throttle(true);
+      //autopilot_set_kill_throttle(true);
 	  //printf("%f\t%f\n",stateGetPositionNed_f()->z,stateGetSpeedNed_f()->z,autopilot_in_flight());
     }
 

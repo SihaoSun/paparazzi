@@ -63,6 +63,8 @@ float du_pref[INDI_NUM_ACT];
 float indi_v[INDI_OUTPUTS];
 float *Bwls[INDI_OUTPUTS];
 int num_iter = 0;
+float Dtime[6] = {2.0,1.0,0.5,0.2,0.1,0.05,0.02,0.01};
+int id_freq = 0;
 
 static void lms_estimation(void);
 static void get_actuator_state(void);
@@ -170,6 +172,7 @@ float p_des_dot;
 float q_des_dot;
 float r_des_dot;
 double ET_integral;
+float temp_indi = 0;
 
 Butterworth2LowPass actuator_lowpass_filters[INDI_NUM_ACT];
 Butterworth2LowPass estimation_input_lowpass_filters[INDI_NUM_ACT];
@@ -662,7 +665,41 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
   }
 
-
+////////////////////////////// ActuatorDynSweep /////////////////////////////
+  int16_t act_cmd = 0;
+  if (1-autopilot_mode_status == 1 && id_freq<8)
+  {
+      /* code */
+      temp_indi += 1.0/PERIODIC_FREQUENCY;
+      if (temp_indi<=Dtime[id_freq])
+        act_cmd = -MAX_PPRZ;
+      else if (temp_indi < 2.0 * Dtime[id_freq])
+        act_cmd = MAX_PPRZ;
+      else if (temp_indi < 3.0 * Dtime[id_freq])
+        act_cmd = -MAX_PPRZ;
+      else if (temp_indi < 4.0 * Dtime[id_freq])
+        act_cmd = MAX_PPRZ;
+      else if (temp_indi < 5.0 * Dtime[id_freq])
+        act_cmd = -MAX_PPRZ;
+      else if (temp_indi < 6.0 * Dtime[id_freq])
+        act_cmd = MAX_PPRZ;
+      else if (temp_indi < 7.0 * Dtime[id_freq])
+        act_cmd = -MAX_PPRZ;
+      else 
+      {
+          id_freq ++;
+          temp_indi = 0;
+      }
+      for (i = 0; i < INDI_NUM_ACT; i++) {
+          actuators_pprz[i] = act_cmd;
+      }
+  }
+  else
+  {
+    temp_indi = 0;
+    id_freq = 0;    
+  }
+  printf("%f\t%f\t%d\t%d\n",temp_indi, Dtime[id_freq], id_freq, act_cmd);
 //////////////////////////////// NDI ////////////////////////////////////////
 
 
@@ -693,7 +730,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     //                       0.3333,   -0.3289,  -8.5997,    1.0000};
     //  float G[4][4] = {       0.7501,   -0.7501,   -0.7501,    0.7501,
     //                          0.7601,    0.7601,   -0.7601,   -0.7601,
-    //                          0.0291,   -0.0291,    0.0291,   -0.0291,
+    //                           0.0291,   -0.0291,    0.0291,   -0.0291,
     //                          0.2500,    0.2500,    0.2500,    0.2500}; //G is scaled by 1e6
       //w0 = 9500
 //      float G_inv[4][4]={     0.3111,    0.3333,    1.7781,    1.0000,
