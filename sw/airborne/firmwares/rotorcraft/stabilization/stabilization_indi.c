@@ -63,7 +63,7 @@ float du_pref[INDI_NUM_ACT];
 float indi_v[INDI_OUTPUTS];
 float *Bwls[INDI_OUTPUTS];
 int num_iter = 0;
-float Dtime[6] = {2.0,1.0,0.5,0.2,0.1,0.05,0.02,0.01};
+float Dtime[8] = {2.0,1.0,0.5,0.2,0.1,0.05,0.02,0.01};
 int id_freq = 0;
 
 static void lms_estimation(void);
@@ -683,7 +683,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
         act_cmd = -MAX_PPRZ;
       else if (temp_indi < 6.0 * Dtime[id_freq])
         act_cmd = MAX_PPRZ;
-      else if (temp_indi < 7.0 * Dtime[id_freq])
+      else if (temp_indi < 6.0 * Dtime[id_freq]+2.0)
         act_cmd = -MAX_PPRZ;
       else 
       {
