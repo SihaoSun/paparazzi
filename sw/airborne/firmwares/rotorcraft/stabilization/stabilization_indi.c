@@ -1291,12 +1291,12 @@ void calc_g1_damage_tall(void)
 
   // IF right front & left back are damaged
   if ((DAMAGED_ROTOR_INDEX2 == 1 && DAMAGED_ROTOR_INDEX3 == 3) || (DAMAGED_ROTOR_INDEX2 == 3 && DAMAGED_ROTOR_INDEX3 == 1)){ 
-  g1_damage_tall_pseudo_inv[0][0] =  0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[0][1] =  0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[0][3] = -7.623*INDI_G_SCALING; // RPM might need to be scaled with INDI_G_SCALING/10 instead
-  g1_damage_tall_pseudo_inv[2][0] = -0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[2][1] = -0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[2][3] = -7.623*INDI_G_SCALING;
+  g1_damage_tall_pseudo_inv[0][0] =  0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[0][1] =  0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[0][3] = -7.623*INDI_G_SCALING/10; // RPM might need to be scaled with INDI_G_SCALING/10 instead
+  g1_damage_tall_pseudo_inv[2][0] = -0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[2][1] = -0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[2][3] = -7.623*INDI_G_SCALING/10;
   }
   // IF left front & right back are damaged (Check the signs!)
   if ((DAMAGED_ROTOR_INDEX2 == 0 && DAMAGED_ROTOR_INDEX3 == 2) || (DAMAGED_ROTOR_INDEX2 == 2 && DAMAGED_ROTOR_INDEX3 == 0)){
-  g1_damage_tall_pseudo_inv[1][0] = -0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[1][1] =  0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[1][3] = -7.623*INDI_G_SCALING; // RPM might need to be scaled with INDI_G_SCALING/10 instead
-  g1_damage_tall_pseudo_inv[3][0] =  0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[3][1] = -0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[3][3] = -7.623*INDI_G_SCALING;
+  g1_damage_tall_pseudo_inv[1][0] = -0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[1][1] =  0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[1][3] = -7.623*INDI_G_SCALING/10; // RPM might need to be scaled with INDI_G_SCALING/10 instead
+  g1_damage_tall_pseudo_inv[3][0] =  0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[3][1] = -0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[3][3] = -7.623*INDI_G_SCALING/10;
   }
 }
