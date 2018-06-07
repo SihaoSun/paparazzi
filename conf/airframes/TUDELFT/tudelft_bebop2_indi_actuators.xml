@@ -57,6 +57,12 @@
     <module name="actuator_terminator">
       <define name="DAMAGED_ROTOR_INDEX" value="3"/>
     </module>
+
+    <module name="double_fault">
+      <define name="DAMAGED_ROTOR_INDEX3" value="3"/>
+      <define name="DAMAGED_ROTOR_INDEX2" value="1"/>
+    </module>
+
     <module name="guidance_primary_axis">
       <!--define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/-->
       <define name="PRIMARY_AXIS_GUIDANCE_NX_GAIN"  value = "1.0"/>

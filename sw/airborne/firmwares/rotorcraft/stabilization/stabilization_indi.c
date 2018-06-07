@@ -29,6 +29,7 @@
  * Dynamic Inversion for Attitude Control of Micro Aerial Vehicles
  * http://arc.aiaa.org/doi/pdf/10.2514/1.G001490
  */
+#include "firmwares/rotorcraft/autopilot_utils.h"
 
 #include "firmwares/rotorcraft/stabilization/stabilization_indi.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude.h"
@@ -46,7 +47,11 @@
 #include "modules/actuator_terminator/actuator_terminator.h"
 #include "modules/sliding_mode_observer/sliding_mode_observer.h"
 #include "modules/attitude_optitrack/attitude_optitrack.h"
+#include "modules/double_fault/double_fault.h" // Include for double fault capability
+
+
 #include <stdio.h>
+
 
 //only 4 actuators supported for now
 #define INDI_NUM_ACT 4
@@ -71,6 +76,9 @@ static void calc_g2_element(float dx_error, int8_t j, float mu_extra);
 static void calc_g1g2_pseudo_inv(void);
 static void bound_g_mat(void);
 static void calc_g1_inv_damage(void);
+
+// Initialize the function that calculates pseudo inversion for tall matrix
+static void calc_g1_damage_tall(void);
 
 int32_t stabilization_att_indi_cmd[COMMANDS_NB];
 struct ReferenceSystem reference_acceleration = {
@@ -166,6 +174,12 @@ float g2_init[INDI_NUM_ACT];
 float g1_damage[3][3];
 float g1_damage_inv[3][3];
 
+// include for double fault capability
+float g1_damage_tall_trans_mult[INDI_OUTPUTS][INDI_OUTPUTS];
+float g1_damage_tall_inv[INDI_OUTPUTS][INDI_OUTPUTS];
+float g1_damage_tall[INDI_NUM_ACT][INDI_OUTPUTS]; 
+float g1_damage_tall_pseudo_inv[INDI_NUM_ACT][INDI_OUTPUTS];
+
 float p_des_dot;
 float q_des_dot;
 float r_des_dot;
@@ -232,6 +246,7 @@ void stabilization_indi_init(void)
   //Calculate G1G2_PSEUDO_INVERSE
   calc_g1g2_pseudo_inv();
   calc_g1_inv_damage();
+  calc_g1_damage_tall();
 
   // Initialize the array of pointers to the rows of g1g2
   uint8_t i;
@@ -587,6 +602,22 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
   }
 
+  if (double_fault_flag == 1){
+    indi_du[DAMAGED_ROTOR_INDEX3]  = 0;
+    indi_du[DAMAGED_ROTOR_INDEX2]  = 0;
+
+  // IF right front & left back are damaged
+  if ((DAMAGED_ROTOR_INDEX2 == 1 && DAMAGED_ROTOR_INDEX3 == 3) || (DAMAGED_ROTOR_INDEX2 == 3 && DAMAGED_ROTOR_INDEX3 == 1)){ 
+    indi_du[0] = (g1_damage_tall_pseudo_inv[0][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[0][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[0][3] * indi_v[3]);
+    indi_du[2] = (g1_damage_tall_pseudo_inv[2][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[2][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[2][3] * indi_v[3]);
+  }
+  // IF left front & right back are damaged (Check the signs!)
+  if ((DAMAGED_ROTOR_INDEX2 == 0 && DAMAGED_ROTOR_INDEX3 == 2) || (DAMAGED_ROTOR_INDEX2 == 2 && DAMAGED_ROTOR_INDEX3 == 0)){
+    indi_du[1] = (g1_damage_tall_pseudo_inv[1][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[1][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[1][3] * indi_v[3]);
+    indi_du[3] = (g1_damage_tall_pseudo_inv[3][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[3][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[3][3] * indi_v[3]);
+  }  
+  
+  }
   //printf("%d\n", damage_detected);
 #else
   // WLS Control Allocator
@@ -655,6 +686,11 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     if ((i == DAMAGED_ROTOR_INDEX ) && damage_status()){
       actuators_pprz[i] = -MAX_PPRZ;
     }
+
+    if (((i == DAMAGED_ROTOR_INDEX2) || (i == DAMAGED_ROTOR_INDEX3) ) && double_fault_flag == 1){
+      actuators_pprz[i] = -MAX_PPRZ;
+
+       }    
 
     if (stateGetPositionNed_f()->z >= 0.5 && stateGetSpeedNed_f()->z > 0)
     {
@@ -1172,5 +1208,91 @@ static void bound_g_mat(void)
     if (g2_est[j] < min_limit) {
       g2_est[j] = min_limit;
     }
+  }
+}
+
+void calc_g1_damage_tall(void)
+{
+    int i0 = 0,j0 = 0;
+    for (int i = 0; i < 4; i++) // loop over states
+    {
+      if ((i != 2)) // Added the '1' channel for the pitch control
+      {
+        j0 = 0;
+        for (int  j = 0; j < 4; j++) // Set j < 3 instead of <4 prevents a lot of errors
+        {
+          // This invokes warning: [-Waggressive-loop-optimizations]
+          // A simple fix would be to hardcode it 
+          if ((j != DAMAGED_ROTOR_INDEX) && (j != DAMAGED_ROTOR_INDEX2)) // 1 and 3
+          { 
+            g1_damage_tall[i0][j0] = g1[i][j]/INDI_G_SCALING;
+           j0++; 
+            
+          }
+          else {
+        g1_damage_tall[i0][j0] = 0;
+            j0++;
+                } 
+          }
+        }
+      else {
+        g1_damage_tall[i0][j0] = 0;
+      }
+        
+        i0++;
+        
+    }
+
+  //G1G2*transpose(G1G2)
+  //calculate matrix multiplication of its transpose INDI_OUTPUTSxnum_act x num_actxINDI_OUTPUTS
+  float element = 0;
+  int8_t row;
+  int8_t col;
+  for (row = 0; row < INDI_OUTPUTS; row++) {
+    for (col = 0; col < INDI_OUTPUTS; col++) {
+      element = 0;
+      for (int i = 0; i < INDI_NUM_ACT; i++) {
+        element = element + g1_damage_tall[row][i] * g1_damage_tall[col][i];
+      }
+      g1_damage_tall_trans_mult[row][col] = element;
+    }
+  }
+
+  //there are numerical errors if the scaling is not right.
+  float_vect_scale(g1_damage_tall_trans_mult[0], 1000.0, INDI_OUTPUTS * INDI_OUTPUTS);
+
+  //inverse of 4x4 matrix
+  float_mat_inv_4d(g1_damage_tall_inv[0], g1_damage_tall_trans_mult[0]);
+
+  //scale back
+  float_vect_scale(g1_damage_tall_inv[0], 1000.0, INDI_OUTPUTS * INDI_OUTPUTS);
+  
+  // Initialize all zeros matrix
+  for (row = 0; row < INDI_NUM_ACT; row++) {
+    for (col = 0; col < INDI_OUTPUTS; col++) {
+      element = 0;
+      
+      g1_damage_tall_pseudo_inv[row][col] = 0;
+      
+    }
+  }
+
+  // We hardcode this because the regular simple calculation as A^+ = (A' * A)^-1 .* A' 
+  // does not provide an answer (NaN's) for double rotor failure
+
+  // Therefore we need a singular value decomposition to calculate the pseudo inverse. 
+  // This is tedious, besides we can do it offline!
+  // We know what the inversion looks like from Matlab thus this is 1000x faster
+  // And now append the values that are supposed to be non-zero
+
+  // IF right front & left back are damaged
+  if ((DAMAGED_ROTOR_INDEX2 == 1 && DAMAGED_ROTOR_INDEX3 == 3) || (DAMAGED_ROTOR_INDEX2 == 3 && DAMAGED_ROTOR_INDEX3 == 1)){ 
+  g1_damage_tall_pseudo_inv[0][0] =  0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[0][1] =  0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[0][3] = -7.623*INDI_G_SCALING; // RPM might need to be scaled with INDI_G_SCALING/10 instead
+  g1_damage_tall_pseudo_inv[2][0] = -0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[2][1] = -0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[2][3] = -7.623*INDI_G_SCALING;
+  }
+  // IF left front & right back are damaged (Check the signs!)
+  if ((DAMAGED_ROTOR_INDEX2 == 0 && DAMAGED_ROTOR_INDEX3 == 2) || (DAMAGED_ROTOR_INDEX2 == 2 && DAMAGED_ROTOR_INDEX3 == 0)){
+  g1_damage_tall_pseudo_inv[1][0] = -0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[1][1] =  0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[1][3] = -7.623*INDI_G_SCALING; // RPM might need to be scaled with INDI_G_SCALING/10 instead
+  g1_damage_tall_pseudo_inv[3][0] =  0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[3][1] = -0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[3][3] = -7.623*INDI_G_SCALING;
   }
 }

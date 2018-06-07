@@ -25,6 +25,7 @@
 
 
 #define DAMAGED_ROTOR_INDEX2 1 
+#define DAMAGED_ROTOR_INDEX3 3
 
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_common_int.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_ref_quat_int.h"
