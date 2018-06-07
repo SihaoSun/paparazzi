@@ -58,21 +58,16 @@
       <define name="DAMAGED_ROTOR_INDEX" value="3"/>
     </module>
 
-    <module name="double_fault">
-      <define name="DAMAGED_ROTOR_INDEX3" value="3"/>
-      <define name="DAMAGED_ROTOR_INDEX2" value="1"/>
-    </module>
-
     <module name="guidance_primary_axis">
       <!--define name="GUIDANCE_PA_RC_DEBUG" value="FALSE"/-->
       <define name="PRIMARY_AXIS_GUIDANCE_NX_GAIN"  value = "1.0"/>
       <define name="PRIMARY_AXIS_GUIDANCE_NY_GAIN"  value = "1.0"/>
       <define name="PRIMARY_AXIS_GUIDANCE_ABS"      value = "0.0"/>
-      <define name="GUIDANCE_PA_POS_GAIN"           value = "1.0"/>
-      <define name="GUIDANCE_PA_SPEED_GAIN"         value = "2.0"/>
-      <define name="GUIDANCE_PA_POS_GAIN_INT"       value = "0.5"/>
-      <define name="GUIDANCE_PA_ATT_GAIN"           value = "10.0"/>
-      <define name="GUIDANCE_PA_ACC_FILTER_FC"      value = "3.0"/>
+      <define name="GUIDANCE_PA_POS_GAIN"           value = "0.8"/>
+      <define name="GUIDANCE_PA_SPEED_GAIN"         value = "1.3"/>
+      <define name="GUIDANCE_PA_POS_GAIN_INT"       value = "0.0"/>
+      <define name="GUIDANCE_PA_ATT_GAIN"           value = "5.0"/>
+      <define name="GUIDANCE_PA_ACC_FILTER_FC"      value = "8.0"/>
       <define name="GUIDANCE_PA_Z_GAIN"             value = "8.0"/>
       <define name="GUIDANCE_PA_Z_GAIN_INT"         value = "0.5"/>
       <define name="FDD_DELAY"                      value = "0.1"/>

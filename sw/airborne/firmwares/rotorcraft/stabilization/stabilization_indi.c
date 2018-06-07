@@ -47,7 +47,7 @@
 #include "modules/actuator_terminator/actuator_terminator.h"
 #include "modules/sliding_mode_observer/sliding_mode_observer.h"
 #include "modules/attitude_optitrack/attitude_optitrack.h"
-#include "modules/double_fault/double_fault.h" // Include for double fault capability
+//#include "modules/double_fault/double_fault.h" // Include for double fault capability
 
 
 #include <stdio.h>
@@ -602,21 +602,22 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
     }
   }
 
-  if (double_fault_flag == 1){
+  if (damage_detected2){
     indi_du[DAMAGED_ROTOR_INDEX3]  = 0;
     indi_du[DAMAGED_ROTOR_INDEX2]  = 0;
 
-  // IF right front & left back are damaged
-  if ((DAMAGED_ROTOR_INDEX2 == 1 && DAMAGED_ROTOR_INDEX3 == 3) || (DAMAGED_ROTOR_INDEX2 == 3 && DAMAGED_ROTOR_INDEX3 == 1)){ 
-    indi_du[0] = (g1_damage_tall_pseudo_inv[0][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[0][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[0][3] * indi_v[3]);
-    indi_du[2] = (g1_damage_tall_pseudo_inv[2][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[2][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[2][3] * indi_v[3]);
-  }
-  // IF left front & right back are damaged (Check the signs!)
-  if ((DAMAGED_ROTOR_INDEX2 == 0 && DAMAGED_ROTOR_INDEX3 == 2) || (DAMAGED_ROTOR_INDEX2 == 2 && DAMAGED_ROTOR_INDEX3 == 0)){
-    indi_du[1] = (g1_damage_tall_pseudo_inv[1][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[1][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[1][3] * indi_v[3]);
-    indi_du[3] = (g1_damage_tall_pseudo_inv[3][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[3][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[3][3] * indi_v[3]);
-  }  
-  
+    // IF right front & left back are damaged
+    if ((DAMAGED_ROTOR_INDEX2 == 1 && DAMAGED_ROTOR_INDEX3 == 3) || (DAMAGED_ROTOR_INDEX2 == 3 && DAMAGED_ROTOR_INDEX3 == 1)){ 
+      indi_du[0] = (g1_damage_tall_pseudo_inv[0][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[0][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[0][3] * indi_v[3]);
+      indi_du[2] = (g1_damage_tall_pseudo_inv[2][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[2][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[2][3] * indi_v[3]);
+      printf("%f\t%f\t%f\t%f\n", indi_du[0],indi_du[1],indi_du[2],indi_du[3]);
+    }
+    // IF left front & right back are damaged (Check the signs!)
+    if ((DAMAGED_ROTOR_INDEX2 == 0 && DAMAGED_ROTOR_INDEX3 == 2) || (DAMAGED_ROTOR_INDEX2 == 2 && DAMAGED_ROTOR_INDEX3 == 0)){
+      indi_du[1] = (g1_damage_tall_pseudo_inv[1][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[1][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[1][3] * indi_v[3]);
+      indi_du[3] = (g1_damage_tall_pseudo_inv[3][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[3][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[3][3] * indi_v[3]);
+    }  
+    
   }
   //printf("%d\n", damage_detected);
 #else
@@ -687,7 +688,7 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
       actuators_pprz[i] = -MAX_PPRZ;
     }
 
-    if (((i == DAMAGED_ROTOR_INDEX2) || (i == DAMAGED_ROTOR_INDEX3) ) && double_fault_flag == 1){
+    if (((i == DAMAGED_ROTOR_INDEX2) || (i == DAMAGED_ROTOR_INDEX3) ) && damage_flag2 == 1){
       actuators_pprz[i] = -MAX_PPRZ;
 
        }    
@@ -1213,6 +1214,7 @@ static void bound_g_mat(void)
 
 void calc_g1_damage_tall(void)
 {
+    // --------  Calculate psudo inverse of G1 on-line (incorrect) 
     int i0 = 0,j0 = 0;
     for (int i = 0; i < 4; i++) // loop over states
     {
@@ -1276,6 +1278,8 @@ void calc_g1_damage_tall(void)
       
     }
   }
+
+  // -------- 
 
   // We hardcode this because the regular simple calculation as A^+ = (A' * A)^-1 .* A' 
   // does not provide an answer (NaN's) for double rotor failure

@@ -28,7 +28,7 @@
 #include "firmwares/rotorcraft/autopilot_utils.h"
 
 bool damage_detected;
-
+bool damage_detected2;
 float temp;
 #ifdef FDD_DELAY
 	float FDD_delay = FDD_DELAY;
@@ -46,7 +46,9 @@ bool damage_status2(){
 }
 void actuator_terminator_init(){
 	damage_flag = 0;
+	damage_flag = 0;
 	damage_detected = 0;
+	damage_detected2 = 0;
 	fault_limitation = 1;
 	fault_factor = 0.0;	
 	temp = 0.0;
@@ -56,12 +58,17 @@ void actuator_terminator_init(){
 
 void actuator_terminator(){
     damage_flag	= 1;
+    damage_flag2 = 1;
     //damage_flag2 = 1;
     temp += 1.0/PERIODIC_FREQUENCY;
     
     if (temp >= FDD_delay)
-    	damage_detected = true;
-    
+    {
+		damage_detected = true;
+    	damage_detected2 = true;
+
+    }
+    	
  
 	//printf("%d \n", damage_detected);
 

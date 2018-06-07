@@ -39,6 +39,7 @@ float fault_factor;
 bool actuator_terminator_running;
 
 extern bool damage_detected;
+extern bool damage_detected2;
 extern float FDD_delay;
 
 extern void actuator_terminator(void);
