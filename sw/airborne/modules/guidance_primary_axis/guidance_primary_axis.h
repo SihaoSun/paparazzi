@@ -39,7 +39,10 @@ float primary_axis_n_gain_y;
 float primary_axis_n_abs;
 
 float guidance_pa_att_gain;
+float guidance_pa_pos_gain;
+
 float extra_gain_att_gain;
+float extra_gain_pos_gain;
 
 // position act, ref, err
 float pos_x_act;
@@ -63,6 +66,8 @@ float speed_sp_x; //ref
 float speed_sp_y;
 float speed_sp_z;
 
+float guidance_pa_pos_gain_int;
+
 // acceleration act, ref, err
 
 extern bool guidance_primary_axis_status(void);
@@ -77,6 +82,10 @@ struct FloatVect3 nd_state;
 struct FloatVect3 nd_i_state;
 struct FloatVect3 sp_accel_primary_axis;
 struct FloatVect3 sp_accel_primary_axis_filter;
+
+extern float minimum_threshold;
+extern float maximum_threshold;
+extern bool protect_inner_loop;
 
 #endif
 

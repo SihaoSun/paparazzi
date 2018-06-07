@@ -35,6 +35,8 @@
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_rc_setpoint.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_quat_transformations.h"
 
+#include "boards/bebop/actuators.h" // In order to use RPM_OBS
+
 #include "modules/guidance_primary_axis/guidance_primary_axis.h"
 
 #include "math/pprz_algebra_float.h"
@@ -123,11 +125,23 @@ float act_dyn[INDI_NUM_ACT] = STABILIZATION_INDI_ACT_DYN;
 #define STABILIZATION_INDI_MAX_RATE 6.0
 #endif
 
+#ifdef MIN_THRESHOLD
+// #define MIN_THRESHOLD 10250
+float minimum_threshold = MIN_THRESHOLD;
+#endif  
+
+
+#ifdef MAX_THRESHOLD
+// #define MAX_THRESHOLD 11400
+float maximum_threshold = MAX_THRESHOLD;
+#endif
+
 // variables needed for control
 float actuator_state_filt_vect[INDI_NUM_ACT];
 struct FloatRates angular_accel_ref = {0., 0., 0.};
 float angular_acceleration[3] = {0., 0., 0.};
 float actuator_state[INDI_NUM_ACT];
+
 
 float indi_u[INDI_NUM_ACT];
 float indi_u2[INDI_NUM_ACT];
@@ -136,8 +150,8 @@ float indi_du[INDI_NUM_ACT];
 float indi_du2[INDI_NUM_ACT];
 
 // variables required for gain fraction
-float MIN_THRESHOLD; // for calculate_gain_fraction
-float MAX_THRESHOLD; // for calculate_gain_fraction
+// float MIN_THRESHOLD; // for calculate_gain_fraction
+// float MAX_THRESHOLD; // for calculate_gain_fraction
 float extra_gain_multiplier[4]; //
 //float max_extra_gain_multiplier; // scalar maximum of extra_gain_multiplier[4];
 
@@ -157,6 +171,7 @@ float estimation_rate_d[INDI_NUM_ACT];
 float estimation_rate_dd[INDI_NUM_ACT];
 float du_estimation[INDI_NUM_ACT];
 float ddu_estimation[INDI_NUM_ACT];
+
 
 // The learning rate per axis (roll, pitch, yaw, thrust)
 float mu1[INDI_OUTPUTS] = {0.00001, 0.00001, 0.000003, 0.000002};
@@ -252,6 +267,7 @@ void stabilization_indi_init(void)
   float_vect_zero(estimation_rate_d, INDI_NUM_ACT);
   float_vect_zero(estimation_rate_dd, INDI_NUM_ACT);
   float_vect_zero(actuator_state_filt_vect, INDI_NUM_ACT);
+
 
   //Calculate G1G2_PSEUDO_INVERSE
   calc_g1g2_pseudo_inv();
@@ -612,7 +628,7 @@ if (double_failure_flag == 1){
 
 
   // ADJUST GAINS
-    // calculate_gain_fraction(); 
+  calculate_gain_fraction(); 
   // printf("max_extra_gain_multiplier in stabilization init: %2.2f \n", max_extra_gain_multiplier);
   // Bound the inputs to the actuators
   for (i = 0; i < INDI_NUM_ACT; i++) {
@@ -627,6 +643,7 @@ if (double_failure_flag == 1){
   if (!in_flight) {
     float_vect_zero(indi_u, INDI_NUM_ACT);
     float_vect_zero(indi_du, INDI_NUM_ACT);
+    guidance_pa_pos_gain_int = 0;
   }
 
   // Propagate actuator filters
@@ -1043,7 +1060,7 @@ void calc_g1_damage_tall(void)
   // Therefore we need a singular value decomposition to calculate the pseudo inverse. 
   // But we know what the inversion looks like from Matlab thus this is 1000x faster
 float scaling = 100;
-  g1_damage_tall_pseudo_inv[0][0] = 0.0178*scaling*10; g1_damage_tall_pseudo_inv[0][1] = 0.0166*scaling*10; g1_damage_tall_pseudo_inv[0][3] = -7.623*scaling;
+  g1_damage_tall_pseudo_inv[0][0] =  0.0178*scaling*10; g1_damage_tall_pseudo_inv[0][1] =  0.0166*scaling*10; g1_damage_tall_pseudo_inv[0][3] = -7.623*scaling;
   g1_damage_tall_pseudo_inv[2][0] = -0.0178*scaling*10; g1_damage_tall_pseudo_inv[2][1] = -0.0166*scaling*10; g1_damage_tall_pseudo_inv[2][3] = -7.623*scaling;
     printf("Now for the inverse \n");
     printf("%6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n %6.4f %6.4f %6.4f %6.4f\n"
@@ -1174,16 +1191,20 @@ static void bound_g_mat(void)
 }
 
 static void calculate_gain_fraction(void){
-MIN_THRESHOLD = 10260;//10260; // arbitrary, set to 10% of max
-MAX_THRESHOLD = 11400;//11400; // empirical, max rpm of the rotors
+// MIN_THRESHOLD = 10260;//10260; // arbitrary, set to 10% of max
+// MAX_THRESHOLD = 11400;//11400; // empirical, max rpm of the rotors
+
+// minimum_threshold = MIN_THRESHOLD;
+// maximum_threshold = MAX_THRESHOLD;
 
 // Do for all actuators?
 int i;
 for (i = 0; i < INDI_NUM_ACT; i++) {
-// printf("%2.2f\t%2.2f\t%2.2f\t%2.2f\t%2.2f\t%2.2f \t",extra_gain_multiplier[0], extra_gain_multiplier[1], extra_gain_multiplier[2],extra_gain_multiplier[3],max_extra_gain_multiplier, guidance_pa_att_gain );
-  extra_gain_multiplier[i] = 10 * (act_obs[i] - MIN_THRESHOLD) / (MAX_THRESHOLD); // when RPM in [MIN,MAX] -> extra_gain_multiplier in [0,1]
-  Bound(extra_gain_multiplier[i], 0, 1); // bound the multiplier between 0 and 1 for safety
+  extra_gain_multiplier[i] = 10 * (actuators_bebop.rpm_obs[i] - minimum_threshold) / (maximum_threshold); // when RPM in [MIN,MAX] -> extra_gain_multiplier in [0,1]
+  Bound(extra_gain_multiplier[i], 0.0, 1.0); // bound the multiplier between 0 and 1 for safety
   }
   max_extra_gain_multiplier = float_vect_max(extra_gain_multiplier, INDI_NUM_ACT); // Take largest element without defining which element this was
+printf("%2.2f\t%2.2f\t%2.2f\t%2.2f\t%2.2f\t%2.2f \t",extra_gain_multiplier[0], extra_gain_multiplier[1], extra_gain_multiplier[2],extra_gain_multiplier[3],max_extra_gain_multiplier, guidance_pa_pos_gain );
+// printf("Min_thres: %2.2f \t Max_thres: %2.2f \t", minimum_threshold,maximum_threshold);
 }
 

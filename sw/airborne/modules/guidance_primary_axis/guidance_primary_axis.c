@@ -47,38 +47,39 @@
 #include "modules/attitude_optitrack/attitude_optitrack.h"
 
 #ifdef INNER_LOOP_PROTECTION
-float protect_inner_loop = INNER_LOOP_PROTECTION;
+bool protect_inner_loop = INNER_LOOP_PROTECTION;
 #else
-float protect_inner_loop = 0;
+bool protect_inner_loop = 0;
 #endif
+
 #ifdef INTEGRAL_GAIN_WORKS
 bool int_gain_works = INTEGRAL_GAIN_WORKS;
-float guidance_pa_pos_gain_int = 0;
+float guidance_pa_pos_gain_int = 0.5;
 
 #else
 bool int_gain_works = 0;
-float guidance_pa_pos_gain_int = 0;
-
+float guidancence_pa_pos_gain_int = 0;
 #endif
 
 #ifdef GUIDANCE_PA_POS_GAIN
 float guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN;
+float extra_gain_pos_gain = 0.7;
 #else
-float guidance_pa_pos_gain = 1;
-float extra_gain_pos_gain = 0; // RPM is high enough, then extra_gain_att_gain is added to guidance_pa_pos_gain
+float guidance_pa_pos_gain = 0.8;
+float extra_gain_pos_gain = 0.7; // RPM is high enough, then extra_gain_att_gain is added to guidance_pa_pos_gain
 #endif
 
 #ifdef GUIDANCE_PA_SPEED_GAIN
 float guidance_pa_speed_gain = GUIDANCE_INDI_SPEED_GAIN;
 #else
-float guidance_pa_speed_gain = 1.2;
+float guidance_pa_speed_gain = 2.0;
 #endif
 	// printf("max_extra_gain_multiplier: %2.2f \t %2.2f \n", max_extra_gain_multiplier,guidance_pa_att_gain);
 
 #ifdef GUIDANCE_PA_ATT_GAIN 
 float guidance_pa_att_gain = GUIDANCE_PA_ATT_GAIN
 #else
-float guidance_pa_att_gain = -5.0;
+float guidance_pa_att_gain = -10.0;
 float extra_gain_att_gain = 3; // If RPM is high enough, then extra_gain_att_gain is added to guidance_pa_att_gain
 #endif
 
@@ -120,7 +121,7 @@ void guidance_primary_axis_init(void)
 void low_pass_filter_init(void)
 {	
 	float tau = 1.0 / (2.0 * M_PI * 8.0);
-	float tau_nd = 1.0/(2.0 * M_PI * 1.5); // 1.5 Because its half of the 3 Hz yaw rotational period 
+	float tau_nd = 1.0/(2.0 * M_PI * 8.5); // 1.5 Because its half of the 3 Hz yaw rotational period 
 	float sample_time = 1.0 / PERIODIC_FREQUENCY;
 	init_first_order_low_pass(&nd_i_state_x,tau_nd,sample_time,0);
 	init_first_order_low_pass(&nd_i_state_y,tau_nd,sample_time,0);
@@ -165,19 +166,24 @@ void guidance_primary_axis_run(void)
 
 	// printf("%d\t%f\t%d\t%f\n",guidance_h.ref.pos.x, stateGetPositionNed_f()->x, guidance_h.ref.pos.y, stateGetPositionNed_f()->y);
 	if (protect_inner_loop == 1){
-	guidance_pa_pos_gain += max_extra_gain_multiplier * extra_gain_pos_gain; // extra_gain_pos_gain is calculated within stabilization_indi.c (innerloop)
+	guidance_pa_pos_gain -= max_extra_gain_multiplier * extra_gain_pos_gain; // extra_gain_pos_gain is calculated within stabilization_indi.c (innerloop)
+	guidance_pa_pos_gain_int -= max_extra_gain_multiplier * 0.4;
+	printf("pos_gain: %2.2f, extra_gain_pos_gain: %2.2f\n",guidance_pa_pos_gain,extra_gain_pos_gain);
+
 	}
 
 	speed_sp_x = pos_x_err * guidance_pa_pos_gain;
-	speed_sp_y = pos_y_err * guidance_pa_pos_gain;
-	speed_sp_z = pos_z_err * guidance_pa_pos_gain*0.5;
 	
+
 	// // Reset pos_gain
-	// guidance_pa_pos_gain = 1; // Reset to avoid gain increase ad infinitum
+	guidance_pa_pos_gain = GUIDANCE_PA_POS_GAIN; // Reset to avoid gain increase ad infinitum
+
+	speed_sp_y = pos_y_err * guidance_pa_pos_gain*1.2;
+	speed_sp_z = pos_z_err * guidance_pa_pos_gain*0.5;
+
 
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
 	struct FloatVect3 sp_accel_raw = {0.0,0.0,0.0};
-
 	// Addition for logger file
 	speed_x_act = stateGetSpeedNed_f()->x;
 	speed_y_act = stateGetSpeedNed_f()->y;
@@ -186,10 +192,15 @@ void guidance_primary_axis_run(void)
  	if (int_gain_works == 1){
 
 	if (autopilot.mode != AP_MODE_ATTITUDE_DIRECT) // No error accumulation in Manual mode
-	{
+	{		
  	sp_accel_int.x += pos_x_err / PERIODIC_FREQUENCY;
 	sp_accel_int.y += pos_y_err / PERIODIC_FREQUENCY;
 	sp_accel_int.z += pos_z_err / PERIODIC_FREQUENCY;
+	//   if (!in_flight) {
+	// sp_accel_int.z = 0;
+ // 	sp_accel_int.x = 0;
+	// sp_accel_int.y = 0;
+ //    }
 	}
 	else
 	{		

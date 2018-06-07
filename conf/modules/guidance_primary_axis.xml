@@ -10,6 +10,10 @@
         <dl_setting var="primary_axis_n_abs" min="0" step="0.05" max="0.4" shortname="n_abs" param="PRIMARY_AXIS_GUIDANCE_ABS" persistent="true"/>
         <dl_setting var="primary_axis_n_gain_x" min="0" step="0.2" max="1.0" shortname="n_x_gain" param="PRIMARY_AXIS_GUIDANCE_NX_GAIN" persistent="true"/>
         <dl_setting var="primary_axis_n_gain_y" min="0" step="0.2" max="1.0" shortname="n_y_gain" param="PRIMARY_AXIS_GUIDANCE_NY_GAIN" persistent="true"/>
+        <dl_setting var="minimum_threshold" min="5000" step="25" max="11600" shortname="min_thres" param="MIN_THRESHOLD" persistent="true"/>
+        <dl_setting var="maximum_threshold" min="5000" step="25" max="11600" shortname="max_thres" param="MAX_THRESHOLD" persistent="true"/>
+        <dl_setting var="protect_inner_loop" min="0" step="1" max="1" shortname="use_innerloopprotection" values="FALSE|TRUE" param="INNER_LOOP_PROTECTION" type="bool" persistent="true"/>
+        
       </dl_settings>
     </dl_settings>
   </settings>

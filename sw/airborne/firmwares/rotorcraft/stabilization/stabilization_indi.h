@@ -24,7 +24,9 @@
 #define STABILIZATION_INDI
 
 
+
 #define DAMAGED_ROTOR_INDEX2 1 
+#define DAMAGED_ROTOR_INDEX3 3
 
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_common_int.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_ref_quat_int.h"
@@ -60,5 +62,8 @@ float q_des_dot_logger;
 float p_des_filter_logger;
 float q_des_filter_logger;   
 float max_extra_gain_multiplier;
+
+
+
 #endif /* STABILIZATION_INDI */
 
