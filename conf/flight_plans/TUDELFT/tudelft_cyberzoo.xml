@@ -131,7 +131,7 @@
       <exception cond="NavDetectGround()" deroute="Holding point"/>
       <exception cond="!nav_is_in_flight()" deroute="Landed"/>
       <call_once fun="NavStartDetectGround()"/>
-      <stay climb="nav_descend_vspeed" vmode="climb" wp="TD"/>
+      <stay climb="-0.5" vmode="climb" wp="TD"/>
     </block>
     <block name="Landed">
       <set value = "FALSE" var = "actuator_terminator_running" />

@@ -58,14 +58,14 @@ void actuator_terminator_init(){
 
 void actuator_terminator(){
     damage_flag	= 1;
-    damage_flag2 = 1;
+    damage_flag2 = 0;
     //damage_flag2 = 1;
     temp += 1.0/PERIODIC_FREQUENCY;
     
     if (temp >= FDD_delay)
     {
 		damage_detected = true;
-    	damage_detected2 = true;
+    	damage_detected2 = false;
 
     }
     	

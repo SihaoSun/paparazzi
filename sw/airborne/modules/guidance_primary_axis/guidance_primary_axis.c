@@ -146,10 +146,11 @@ void guidance_primary_axis_run(void)
     	else
       		r = angular_rate_optitrack.r;
   	}
-
+ 
+ 	//printf("%f\t%f\n",attitude_optitrack.psi*57.3, stateGetNedToBodyEulers_f()->psi*57.3);
 	//Linear controller to find the acceleration setpoint rate_cmd_primary_axis position and velocity
-	float dx = 0.020;
-	float dy = 0.002;
+	float dx = 0.023;
+	float dy = 0.0019;
 	float x_cg, y_cg, vx_cg, vy_cg;
 	x_cg = stateGetPositionNed_f()->x -(cos(psi - 23/57.3)*dx - 	sin(psi - 23/57.3)*dy);
 	y_cg = stateGetPositionNed_f()->y -(sin(psi - 23/57.3)*dx + 	cos(psi - 23/57.3)*dy);
@@ -174,7 +175,6 @@ void guidance_primary_axis_run(void)
 
 	if (speed_sp_z <= -1.5)  // bound the maximum verticle speed
 		speed_sp_z = -1.5;
-
 
 	//printf("%f\t%f\n", speed_sp_z,(stateGetSpeedNed_f()->z));
 	struct FloatVect3 sp_accel = {0.0,0.0,0.0};
