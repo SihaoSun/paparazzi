@@ -232,7 +232,6 @@ if ((autopilot.mode == AP_MODE_ATTITUDE_DIRECT) || (autopilot.mode == AP_MODE_AT
 	  	sp_accel.z = -(radio_control.values[RADIO_THROTTLE]-5000)*16.0/9600.0;
     }
 
-//printf("%f\n", sp_accel.z);
 }
 else{
 	float psi_des = guidance_h.sp.heading;

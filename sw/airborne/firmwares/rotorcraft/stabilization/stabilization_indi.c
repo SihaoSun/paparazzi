@@ -123,6 +123,11 @@ float act_dyn[INDI_NUM_ACT] = STABILIZATION_INDI_ACT_DYN;
 #define STABILIZATION_INDI_MAX_RATE 6.0
 #endif
 
+#if FORWARD_REACHABLE_TEST
+  float temp_indi = 0;
+  float forward_reachability_switch = 0;
+#endif
+
 // variables needed for control
 float actuator_state_filt_vect[INDI_NUM_ACT];
 struct FloatRates angular_accel_ref = {0., 0., 0.};
@@ -605,19 +610,21 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   if (damage_detected2){
     indi_du[DAMAGED_ROTOR_INDEX3]  = 0;
     indi_du[DAMAGED_ROTOR_INDEX2]  = 0;
-
+    //printf("%d\t%d\n",DAMAGED_ROTOR_INDEX3,DAMAGED_ROTOR_INDEX2 );
     // IF right front & left back are damaged
     if ((DAMAGED_ROTOR_INDEX2 == 1 && DAMAGED_ROTOR_INDEX3 == 3) || (DAMAGED_ROTOR_INDEX2 == 3 && DAMAGED_ROTOR_INDEX3 == 1)){ 
       indi_du[0] = (g1_damage_tall_pseudo_inv[0][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[0][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[0][3] * indi_v[3]);
       indi_du[2] = (g1_damage_tall_pseudo_inv[2][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[2][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[2][3] * indi_v[3]);
-      printf("%f\t%f\t%f\t%f\n", indi_du[0],indi_du[1],indi_du[2],indi_du[3]);
+      //printf("%f\t%f\t%f\t%f\n", indi_du[0],indi_du[1],indi_du[2],indi_du[3]);
     }
     // IF left front & right back are damaged (Check the signs!)
     if ((DAMAGED_ROTOR_INDEX2 == 0 && DAMAGED_ROTOR_INDEX3 == 2) || (DAMAGED_ROTOR_INDEX2 == 2 && DAMAGED_ROTOR_INDEX3 == 0)){
       indi_du[1] = (g1_damage_tall_pseudo_inv[1][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[1][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[1][3] * indi_v[3]);
       indi_du[3] = (g1_damage_tall_pseudo_inv[3][0] * indi_v[0]) + (g1_damage_tall_pseudo_inv[3][1] * indi_v[1]) + (g1_damage_tall_pseudo_inv[3][3] * indi_v[3]);
-    }  
+    } 
+
     
+    //printf("%f\t%f\t%f\t%f\n",indi_du[0],indi_du[1],indi_du[2],indi_du[3] );
   }
   //printf("%d\n", damage_detected);
 #else
@@ -683,23 +690,49 @@ static void stabilization_indi_calc_cmd(struct Int32Quat *att_err, bool rate_con
   /*Commit the actuator command*/
   for (i = 0; i < INDI_NUM_ACT; i++) {
     actuators_pprz[i] = (int16_t) indi_u[i];
-    //actuators_pprz[i] = -MAX_PPRZ;
-    if ((i == DAMAGED_ROTOR_INDEX ) && damage_status()){
+
+    if ((i == DAMAGED_ROTOR_INDEX ) && damage_flag){
       actuators_pprz[i] = -MAX_PPRZ;
     }
 
     if (((i == DAMAGED_ROTOR_INDEX2) || (i == DAMAGED_ROTOR_INDEX3) ) && damage_flag2 == 1){
       actuators_pprz[i] = -MAX_PPRZ;
-
-       }    
-
-    if (stateGetPositionNed_f()->z >= 0.5 && stateGetSpeedNed_f()->z > 0)
-    {
-      actuators_pprz[i] = -MAX_PPRZ;   
-    }
+    }    
   }
 
+  //printf("%d\t%d\t%d\t%d\n",actuators_pprz[0],actuators_pprz[1],actuators_pprz[2],actuators_pprz[3] );
+////////////////////////////    Forward reachability   //////////////////////////////////////
 
+#if FORWARD_REACHABLE_TEST
+if (radio_control.values[RADIO_THROTTLE]<1000)
+  forward_reachability_switch = 1;
+
+float forward_reachability_time_horizon = 0.1;
+
+if(radio_control.values[RADIO_THROTTLE]>1000 && forward_reachability_switch == 1){
+  //forward reachable test starts
+  temp_indi += 1.0/PERIODIC_FREQUENCY;
+  if(temp_indi <= forward_reachability_time_horizon){
+    actuators_pprz[0] = -MAX_PPRZ;
+    actuators_pprz[1] = -MAX_PPRZ;
+    actuators_pprz[2] = MAX_PPRZ;
+    actuators_pprz[3] = MAX_PPRZ;
+  }
+  else
+  {
+    temp_indi = 0;
+    forward_reachability_switch = 0;
+  }
+}
+#endif
+
+#if MANUAL_KILL_PROTECTION
+if(autopilot_mode_status){
+  autopilot_set_kill_throttle(true);
+}
+#endif
+
+//printf("switch=%d\ttime=%f\n", forward_reachability_switch,temp_indi);
 //////////////////////////////// NDI ////////////////////////////////////////
 
 
@@ -1296,7 +1329,7 @@ void calc_g1_damage_tall(void)
   }
   // IF left front & right back are damaged (Check the signs!)
   if ((DAMAGED_ROTOR_INDEX2 == 0 && DAMAGED_ROTOR_INDEX3 == 2) || (DAMAGED_ROTOR_INDEX2 == 2 && DAMAGED_ROTOR_INDEX3 == 0)){
-  g1_damage_tall_pseudo_inv[1][0] = -0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[1][1] =  0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[1][3] = -7.623*INDI_G_SCALING/10; // RPM might need to be scaled with INDI_G_SCALING/10 instead
-  g1_damage_tall_pseudo_inv[3][0] =  0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[3][1] = -0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[3][3] = -7.623*INDI_G_SCALING/10;
+  g1_damage_tall_pseudo_inv[1][0] =  -0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[1][1] =  0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[1][3] = -7.623*INDI_G_SCALING/10; // RPM might need to be scaled with INDI_G_SCALING/10 instead
+  g1_damage_tall_pseudo_inv[3][0] =  0.0178*INDI_G_SCALING; g1_damage_tall_pseudo_inv[3][1] =   -0.0166*INDI_G_SCALING; g1_damage_tall_pseudo_inv[3][3] = -7.623*INDI_G_SCALING/10;
   }
 }

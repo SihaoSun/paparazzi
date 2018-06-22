@@ -27,6 +27,7 @@
 #include "stdio.h"
 #include "firmwares/rotorcraft/autopilot_utils.h"
 
+bool actuator_terminator_takeoff_flag;
 bool damage_detected;
 bool damage_detected2;
 float temp;
@@ -57,20 +58,38 @@ void actuator_terminator_init(){
 }
 
 void actuator_terminator(){
-    damage_flag	= 1;
-    damage_flag2 = 0;
+
+	if (actuator_terminator_takeoff_flag == 1)
+	{
+	    damage_flag	= 0;
+	    damage_flag2 = 1;		
+	}
+	else
+	{
+		damage_flag = 1;
+		damage_flag2 = 0;
+	}
     //damage_flag2 = 1;
     temp += 1.0/PERIODIC_FREQUENCY;
     
     if (temp >= FDD_delay)
     {
-		damage_detected = true;
-    	damage_detected2 = false;
+	    if (actuator_terminator_takeoff_flag == 1)
+		{
+			damage_detected = false;
+	    	damage_detected2 = true;		
+		}
+		else
+		{
+			damage_detected = true;
+	    	damage_detected2 = false;
+		}
 
     }
+
     	
  
-	//printf("%d \n", damage_detected);
+	printf("%d \n", actuator_terminator_takeoff_flag);
 
 }
 

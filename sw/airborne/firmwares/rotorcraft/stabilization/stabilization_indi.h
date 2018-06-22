@@ -24,6 +24,9 @@
 #define STABILIZATION_INDI
 
 
+// #define DAMAGED_ROTOR_INDEX2 0 
+// #define DAMAGED_ROTOR_INDEX3 2
+
 #define DAMAGED_ROTOR_INDEX2 1 
 #define DAMAGED_ROTOR_INDEX3 3
 
@@ -69,6 +72,7 @@ float r_des_filter_logger;
 float NDI_PSI0[4];
 float Error[4];
 
+extern float forward_reachability_switch;
 extern Butterworth2LowPass rate_lowpass_filters[3];
 
 #endif /* STABILIZATION_INDI */

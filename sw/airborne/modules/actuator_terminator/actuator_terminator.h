@@ -37,7 +37,7 @@ bool fault_limitation;
 float fault_factor;
 
 bool actuator_terminator_running;
-
+extern bool actuator_terminator_takeoff_flag;
 extern bool damage_detected;
 extern bool damage_detected2;
 extern float FDD_delay;

@@ -72,7 +72,8 @@ void file_logger_start(void)
       "p,q,r,phi,theta,psi,Acc^b_x,Acc^b_y,Acc^b_z,phi_ot,theta_ot,psi_ot,r_ot,"
       "p_des,q_des,r_des,h1,h2,h3,ndi_x,ndi_y,ndi_z,acc_des_x,acc_des_y,acc_des_z,acc_des_x_filter,acc_des_y_filter,acc_des_z_filter,"
       "p_des_dot, q_des_dot, r_des_dot, p_des_filter, q_des_filter, r_des_filter,"
-      "z_ref,z,du1,du2,du3,du4,Vx,Vy,Vz,Vx_des,Vy_des,Vz_des,x_ref,y_ref,x,y, thrust_cmd_pa,thrust_cmd_pa_raw\n"
+      "z_ref,z,du1,du2,du3,du4,Vx,Vy,Vz,Vx_des,Vy_des,Vz_des,x_ref,y_ref,x,y, thrust_cmd_pa,thrust_cmd_pa_raw,"
+      "k_p,k_v,k_vi,k_att,acc_wc,k_z,k_zi,kp,kq\n"
     );
   }
 }
@@ -95,7 +96,7 @@ void file_logger_periodic(void)
   static uint32_t counter;
   struct Int32Quat *quat = stateGetNedToBodyQuat_i();
 
-  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d, %d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d, %d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
           counter,
           imu.gyro_unscaled.p,
           imu.gyro_unscaled.q,
@@ -177,7 +178,16 @@ void file_logger_periodic(void)
           POS_FLOAT_OF_BFP(stateGetPositionNed_i()->x),
           POS_FLOAT_OF_BFP(stateGetPositionNed_i()->y),
           thrust_primary_axis,
-          thrust_specific_raw
+          thrust_specific_raw,
+          guidance_pa_pos_gain,     
+          guidance_pa_speed_gain,  
+          guidance_pa_pos_gain_int,
+          guidance_pa_att_gain,     
+          guidance_pa_acc_filter_fc,
+          guidance_pa_z_gain,      
+          guidance_pa_z_gain_int,
+          reference_acceleration.rate_p,
+          reference_acceleration.rate_q
          );
   counter++;
 }

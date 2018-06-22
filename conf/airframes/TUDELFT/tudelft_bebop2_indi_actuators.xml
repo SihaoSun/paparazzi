@@ -44,7 +44,8 @@
     <define name="SMC_TEST_NOMINAL" value = "TRUE"/>
     <define name="SMC_TEST_NDI_USED" value = "FALSE"/>
     <define name = "COMPENSATE_CG_SHIFT" value = "FALSE"/>
-
+    <define name = "FORWARD_REACHABLE_TEST" value = "FALSE"/>
+    <define name = "MANUAL_KILL_PROTECTION" value = "TRUE"/>
   </firmware>
 
   <modules main_freq="512">
@@ -55,7 +56,7 @@
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
     </module>
     <module name="actuator_terminator">
-      <define name="DAMAGED_ROTOR_INDEX" value="3"/>
+      <define name="DAMAGED_ROTOR_INDEX" value="1"/>
     </module>
 
     <module name="guidance_primary_axis">
@@ -63,9 +64,9 @@
       <define name="PRIMARY_AXIS_GUIDANCE_NX_GAIN"  value = "1.0"/>
       <define name="PRIMARY_AXIS_GUIDANCE_NY_GAIN"  value = "1.0"/>
       <define name="PRIMARY_AXIS_GUIDANCE_ABS"      value = "0.0"/>
-      <define name="GUIDANCE_PA_POS_GAIN"           value = "0.8"/>
-      <define name="GUIDANCE_PA_SPEED_GAIN"         value = "1.3"/>
-      <define name="GUIDANCE_PA_POS_GAIN_INT"       value = "0.0"/>
+      <define name="GUIDANCE_PA_POS_GAIN"           value = "1.0"/>
+      <define name="GUIDANCE_PA_SPEED_GAIN"         value = "1.5"/>
+      <define name="GUIDANCE_PA_POS_GAIN_INT"       value = "0.3"/>
       <define name="GUIDANCE_PA_ATT_GAIN"           value = "5.0"/>
       <define name="GUIDANCE_PA_ACC_FILTER_FC"      value = "8.0"/>
       <define name="GUIDANCE_PA_Z_GAIN"             value = "8.0"/>
