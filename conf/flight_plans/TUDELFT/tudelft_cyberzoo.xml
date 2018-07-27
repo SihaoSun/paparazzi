@@ -20,10 +20,10 @@
     <waypoint lat="51.9906737" lon="4.3768074" name="_CZ4"/>
     <waypoint height="0.6" lat="51.9906271" lon= "4.3768222" name="Infront Fan"/>
     <waypoint height="0.6" lat="51.9906365" lon= "4.3768110" name="Outside Fan"/>    
-    <!--waypoint height="1.5" name="p1" lat = "51.9906242 " lon = "4.3768286"/>
-    <waypoint height="1.5" name="p2" lat = "51.9906485" lon = "4.3768035"/-->
-    <waypoint height="1.5" name="p1" x="-1.0" y="-2.0"/>
-    <waypoint height="1.5" name="p2" x="-2.0892" y="-0.3226"/>
+    <waypoint height="1.5" name="p1" lat = "51.9906199	" lon = "4.3768016"/>
+    <waypoint height="1.5" name="p2" lat = "51.9906381	" lon = "4.3767815"/>
+    <!--waypoint height="1.5" name="p1" x="-1.0" y="-2.0"/>
+    <waypoint height="1.5" name="p2" x="-2.0892" y="-0.3226"/-->
   </waypoints>
   <sectors>
     <sector color="red" name="CyberZoo">
